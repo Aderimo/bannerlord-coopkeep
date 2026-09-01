@@ -1,0 +1,19 @@
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.received.*
+TestResults/
+artifacts/
+publish/
+*.log
+
+# publish.ps1 tarafindan uretilen tek dosyalik exe.
+# Depoya girmiyor (~100 MB); surumler GitHub Releases uzerinden dagitilir.
+/CoopKeep.exe

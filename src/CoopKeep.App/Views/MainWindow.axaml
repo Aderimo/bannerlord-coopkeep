@@ -1,0 +1,498 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:CoopKeep.App.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1080" d:DesignHeight="700"
+        x:Class="CoopKeep.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="CoopKeep"
+        Width="1120" Height="860"
+        MinWidth="960" MinHeight="720">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+  <Panel>
+    <Grid RowDefinitions="Auto,*" Margin="16">
+
+        <!-- ÜST ŞERİT -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Classes="h1" Text="CoopKeep" VerticalAlignment="Center" />
+                <TextBlock Classes="dim" Text="{Binding L[app.subtitle]}" VerticalAlignment="Center" />
+
+                <!-- Geliştirici bağlantısı -->
+                <TextBlock Classes="dim" Text="·" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <TextBlock Classes="dim" Text="{Binding L[lbl.madeBy]}" VerticalAlignment="Center" />
+                    <Button Command="{Binding OpenAuthorPageCommand}"
+                            Background="Transparent" BorderThickness="0" Padding="2,0"
+                            Cursor="Hand" ToolTip.Tip="{Binding AuthorUrl}">
+                        <TextBlock Text="{Binding AuthorName}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Accent}" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Durum rozeti -->
+            <Border Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderDim}"
+                    BorderThickness="1" CornerRadius="20" Padding="14,6">
+                <StackPanel Orientation="Horizontal" Spacing="9">
+                    <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                             Fill="{Binding StatusBrush}" />
+                    <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMain}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Uptime}" Classes="dim" VerticalAlignment="Center"
+                               IsVisible="{Binding IsRunning}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <!--
+                    Gizlilik: IP/port, Steam adı ve konsolu yayın için maskeler.
+                    Simge emoji ile değil vektörle çizildi — emoji yazı tipine bağlı
+                    ve platforma göre kutu olarak görünebiliyor.
+                -->
+                <Button Command="{Binding TogglePrivacyCommand}" Width="52"
+                        ToolTip.Tip="{Binding L[msg.privacyHint]}">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Göz konturu -->
+                            <Path Data="M1,12 C4,6.5 8,4 12,4 C16,4 20,6.5 23,12 C20,17.5 16,20 12,20 C8,20 4,17.5 1,12 Z"
+                                  Stroke="{Binding PrivacyIconBrush}" StrokeThickness="1.8" />
+                            <!-- Göz bebeği -->
+                            <Ellipse Canvas.Left="8.5" Canvas.Top="8.5" Width="7" Height="7"
+                                     Fill="{Binding PrivacyIconBrush}" />
+                            <!-- Gizliyken üstü çizili -->
+                            <Path Data="M3,21 L21,3" Stroke="{Binding PrivacyIconBrush}"
+                                  StrokeThickness="2.2" IsVisible="{Binding PrivacyMode}" />
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+                <Button Command="{Binding RefreshCommand}" Content="{Binding L[btn.refresh]}" />
+                <Button Command="{Binding ToggleLanguageCommand}" Width="58">
+                    <TextBlock Text="{Binding L[lang.label]}" HorizontalAlignment="Center" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- GÖVDE -->
+        <Grid Grid.Row="1" ColumnDefinitions="320,14,*">
+
+            <!-- SOL: KAMPANYALAR -->
+            <Border Grid.Column="0" Classes="panel">
+                <Grid RowDefinitions="Auto,*,Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.campaigns]}" />
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Campaigns}"
+                             SelectedItem="{Binding SelectedCampaign}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextMain}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <!-- Etiket, listenin DataContext'indeki görünüm modelinden
+                                             geliyor; şablonun kendi DataContext'i SaveSet. -->
+                                        <TextBlock Classes="dim">
+                                            <Run Text="{Binding PlayerCount}" />
+                                            <Run Text="{Binding $parent[ListBox].DataContext.L[col.players]}" />
+                                        </TextBlock>
+                                        <TextBlock Classes="dim"
+                                                   Text="{Binding LastModifiedLocal, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="1" Classes="dim" TextWrapping="Wrap"
+                               VerticalAlignment="Center" TextAlignment="Center"
+                               Text="{Binding L[msg.noCampaigns]}"
+                               IsVisible="{Binding !HasCampaigns}" />
+
+                    <!-- Kampanya adı kutusu: yeni dünya, yeniden adlandırma ve kopyalama
+                         işlemlerinin ortak hedef adı. -->
+                    <StackPanel Grid.Row="2" Spacing="7" Margin="0,12,0,0">
+                        <TextBox Text="{Binding CampaignNameInput}"
+                                 Watermark="{Binding L[lbl.campaignName]}" />
+
+                        <Button Classes="primary" Command="{Binding NewWorldCommand}"
+                                Content="{Binding L[btn.new]}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+
+                        <UniformGrid Columns="2" Margin="0,2,0,0">
+                            <Button Command="{Binding RenameCampaignCommand}"
+                                    Content="{Binding L[btn.rename]}" Margin="0,0,4,0"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    FontSize="12" Padding="6,6" />
+                            <Button Command="{Binding DuplicateCampaignCommand}"
+                                    Content="{Binding L[btn.duplicate]}" Margin="4,0,0,0"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    FontSize="12" Padding="6,6" />
+                        </UniformGrid>
+
+                        <UniformGrid Columns="2">
+                            <Button Command="{Binding OpenSavesFolderCommand}"
+                                    Content="{Binding L[btn.openFolder]}" Margin="0,0,4,0"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    FontSize="12" Padding="6,6" />
+                            <Button Classes="danger" Command="{Binding RequestDeleteCommand}"
+                                    Content="{Binding L[btn.delete]}" Margin="4,0,0,0"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    FontSize="12" Padding="6,6"
+                                    IsVisible="{Binding !PendingDelete}" />
+                        </UniformGrid>
+
+                        <!-- İki adımlı silme: kalıcı ve geri alınamaz bir işlem -->
+                        <Border IsVisible="{Binding PendingDelete}"
+                                Background="#3A1F1F" BorderBrush="{StaticResource Danger}"
+                                BorderThickness="1" CornerRadius="6" Padding="10">
+                            <StackPanel Spacing="7">
+                                <TextBlock Text="{Binding L[msg.deleteWarning]}" TextWrapping="Wrap"
+                                           FontSize="12" Foreground="#F5C2C2" />
+                                <UniformGrid Columns="2">
+                                    <Button Command="{Binding CancelDeleteCommand}"
+                                            Content="{Binding L[btn.cancel]}" Margin="0,0,4,0"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            FontSize="12" Padding="6,6" />
+                                    <Button Command="{Binding ConfirmDeleteCommand}"
+                                            Content="{Binding L[btn.confirmDelete]}" Margin="4,0,0,0"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            FontSize="12" Padding="6,6"
+                                            Background="{StaticResource Danger}" Foreground="White" />
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="3" Classes="dim" TextWrapping="Wrap" Margin="0,10,0,0"
+                               Text="{Binding BusyMessage}" IsVisible="{Binding IsBusy}" />
+                </Grid>
+            </Border>
+
+            <!--
+                SAĞ: sunucu · oyuncular · ayarlar · yedekler · konsol
+                Kaydırılabilir: paneller küçük ekranlarda birbirini ezmesin.
+            -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+            <Grid RowDefinitions="Auto,12,Auto,12,Auto,12,Auto,12,Auto">
+
+                <!-- SUNUCU PANELİ -->
+                <Border Grid.Row="0" Classes="panel">
+                    <Grid RowDefinitions="Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.server]}" />
+
+                        <StackPanel Grid.Row="1" Spacing="12" Margin="0,0,0,14">
+                            <UniformGrid Columns="4">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.active]}" />
+                                    <TextBlock Classes="value" Text="{Binding ActiveSaveName}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.port]}" />
+                                    <TextBlock Classes="value" Text="{Binding DisplayedPort}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.password]}" />
+                                    <TextBlock Classes="value" Text="{Binding PasswordText}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.steam]}" />
+                                    <TextBlock Classes="value" Text="{Binding SteamText}" />
+                                </StackPanel>
+                            </UniformGrid>
+
+                            <!--
+                                Sunucu tarayıcısındaki "Host Name" bu addır, kampanya adı DEĞİL.
+                                Gösterilmemesi kullanıcının kendi sunucusunu bulamamasına yol açıyordu.
+                            -->
+                            <Border Background="{StaticResource BgRaised}" CornerRadius="6" Padding="10,8">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.hostName]}" />
+                                    <TextBlock FontWeight="SemiBold" FontSize="13"
+                                               Foreground="{StaticResource Accent}"
+                                               Text="{Binding DisplayedHostName}"
+                                               IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    <TextBlock Classes="dim" Text="{Binding L[msg.hostNameUnknown]}"
+                                               IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                                    <TextBlock Classes="dim" TextWrapping="Wrap" Margin="0,3,0,0"
+                                               Text="{Binding L[msg.hostNameHint]}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                            <Button Classes="primary" Command="{Binding StartCommand}"
+                                    Content="{Binding L[btn.start]}" />
+                            <Button Classes="danger" Command="{Binding StopCommand}"
+                                    Content="{Binding L[btn.stop]}" />
+                            <Button Command="{Binding SaveNowCommand}"
+                                    Content="{Binding L[btn.save]}" />
+
+                            <TextBox Width="260" Text="{Binding AnnounceText}"
+                                     Watermark="{Binding L[msg.announcePlaceholder]}"
+                                     Margin="8,0,0,0" />
+                            <Button Command="{Binding AnnounceCommand}"
+                                    Content="{Binding L[btn.announce]}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- OYUNCULAR -->
+                <Border Grid.Row="2" Classes="panel">
+                    <Grid RowDefinitions="Auto,Auto">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8">
+                            <TextBlock Grid.Column="0" Classes="h2" Margin="0,0,12,0"
+                                       VerticalAlignment="Center" Text="{Binding L[sec.players]}" />
+                            <TextBox Grid.Column="1" MaxWidth="240" HorizontalAlignment="Left"
+                                     Text="{Binding PlayerFilter}"
+                                     Watermark="{Binding L[msg.searchPlayers]}" />
+                            <Button Grid.Column="3" Classes="danger" Command="{Binding KickCommand}"
+                                    Content="{Binding L[btn.kick]}" Padding="10,4" />
+                        </Grid>
+
+                        <ListBox Grid.Row="1" MaxHeight="140"
+                                 ItemsSource="{Binding Players}"
+                                 SelectedItem="{Binding SelectedPlayer}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="40,*,Auto">
+                                        <TextBlock Grid.Column="0" Classes="dim" Text="{Binding Id}" />
+                                        <TextBlock Grid.Column="1" Classes="value" Text="{Binding Name}" />
+                                        <TextBlock Grid.Column="2" Classes="dim" Text="{Binding State}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock Grid.Row="1" Classes="dim" Margin="0,6"
+                                   Text="{Binding L[msg.noPlayers]}"
+                                   IsVisible="{Binding !HasPlayers}" />
+                    </Grid>
+                </Border>
+
+                <!-- AYARLAR -->
+                <Border Grid.Row="4" Classes="panel" Margin="0,0,0,14">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.settings]}" />
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,14,120,14,170,14,Auto">
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Classes="dim" Text="{Binding L[lbl.password]}" />
+                                <TextBox Text="{Binding EditPassword}" PasswordChar="•"
+                                         IsEnabled="{Binding !IsRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="3">
+                                <TextBlock Classes="dim" Text="{Binding L[lbl.port]}" />
+                                <TextBox Text="{Binding EditPort}" IsEnabled="{Binding !IsRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Spacing="3">
+                                <TextBlock Classes="dim" Text="{Binding L[lbl.autosave]}"
+                                           TextWrapping="NoWrap" />
+                                <TextBox Text="{Binding EditAutosave}" IsEnabled="{Binding !IsRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="6" Spacing="6" VerticalAlignment="Bottom">
+                                <CheckBox IsChecked="{Binding EditSteam}" IsEnabled="{Binding !IsRunning}"
+                                          Content="{Binding L[lbl.steam]}"
+                                          Foreground="{StaticResource TextMain}" />
+                                <Button Command="{Binding ApplySettingsCommand}"
+                                        Content="{Binding L[btn.apply]}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Otomasyon anahtarları -->
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="20" Margin="0,12,0,0">
+                            <CheckBox IsChecked="{Binding AutoBackup}"
+                                      Content="{Binding L[lbl.autoBackup]}"
+                                      Foreground="{StaticResource TextMain}" />
+                            <CheckBox IsChecked="{Binding AutoRestart}"
+                                      Content="{Binding L[lbl.autoRestart]}"
+                                      Foreground="{StaticResource TextMain}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Spacing="2" Margin="0,10,0,0">
+                            <TextBlock Classes="dim" Text="{Binding L[msg.autosaveHint]}" TextWrapping="Wrap" />
+                            <TextBlock Classes="dim" Text="{Binding L[msg.steamHint]}" TextWrapping="Wrap" />
+                            <TextBlock Classes="dim" Text="{Binding L[msg.settingsNeedRestart]}" />
+                            <TextBlock Foreground="{StaticResource Accent}" FontSize="12"
+                                       Text="{Binding SettingsNotice}"
+                                       IsVisible="{Binding SettingsNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- YEDEKLER -->
+                <Border Grid.Row="6" Classes="panel">
+                    <Grid RowDefinitions="Auto,Auto,Auto">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8">
+                            <TextBlock Grid.Column="0" Classes="h2" Margin="0,0,12,0"
+                                       VerticalAlignment="Center" Text="{Binding L[sec.backups]}" />
+                            <Button Grid.Column="2" Command="{Binding BackupNowCommand}"
+                                    Content="{Binding L[btn.backupNow]}" Padding="10,4"
+                                    Margin="0,0,8,0" />
+                            <Button Grid.Column="3" Command="{Binding RequestRestoreCommand}"
+                                    Content="{Binding L[btn.restore]}" Padding="10,4"
+                                    IsVisible="{Binding !PendingRestore}" />
+                        </Grid>
+
+                        <ComboBox Grid.Row="1" HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding Backups}"
+                                  SelectedItem="{Binding SelectedBackup}"
+                                  IsVisible="{Binding HasBackups}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding CreatedLocal, StringFormat='{}{0:dd.MM.yyyy  HH:mm:ss}'}"
+                                               FontSize="12" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1" Classes="dim" Text="{Binding L[msg.noBackups]}"
+                                   IsVisible="{Binding !HasBackups}" />
+
+                        <StackPanel Grid.Row="2" Spacing="6" Margin="0,8,0,0">
+                            <!-- Geri yükleme geri alınamaz bir işlem: iki adımlı onay -->
+                            <Border IsVisible="{Binding PendingRestore}"
+                                    Background="#3A2E1F" BorderBrush="{StaticResource Accent}"
+                                    BorderThickness="1" CornerRadius="6" Padding="10">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Text="{Binding L[msg.restoreWarning]}" TextWrapping="Wrap"
+                                               FontSize="12" Foreground="#F0DCA8" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Command="{Binding CancelRestoreCommand}"
+                                                Content="{Binding L[btn.cancel]}" FontSize="12" Padding="10,5" />
+                                        <Button Classes="primary" Command="{Binding ConfirmRestoreCommand}"
+                                                Content="{Binding L[btn.confirmRestore]}" FontSize="12" Padding="10,5" />
+                                    </StackPanel>
+                                    <TextBlock Classes="dim" Text="{Binding L[msg.stopToRestore]}"
+                                               IsVisible="{Binding IsRunning}" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Classes="dim" Text="{Binding L[msg.backupHint]}" TextWrapping="Wrap" />
+                            <TextBlock Foreground="{StaticResource Accent}" FontSize="12"
+                                       Text="{Binding BackupNotice}"
+                                       IsVisible="{Binding BackupNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- KONSOL -->
+                <Border Grid.Row="8" Classes="panel" MinHeight="240">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.console]}" />
+
+                        <Border Grid.Row="1" Background="{StaticResource ConsoleBg}"
+                                CornerRadius="6" Padding="10" ClipToBounds="True">
+                            <Panel>
+                                <!--
+                                    Gizli modda bulanıklaştırılır: konsol dosya yolları
+                                    (kullanıcı adı dahil), oyuncu adresleri ve Steam lobi
+                                    kimliği içeriyor — yayında görünmemeli.
+                                -->
+                                <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}">
+                                    <ItemsControl ItemsSource="{Binding Console}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}"
+                                                           FontFamily="Cascadia Mono, Consolas, monospace"
+                                                           FontSize="11"
+                                                           Foreground="#A9B4C4"
+                                                           TextWrapping="NoWrap" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+
+                                <Border IsVisible="{Binding PrivacyMode}"
+                                        Background="#B00F1115" CornerRadius="6">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Spacing="10">
+                                        <Viewbox Width="30" Height="30" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M1,12 C4,6.5 8,4 12,4 C16,4 20,6.5 23,12 C20,17.5 16,20 12,20 C8,20 4,17.5 1,12 Z"
+                                                      Stroke="{StaticResource TextDim}" StrokeThickness="1.6" />
+                                                <Ellipse Canvas.Left="8.5" Canvas.Top="8.5" Width="7" Height="7"
+                                                         Fill="{StaticResource TextDim}" />
+                                                <Path Data="M3,21 L21,3" Stroke="{StaticResource TextDim}"
+                                                      StrokeThickness="2" />
+                                            </Canvas>
+                                        </Viewbox>
+                                        <TextBlock Text="{Binding L[msg.consoleHidden]}"
+                                                   Classes="dim" TextAlignment="Center"
+                                                   TextWrapping="Wrap" MaxWidth="320" />
+                                    </StackPanel>
+                                </Border>
+                            </Panel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+
+    <!-- KARŞILAMA EKRANI — yalnızca ilk açılışta, sonra tercihe göre -->
+    <Border IsVisible="{Binding ShowTutorial}" Background="#CC0B0D11">
+      <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderDim}"
+              BorderThickness="1" CornerRadius="10" Padding="26"
+              MaxWidth="620" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,18">
+            <TextBlock Grid.Column="0" Classes="h1" Text="{Binding L[tut.title]}"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="1" Command="{Binding CloseTutorialCommand}"
+                    Background="Transparent" BorderThickness="0" Padding="8,2"
+                    VerticalAlignment="Top">
+              <TextBlock Text="✕" FontSize="15" Foreground="{StaticResource TextDim}" />
+            </Button>
+          </Grid>
+
+          <StackPanel Grid.Row="1" Spacing="15">
+            <StackPanel Spacing="3">
+              <TextBlock Text="{Binding L[tut.step1title]}" FontWeight="SemiBold" FontSize="13"
+                         Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding L[tut.step1]}" TextWrapping="Wrap" FontSize="12"
+                         Foreground="{StaticResource TextMain}" />
+            </StackPanel>
+            <StackPanel Spacing="3">
+              <TextBlock Text="{Binding L[tut.step2title]}" FontWeight="SemiBold" FontSize="13"
+                         Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding L[tut.step2]}" TextWrapping="Wrap" FontSize="12"
+                         Foreground="{StaticResource TextMain}" />
+            </StackPanel>
+            <StackPanel Spacing="3">
+              <TextBlock Text="{Binding L[tut.step3title]}" FontWeight="SemiBold" FontSize="13"
+                         Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding L[tut.step3]}" TextWrapping="Wrap" FontSize="12"
+                         Foreground="{StaticResource TextMain}" />
+            </StackPanel>
+            <StackPanel Spacing="3">
+              <TextBlock Text="{Binding L[tut.step4title]}" FontWeight="SemiBold" FontSize="13"
+                         Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding L[tut.step4]}" TextWrapping="Wrap" FontSize="12"
+                         Foreground="{StaticResource TextMain}" />
+            </StackPanel>
+          </StackPanel>
+
+          <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,22,0,0">
+            <CheckBox Grid.Column="0" IsChecked="{Binding DontShowTutorialAgain}"
+                      Content="{Binding L[tut.dontShow]}"
+                      Foreground="{StaticResource TextDim}" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Classes="primary" Command="{Binding CloseTutorialCommand}"
+                    Content="{Binding L[tut.close]}" />
+          </Grid>
+        </Grid>
+      </Border>
+    </Border>
+  </Panel>
+</Window>

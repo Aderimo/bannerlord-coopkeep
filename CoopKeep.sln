@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C8045467-298D-4E71-B1D3-D69539283FE6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoopKeep.Core", "src\CoopKeep.Core\CoopKeep.Core.csproj", "{1B40BF24-0FC3-4A83-AC06-A21E68A090CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{089DE51B-6644-414E-972A-80320A02A98D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoopKeep.Core.Tests", "tests\CoopKeep.Core.Tests\CoopKeep.Core.Tests.csproj", "{B05445FD-3D17-464C-A501-A0074E116ECD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoopKeep.Cli", "src\CoopKeep.Cli\CoopKeep.Cli.csproj", "{BC5BD97E-886E-4451-B640-9C594CDD83E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoopKeep.App", "src\CoopKeep.App\CoopKeep.App.csproj", "{748DB371-56BF-4E1F-A9FE-BF91FA8D4791}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1B40BF24-0FC3-4A83-AC06-A21E68A090CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B40BF24-0FC3-4A83-AC06-A21E68A090CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B40BF24-0FC3-4A83-AC06-A21E68A090CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B40BF24-0FC3-4A83-AC06-A21E68A090CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B05445FD-3D17-464C-A501-A0074E116ECD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B05445FD-3D17-464C-A501-A0074E116ECD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B05445FD-3D17-464C-A501-A0074E116ECD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B05445FD-3D17-464C-A501-A0074E116ECD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC5BD97E-886E-4451-B640-9C594CDD83E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC5BD97E-886E-4451-B640-9C594CDD83E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC5BD97E-886E-4451-B640-9C594CDD83E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5BD97E-886E-4451-B640-9C594CDD83E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{748DB371-56BF-4E1F-A9FE-BF91FA8D4791}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{748DB371-56BF-4E1F-A9FE-BF91FA8D4791}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{748DB371-56BF-4E1F-A9FE-BF91FA8D4791}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{748DB371-56BF-4E1F-A9FE-BF91FA8D4791}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1B40BF24-0FC3-4A83-AC06-A21E68A090CA} = {C8045467-298D-4E71-B1D3-D69539283FE6}
+		{B05445FD-3D17-464C-A501-A0074E116ECD} = {089DE51B-6644-414E-972A-80320A02A98D}
+		{BC5BD97E-886E-4451-B640-9C594CDD83E9} = {C8045467-298D-4E71-B1D3-D69539283FE6}
+		{748DB371-56BF-4E1F-A9FE-BF91FA8D4791} = {C8045467-298D-4E71-B1D3-D69539283FE6}
+	EndGlobalSection
+EndGlobal
