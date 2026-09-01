@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>CoopKeep</AssemblyName>
+    <RootNamespace>CoopKeep.App</RootNamespace>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <!--
+    Avalonia 11.3.x kullanılıyor, 12.x değil.
+
+    Sebep: Avalonia 12'nin kaynak üreteçleri Roslyn 4.14 gerektiriyor, .NET 8 SDK ise
+    Roslyn 4.11 ile geliyor. Üreteç sessizce çalışmıyor ve InitializeComponent hiç
+    üretilmediği için derleme "adı geçerli bağlamda yok" hatasıyla düşüyor.
+    Avalonia 12'ye geçmek istenirse önce .NET 10 SDK'ya çıkılmalı.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CoopKeep.Core\CoopKeep.Core.csproj" />
+  </ItemGroup>
+</Project>
