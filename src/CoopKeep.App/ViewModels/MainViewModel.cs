@@ -42,6 +42,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     private bool _suppressSelectionWrite;
 
     private BackupService? _backups;
+    private ServerResourceMonitor? _resources;
     private readonly CrashRestartPolicy _crashPolicy = new();
 
     public MainViewModel()
@@ -55,8 +56,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         AutoBackup = _ui.AutoBackup;
         AutoRestart = _ui.AutoRestart;
 
-        _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _uptimeTimer.Tick += (_, _) => OnPropertyChanged(nameof(Uptime));
+        _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _uptimeTimer.Tick += (_, _) =>
+        {
+            OnPropertyChanged(nameof(Uptime));
+            SampleResources();
+        };
         _uptimeTimer.Start();
 
         WireSupervisor();
@@ -167,6 +172,30 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ => "#6B7280",
     }));
 
+    [ObservableProperty] private string _cpuText = "-";
+    [ObservableProperty] private string _ramText = "-";
+
+    /// <summary>
+    /// Sunucu süreç ağacının kaynak kullanımını örnekler.
+    /// </summary>
+    /// <remarks>
+    /// Sunucunun bellek <i>sınırı</i> ayarlanamıyor — Bannerlord dedicated server'ında
+    /// böyle bir seçenek yok. Bu yüzden yalnızca ölçüp gösteriyoruz.
+    /// </remarks>
+    private void SampleResources()
+    {
+        if (_resources is null || !IsRunning)
+        {
+            if (CpuText != "-") { CpuText = "-"; RamText = "-"; _resources?.Reset(); }
+            return;
+        }
+
+        var sample = _resources.Sample(_supervisor.ProcessId);
+
+        CpuText = sample.ProcessCount == 0 ? "-" : $"{sample.CpuPercent:0}%";
+        RamText = sample.ProcessCount == 0 ? "-" : $"{sample.MemoryGigabytes:0.0} GB";
+    }
+
     public string Uptime
     {
         get
@@ -233,6 +262,15 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             BusyMessage = L["msg.readyIn"];
+
+            // Ekrandaki ayarları başlatmadan ÖNCE uygula.
+            //
+            // Önceden bunun için ayrı bir "Kaydet" düğmesine basmak gerekiyordu;
+            // kullanıcı şifreyi yazıp doğrudan Başlat'a bastığında sunucu şifresiz
+            // açılıyordu ve bunu ancak biri şifresiz girince fark ediyordu.
+            // Artık kural basit: ekranda ne yazıyorsa sunucu onunla açılır.
+            ApplyEditedSettings();
+
             _config.EnsureSaveName(SelectedCampaign.Name);
             ReloadConfig();
 
@@ -414,9 +452,18 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         try
         {
-            _saves.Delete(SelectedCampaign.Name);
+            var name = SelectedCampaign.Name;
+
+            // Dünyanın kendisi + Coop'un yedek kuşakları + bizim yedeklerimiz.
+            // Yalnızca .sav/.json silmek diskte megabaytlarca artık bırakıyordu.
+            var files = _saves.Delete(name);
+            var backups = _backups?.DeleteAll(name) ?? 0;
+
             PendingDelete = false;
+            BackupNotice = string.Format(L["msg.deleted"], files, backups);
+
             ReloadCampaigns();
+            ReloadBackups();
         }
         catch (Exception ex)
         {
@@ -628,19 +675,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand(CanExecute = nameof(CanApplySettings))]
     private void ApplySettings()
     {
-        if (_config is null) return;
-
         try
         {
-            var port = int.TryParse(EditPort, out var p) ? p : ServerConfig.DefaultPort;
-            var autosave = int.TryParse(EditAutosave, out var a) ? a : ServerConfig.DefaultAutosaveMinutes;
-
-            _config.Update(w => w
-                .Password(EditPassword)
-                .Port(port)
-                .AutosaveMinutes(autosave)
-                .Steam(EditSteam));
-
+            ApplyEditedSettings();
             ReloadConfig();
             SettingsNotice = L["msg.settingsSaved"];
         }
@@ -648,6 +685,21 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             SettingsNotice = ex.Message;
         }
+    }
+
+    /// <summary>Düzenleme alanlarındaki değerleri yapılandırmaya yazar.</summary>
+    private void ApplyEditedSettings()
+    {
+        if (_config is null || !_config.Exists) return;
+
+        var port = int.TryParse(EditPort, out var p) ? p : ServerConfig.DefaultPort;
+        var autosave = int.TryParse(EditAutosave, out var a) ? a : ServerConfig.DefaultAutosaveMinutes;
+
+        _config.Update(w => w
+            .Password(EditPassword)
+            .Port(port)
+            .AutosaveMinutes(autosave)
+            .Steam(EditSteam));
     }
 
     private bool CanApplySettings() => _config is not null && _config.Exists && !IsRunning && !IsBusy;
@@ -831,6 +883,13 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         VersionsMatch = _game?.GameVersion is { } gv
                         && _coop?.RequiredGameVersion is { } rv
                         && string.Equals(gv, rv, StringComparison.OrdinalIgnoreCase);
+
+        // Kaynak ölçümü, sunucunun kendi klasörü altındaki süreçleri sayar.
+        if (_coop is not null)
+        {
+            var serverRoot = System.IO.Path.GetDirectoryName(_coop.DedicatedServerExe);
+            if (serverRoot is not null) _resources = new ServerResourceMonitor(serverRoot);
+        }
 
         DataDirectory = CoopInstallation.DefaultDataDirectory;
 
