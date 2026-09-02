@@ -7,15 +7,15 @@
         x:Class="CoopKeep.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="CoopKeep"
-        Width="1120" Height="860"
-        MinWidth="960" MinHeight="720">
+        Width="1440" Height="880"
+        MinWidth="1240" MinHeight="720">
 
     <Design.DataContext>
         <vm:MainViewModel />
     </Design.DataContext>
 
   <Panel>
-    <Grid RowDefinitions="Auto,*" Margin="16">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
 
         <!-- ÜST ŞERİT -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14">
@@ -79,8 +79,12 @@
             </StackPanel>
         </Grid>
 
-        <!-- GÖVDE -->
-        <Grid Grid.Row="1" ColumnDefinitions="320,14,*">
+        <!--
+            GÖVDE — üç sütun: sunucu listesi | içerik | konsol
+            Konsol tam yükseklikte yanda duruyor ki uzun oturumlarda akışı
+            kaybetmeden diğer panellerle çalışılabilsin.
+        -->
+        <Grid Grid.Row="1" ColumnDefinitions="290,12,*,12,380">
 
             <!-- SOL: KAMPANYALAR -->
             <Border Grid.Column="0" Classes="panel">
@@ -181,7 +185,7 @@
                 Kaydırılabilir: paneller küçük ekranlarda birbirini ezmesin.
             -->
             <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
-            <Grid RowDefinitions="Auto,12,Auto,12,Auto,12,Auto,12,Auto">
+            <Grid RowDefinitions="Auto,12,Auto,12,Auto,12,Auto,12,Auto,12,Auto">
 
                 <!-- SUNUCU PANELİ -->
                 <Border Grid.Row="0" Classes="panel">
@@ -223,18 +227,39 @@
                                 Sunucu tarayıcısındaki "Host Name" bu addır, kampanya adı DEĞİL.
                                 Gösterilmemesi kullanıcının kendi sunucusunu bulamamasına yol açıyordu.
                             -->
-                            <Border Background="{StaticResource BgRaised}" CornerRadius="6" Padding="10,8">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Classes="dim" Text="{Binding L[lbl.hostName]}" />
-                                    <TextBlock FontWeight="SemiBold" FontSize="13"
-                                               Foreground="{StaticResource Accent}"
-                                               Text="{Binding DisplayedHostName}"
-                                               IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                    <TextBlock Classes="dim" Text="{Binding L[msg.hostNameUnknown]}"
-                                               IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
-                                    <TextBlock Classes="dim" TextWrapping="Wrap" Margin="0,3,0,0"
-                                               Text="{Binding L[msg.hostNameHint]}" />
-                                </StackPanel>
+                            <!-- Arkadaşlara gönderilecek bilgi tek yerde -->
+                            <Border Background="{StaticResource BgRaised}" CornerRadius="6" Padding="12,10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="3">
+                                        <TextBlock Classes="h2" Margin="0,0,0,4"
+                                                   Text="{Binding L[sec.connect]}" />
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Classes="dim" Text="{Binding L[lbl.hostName]}" />
+                                            <TextBlock FontWeight="SemiBold" FontSize="13"
+                                                       Foreground="{StaticResource Accent}"
+                                                       Text="{Binding DisplayedHostName}"
+                                                       IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                            <TextBlock Classes="dim" Text="{Binding L[msg.hostNameUnknown]}"
+                                                       IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Classes="dim" Text="{Binding L[lbl.localIp]}" />
+                                            <TextBlock Classes="value" Text="{Binding DisplayedLocalIp}" />
+                                        </StackPanel>
+
+                                        <TextBlock Classes="dim" TextWrapping="Wrap" Margin="0,4,0,0"
+                                                   Text="{Binding L[msg.connectHint]}" />
+                                        <TextBlock Foreground="{StaticResource Accent}" FontSize="12"
+                                                   Text="{Binding CopyNotice}"
+                                                   IsVisible="{Binding CopyNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+
+                                    <Button Grid.Column="1" VerticalAlignment="Top"
+                                            Command="{Binding CopyConnectInfoCommand}"
+                                            Content="{Binding L[btn.copy]}" Padding="12,5" />
+                                </Grid>
                             </Border>
                         </StackPanel>
 
@@ -396,8 +421,52 @@
                     </Grid>
                 </Border>
 
-                <!-- KONSOL -->
-                <Border Grid.Row="8" Classes="panel" MinHeight="240">
+                <!-- YÖNETİCİ İŞLEMLERİ -->
+                <Border Grid.Row="8" Classes="panel">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.admin]}" />
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+                            <TextBlock Classes="dim" VerticalAlignment="Center"
+                                       Text="{Binding L[lbl.selectedPlayer]}" />
+                            <TextBlock Classes="value" VerticalAlignment="Center" FontWeight="SemiBold"
+                                       Text="{Binding SelectedPlayer.Name, FallbackValue='—'}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                            <Button Command="{Binding HealPlayerCommand}"
+                                    Content="{Binding L[btn.heal]}" />
+                            <TextBox Width="110" Text="{Binding GoldAmount}" />
+                            <Button Command="{Binding SetGoldCommand}"
+                                    Content="{Binding L[btn.setGold]}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Spacing="3" Margin="0,10,0,0">
+                            <TextBlock Classes="dim" TextWrapping="Wrap" Text="{Binding L[msg.adminHint]}" />
+                            <!-- Öldürme neden yok: sunucu vanilla hile komutlarını reddediyor
+                                 ve canı sıfırlamanın sonucu doğrulanmadı. -->
+                            <TextBlock Classes="dim" TextWrapping="Wrap" Text="{Binding L[msg.adminNoKill]}" />
+                            <TextBlock Foreground="{StaticResource Danger}" FontSize="12"
+                                       Text="{Binding AdminNotice}"
+                                       IsVisible="{Binding AdminNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- MODÜL UYUMU -->
+                <Border Grid.Row="10" Classes="panel">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="h2" Margin="0" Text="{Binding L[sec.modules]}" />
+                        <TextBlock TextWrapping="Wrap" FontSize="12"
+                                   Text="{Binding ModuleNotice}"
+                                   Foreground="{Binding ModuleNoticeBrush}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+            </ScrollViewer>
+
+            <!-- KONSOL: tam yükseklikte, sağ sütunda -->
+            <Border Grid.Column="4" Classes="panel">
                     <Grid RowDefinitions="Auto,*">
                         <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.console]}" />
 
@@ -452,10 +521,33 @@
                             </Panel>
                         </Border>
                     </Grid>
-                </Border>
-            </Grid>
-            </ScrollViewer>
+            </Border>
         </Grid>
+
+        <!--
+            YÖNETİCİ KAYITLARI — sol altta.
+            Bu işlemler oyunun dengesini değiştiriyor; sessizce yapılmaları birlikte
+            oynayan insanlar arasında güven sorunu yaratır, bu yüzden görünür.
+        -->
+        <Border Grid.Row="2" Classes="panel" Margin="0,12,0,0" Padding="12,8"
+                IsVisible="{Binding HasAuditEntries}">
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Classes="h2" Margin="0,0,14,0"
+                           VerticalAlignment="Center" Text="{Binding L[sec.auditLog]}" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding AuditLog}" MaxHeight="72">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Classes="dim" Text="{Binding TimeText}" />
+                                <TextBlock Foreground="{StaticResource Accent}" FontSize="12"
+                                           FontWeight="SemiBold" Text="{Binding PlayerName}" />
+                                <TextBlock Classes="value" Text="{Binding Description}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Border>
     </Grid>
 
     <!-- KARŞILAMA EKRANI — yalnızca ilk açılışta, sonra tercihe göre -->
