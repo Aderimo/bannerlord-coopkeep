@@ -1,0 +1,32 @@
+<Project>
+
+  <!--
+    Sürüm numarasının TEK kaynağı burasıdır.
+
+    Yeni sürüm çıkarmak için yalnızca <Version> değiştirilir; exe'nin dosya
+    sürümü, arayüzdeki gösterim ve yayın paketi otomatik olarak uyumlanır.
+    Ardından CHANGELOG.md'ye giriş eklenip commit "v<sürüm>" etiketiyle işaretlenir.
+
+    Sürüm kuralı (semantic versioning):
+      0.x.y  — henüz kararlı değil; kırıcı değişiklikler minor artışıyla gelebilir
+      x.Y.0  — yeni özellik
+      x.y.Z  — yalnızca hata düzeltmesi
+  -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Authors>aderimo</Authors>
+    <Product>CoopKeep</Product>
+    <Company>aderimo</Company>
+    <Copyright>Copyright (c) 2026 aderimo</Copyright>
+    <RepositoryUrl>https://github.com/aderimo/CoopKeep</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>

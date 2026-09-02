@@ -21,6 +21,12 @@
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                 <TextBlock Classes="h1" Text="CoopKeep" VerticalAlignment="Center" />
+                <!-- Sürüm görünür olsun: hata raporlarının ilk sorusu bu. -->
+                <Border Background="{StaticResource BgRaised}" CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AppVersion}" FontSize="11"
+                               Foreground="{StaticResource TextDim}" />
+                </Border>
                 <TextBlock Classes="dim" Text="{Binding L[app.subtitle]}" VerticalAlignment="Center" />
 
                 <!-- Geliştirici bağlantısı -->

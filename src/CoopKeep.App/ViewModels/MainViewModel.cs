@@ -634,6 +634,22 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     public string AuthorUrl => "https://gitgit.me/aderimo";
     public string AuthorName => "aderimo";
 
+    /// <summary>
+    /// Uygulama sürümü — <c>Directory.Build.props</c> içindeki tek kaynaktan gelir.
+    /// </summary>
+    /// <remarks>
+    /// Hata bildiren kullanıcının hangi sürümü kullandığını görebilmek için arayüzde
+    /// gösteriliyor; "bende çalışmıyor" raporlarının ilk sorusu bu.
+    /// </remarks>
+    public static string AppVersion
+    {
+        get
+        {
+            var v = typeof(MainViewModel).Assembly.GetName().Version;
+            return v is null ? "" : $"v{v.Major}.{v.Minor}.{v.Build}";
+        }
+    }
+
     // --- yönetici işlemleri ----------------------------------------------
     //
     // Söz dizimleri çalışan sunucudan okundu; tahmin değil:
