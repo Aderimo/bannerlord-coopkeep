@@ -2,213 +2,214 @@
 
 # CoopKeep
 
-**Mount & Blade II: Bannerlord — Coop sunucu yöneticisi**
-*Bannerlord Coop server manager*
+**Bannerlord Coop server manager**
 
-[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.1.0-C9A227)](../../releases)
-[![Lisans](https://img.shields.io/badge/lisans-MIT-4ADE80)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#kurulum)
+[![Version](https://img.shields.io/badge/version-v0.1.0-C9A227)](../../releases)
+[![License](https://img.shields.io/badge/license-MIT-4ADE80)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#install)
 
-Kendi bilgisayarında Bannerlord Coop sunucusu açmayı tek tıklık hâle getirir.
-Komut satırı yok, elle dosya düzenleme yok, oyuna girip save yaratma yok.
+Hosting a Mount & Blade II: Bannerlord co-op server on your own PC, in one click.
+No command line, no editing config files by hand, no creating a save in-game first.
+
+**English** · [Türkçe](README.tr.md)
 
 </div>
 
 ---
 
-## Neden
+## Why
 
-Bannerlord Coop modu co-op kampanyayı çalışır hâle getiriyor, ama işletme tarafı
-tamamen elle: DLL'leri unblock etmek, önce oyunda tek oyunculu bir save yaratmak,
-`server-config.json`'ı Notepad'le düzenlemek, `.exe`'yi çift tıklayıp konsol
-penceresini açık tutmak, save bozulursa dosyaları elle kopyalamak.
+The Bannerlord Coop mod makes co-op campaigns work, but running one is all manual:
+unblock DLLs, create a singleplayer save first, edit `server-config.json` in Notepad,
+double-click an `.exe` and keep a console window open, copy files by hand when a save
+breaks.
 
-CoopKeep bu yükü tamamen üstlenir ve **mod dosyalarına hiç dokunmaz.**
+CoopKeep takes all of that over — and **never touches the mod's files.**
 
 ---
 
-## Kurulum
+## Install
 
-### Gereksinimler
+### Requirements
 
 | | |
 |---|---|
-| Oyun | Mount & Blade II: Bannerlord **v1.4.8** (Steam) |
-| Mod | [Bannerlord Coop](https://steamcommunity.com/sharedfiles/filedetails/?id=3770450698) — Steam Atölyesi'nden abone ol |
-| İşletim sistemi | Windows 10/11 |
-| .NET | **Gerekmiyor** — exe kendi kendine yeter |
+| Game | Mount & Blade II: Bannerlord **v1.4.8** (Steam) |
+| Mod | [Bannerlord Coop](https://steamcommunity.com/sharedfiles/filedetails/?id=3770450698) — subscribe on the Steam Workshop |
+| OS | Windows 10/11 |
+| .NET | **Not required** — the exe is self-contained |
 
-### Adımlar
+### Steps
 
-1. Steam'den **Bannerlord**'u kur (zaten varsa geç)
-2. Steam Atölyesi'nden **Bannerlord Coop** moduna abone ol
-3. [Releases](../../releases) sayfasından **`CoopKeep.exe`** dosyasını indir
-4. Çift tıkla. Bu kadar.
+1. Install **Bannerlord** from Steam
+2. Subscribe to **Bannerlord Coop** on the Steam Workshop
+3. Download **`CoopKeep.exe`** from [Releases](../../releases)
+4. Double-click it. That's it.
 
-> **Kurulum gerektirmez.** Oyun klasörüne hiçbir şey kopyalanmaz, hiçbir dosya
-> değiştirilmez. İstediğin klasörde durabilir; silmek istersen exe'yi silmen yeterli.
+> **No installer.** Nothing is copied into the game folder and no game file is modified.
+> Keep it wherever you like; to uninstall, delete the exe.
 
-**Arkadaşlarının CoopKeep'e ihtiyacı yok.** Onlar sadece aynı Coop moduna abone
-olup oyundan bağlanır.
-
----
-
-## Nasıl kullanılır
-
-### 1 · Sunucu seç veya yarat
-
-Sol paneldeki listeden bir sunucu seç. Hiç yoksa alttaki kutuya bir ad yazıp
-**Yeni sunucu**'ya bas.
-
-> Oyuna girmene gerek yok — dünyayı sunucu sıfırdan kurar. Yaklaşık bir dakika sürer.
-
-### 2 · Ayarları yap (isteğe bağlı)
-
-**Ayarlar** bölümünden şifre, port, otomatik kayıt aralığı ve Steam görünürlüğünü
-belirle. Sunucu duruyorken değiştirilir; **Başlat'a bastığında ekranda ne yazıyorsa
-sunucu onunla açılır.**
-
-### 3 · Başlat
-
-**Başlat**'a bas ve bekle. Durum sırayla `Motor açılıyor` → `Dünya yükleniyor` →
-**`Yayında`** olur. Toplam yaklaşık bir dakika.
-
-### 4 · Arkadaşların nasıl girer
-
-Oyunu açarlar → **Coop** menüsü → **Steam Lobbies** sekmesi.
-
-> ⚠️ **En sık yapılan hata:** Aradıkları isim **senin Steam adın**, sunucu adı değil.
-> CoopKeep bunu "Arkadaşlarına gönder" kutusunda gösterir ve **Kopyala** ile
-> panoya alabilirsin.
-
-Doğrudan IP ile bağlanacaklarsa: router'ından **UDP 4200** portunu yönlendirmen
-gerekir. Steam üzerinden gelenler için gerekmez.
+**Your friends do not need CoopKeep.** They just subscribe to the same mod and join
+from the game.
 
 ---
 
-## Neler yapabilir
+## How to use
 
-### Sunucu
-- Başlat, güvenle durdur (dünya kaydedilerek), canlı durum ve faz göstergesi
-- İşlemci ve bellek kullanımı
-- **Çökerse otomatik yeniden başlatma** — üstel bekleme ve çökme döngüsü koruması
+### 1 · Pick or create a server
 
-### Oyuncular
-- Canlı liste, arama, **oyuncu atma** (`kick`)
-- Tüm oyunculara duyuru gönderme
-- **Yönetici işlemleri:** seçili oyuncuya tam can verme ve altın ayarlama.
-  Her işlem kalıcı bir denetim kaydına yazılır ve arayüzde görünür.
+Choose a server in the left panel. If you have none, type a name in the box below
+and press **New server**.
 
-### Dünyalar ve yedekler
-- Yeni dünya yaratma, yeniden adlandırma, kopyalama, silme, klasörünü açma
-- **Her kayıttan sonra otomatik yedek**, işlemsel geri yükleme
-- Sayı *ve* yaş bazlı otomatik temizleme
+> You never have to enter the game — the server builds the world from scratch.
+> Takes about a minute.
 
-### Yayın yapanlar için
-- **Göz düğmesi:** IP, port ve Steam adını maskeler, konsolu bulanıklaştırır.
-  Varsayılan olarak açıktır.
+### 2 · Configure (optional)
 
-### Kurulum denetimi
-- Steam, oyun ve mod otomatik bulunur; sürüm uyumu denetlenir
-- **Modül uyumu denetimi:** oyun başlatıcında sunucunun beklemediği modüller
-  seçiliyse uyarır — bağlantı reddedilmelerinin en olası sebebi budur
+Set a password, port, autosave interval and Steam visibility in **Settings**.
+Changes are made while the server is stopped, and **whatever is on screen is what
+the server starts with.**
+
+### 3 · Start
+
+Press **Start** and wait. The status goes `Booting engine` → `Loading world` →
+**`Online`**. About a minute in total.
+
+### 4 · How your friends join
+
+They open the game → **Coop** menu → **Steam Lobbies** tab.
+
+> ⚠️ **The most common mistake:** the name they search for is **your Steam name**,
+> not the server name. CoopKeep shows it in the "Send to your friends" box, with a
+> **Copy** button.
+
+For a direct IP join, forward **UDP 4200** on your router. Not needed for Steam joins.
 
 ---
 
-## Komut satırı
+## Features
 
-Arayüz istemeyenler için `CoopKeep.Cli`:
+### Server
+- Start, stop safely (the world is saved), live status and phase indicator
+- CPU and memory usage
+- **Automatic restart on crash** — exponential backoff with crash-loop protection
+
+### Players
+- Live list, search, **kick**
+- Broadcast messages to everyone
+- **Admin actions:** give full health or set gold for the selected player.
+  Every action is written to a persistent audit log, visible in the UI.
+
+### Worlds and backups
+- Create, rename, duplicate, delete, open folder
+- **Automatic backup after every save**, transactional restore
+- Pruning by both count *and* age
+
+### For streamers
+- **Eye button:** masks your IP, port and Steam name, and blurs the console.
+  On by default.
+
+### Installation checks
+- Steam, game and mod are found automatically; version compatibility is verified
+- **Module check:** warns when your game launcher has modules enabled that the
+  server does not expect — the most likely cause of failed connections
+
+---
+
+## Command line
+
+For people who prefer a terminal, `CoopKeep.Cli`:
 
 ```bash
-coopkeep doctor          # kurulumu bul ve uyumluluğu denetle
-coopkeep saves           # sunucuları listele (oyuncularıyla)
-coopkeep new Calradia    # yeni dünya yarat (oyuna girmeden)
-coopkeep use Calradia    # aktif sunucuyu değiştir
-coopkeep run             # başlat ve konsolu sür
+coopkeep doctor          # locate the installation and check compatibility
+coopkeep saves           # list servers with their players
+coopkeep new Calradia    # create a new world (without entering the game)
+coopkeep use Calradia    # switch the active server
+coopkeep run             # start and drive the console
 ```
 
 ---
 
-## Sorun giderme
+## Troubleshooting
 
-| Sorun | Sebep ve çözüm |
+| Problem | Cause and fix |
 |---|---|
-| **Arkadaşım sunucuyu bulamıyor** | Sunucu listesinde **senin Steam adını** aratıyor mu? Sunucu adını değil. |
-| **Bağlanamıyor** | CoopKeep'teki **Modül uyumu** bölümüne bak. Oyun başlatıcında fazladan mod seçiliyse kapat. |
-| **Başlat çalışmıyor** | Zaten çalışan bir Coop sunucusu olabilir — CoopKeep uyarır. Görev Yöneticisi'nden kapat. |
-| **Şifre işe yaramıyor** | Şifreyi yazdıktan sonra **Başlat**'a bas; sunucu ayarları yalnızca açılışta okur. |
-| **Mod DLL'leri yüklenmiyor** | Windows indirilen DLL'leri bloke etmiş olabilir. Mod klasöründe PowerShell ile:<br>`Get-ChildItem "<mod klasörü>" -Recurse \| Unblock-File` |
+| **My friend can't find the server** | Are they searching for **your Steam name**? Not the server name. |
+| **They can't connect** | Check the **Module check** panel. Disable extra mods in the game launcher. |
+| **Start does nothing** | A Coop server may already be running — CoopKeep warns about this. Close it from Task Manager. |
+| **The password doesn't work** | Press **Start** after typing it; the server only reads settings at boot. |
+| **Mod DLLs fail to load** | Windows may have blocked the downloaded DLLs. In the mod folder, run:<br>`Get-ChildItem "<mod folder>" -Recurse \| Unblock-File` |
 
 ---
 
-## Bilinen sınırlar
+## Known limitations
 
-Bunlar CoopKeep'in eksiği değil, **modun kendi sınırları** — araştırmayla doğrulandı:
+These are not CoopKeep gaps — they are **limits of the mod itself**, verified by research:
 
-- **Oyuncu limiti yok.** Bannerlord Coop bir slot sınırı uygulamıyor; dışarıdan
-  bağlantı reddedilemiyor.
-- **Ban yok, yalnızca kick var.** Steam kimliği canlı protokole yazılmıyor, bu
-  yüzden kalıcı ban ancak isim bazlı olabilirdi.
-- **Öldürme işlemi yok.** Sunucu vanilla hile komutlarını reddediyor
-  (`Cheat mode is disabled!`) ve canı sıfırlamanın sonucu doğrulanamadı.
-- **"Sadece arkadaşlar" görünürlüğü** dedicated server'da doğrulanamadı.
-- **Bellek sınırı ayarlanamıyor** — sunucunun böyle bir seçeneği yok.
-- Yalnızca **Steam** kurulumları tespit ediliyor (Epic/GOG desteği yok).
-- Aynı anda **tek sunucu** yönetilebiliyor.
+- **No player cap.** Bannerlord Coop does not enforce a slot limit, and connections
+  cannot be refused from the outside.
+- **No ban, only kick.** The Steam identity is not written to the live protocol, so a
+  persistent ban could only ever be name-based.
+- **No kill action.** The server refuses vanilla cheat commands
+  (`Cheat mode is disabled!`) and zeroing health has unverified consequences.
+- **"Friends only" visibility** could not be verified on the dedicated server.
+- **Memory cannot be capped** — the server has no such setting.
+- Only **Steam** installations are detected (no Epic/GOG support).
+- **One server at a time.**
 
-Tam liste: [CHANGELOG.md](CHANGELOG.md)
+Full list: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
-## Nasıl çalışır
+## How it works
 
-CoopKeep, Bannerlord Coop modunun dosyalarına **dokunamaz** — dedicated server dört
-Coop assembly'sini SHA-256 ile doğruluyor ve değiştirilmiş bir modülde exit code 4
-ile açılmayı reddediyor. Bu yüzden entegrasyon yüzeyi kod değil:
+CoopKeep **cannot** modify the Coop mod: the dedicated server verifies four Coop
+assemblies with SHA-256 and refuses to boot with exit code 4 if the module was
+changed. So the integration surface is not code:
 
-| Kanal | Ne için |
+| Channel | Used for |
 |---|---|
-| Süreç yaşam döngüsü | Başlatma, durdurma, çökme tespiti (çıkış kodları 0/2/3/4) |
-| stdin komutları | `status` · `players` · `save` · `say` · `kick` · `stop` |
-| stdout `@DS@` olayları | Durum fazı, canlı oyuncu listesi (JSON) |
-| Dosya sistemi | `server-config.json`, `Game Saves\`, yedekler |
+| Process lifecycle | Start, stop, crash detection (exit codes 0/2/3/4) |
+| stdin commands | `status` · `players` · `save` · `say` · `kick` · `stop` |
+| stdout `@DS@` events | Status phase, live player list (JSON) |
+| File system | `server-config.json`, `Game Saves\`, backups |
 
-Yapılandırma dosyası **yorumları, sırası ve tanımadığımız anahtarları korunarak**
-düzenlenir; mod güncellendiğinde ayarların kaybolmaz.
+The configuration file is edited **preserving its comments, key order and any keys we
+don't recognise**, so your settings survive mod updates.
 
 ---
 
-## Geliştirme
+## Development
 
 ```bash
-dotnet test                                    # 178 test
+dotnet test                                    # 178 tests
 dotnet run --project src/CoopKeep.Cli -- doctor
-powershell -File publish.ps1                   # tek dosyalık exe üretir
+powershell -File publish.ps1                   # produces the single-file exe
 ```
 
-| Proje | Sorumluluk |
+| Project | Responsibility |
 |---|---|
-| `src/CoopKeep.Core` | Süreç yönetimi, protokol, yedekleme, kurulum tespiti — **UI'dan bağımsız** |
-| `src/CoopKeep.App` | Avalonia arayüzü (Türkçe/İngilizce, koyu tema) |
-| `src/CoopKeep.Cli` | Komut satırı aracı |
-| `tests/CoopKeep.Core.Tests` | 178 test |
+| `src/CoopKeep.Core` | Process supervision, protocol, backups, installation discovery — **UI-independent** |
+| `src/CoopKeep.App` | Avalonia UI (English/Turkish, dark theme) |
+| `src/CoopKeep.Cli` | Command line tool |
+| `tests/CoopKeep.Core.Tests` | 178 tests |
 
-Sürüm numarasının tek kaynağı `Directory.Build.props`.
+The single source of the version number is `Directory.Build.props`.
+
+Contributions welcome. Comments, commit messages and tests in this repository are
+written in Turkish; English is fine for issues and pull requests.
 
 ---
 
-## Lisans
+## License
 
-[MIT](LICENSE) — özgürce kullan, değiştir, dağıt.
+[MIT](LICENSE) — use, modify and redistribute freely.
 
-CoopKeep **bağımsız bir araçtır**; Bannerlord Coop ekibiyle veya TaleWorlds ile
-bağlantısı yoktur ve onların kodunu içermez.
-
-*CoopKeep is an independent tool. It is not affiliated with the Bannerlord Coop
-team or TaleWorlds, and contains none of their code.*
+CoopKeep is an **independent tool**. It is not affiliated with the Bannerlord Coop
+team or TaleWorlds, and contains none of their code.
 
 <div align="center">
 
-Geliştiren · **[aderimo](https://gitgit.me/aderimo)**
+Made by · **[aderimo](https://gitgit.me/aderimo)**
 
 </div>
