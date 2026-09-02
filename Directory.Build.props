@@ -18,7 +18,7 @@
     <Product>CoopKeep</Product>
     <Company>aderimo</Company>
     <Copyright>Copyright (c) 2026 aderimo</Copyright>
-    <RepositoryUrl>https://github.com/aderimo/CoopKeep</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Aderimo/bannerlord-coopkeep</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
