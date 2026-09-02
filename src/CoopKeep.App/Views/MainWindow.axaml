@@ -189,7 +189,7 @@
 
                 <!-- SUNUCU PANELİ -->
                 <Border Grid.Row="0" Classes="panel">
-                    <Grid RowDefinitions="Auto,Auto,Auto">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                         <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.server]}" />
 
                         <StackPanel Grid.Row="1" Spacing="12" Margin="0,0,0,14">
@@ -263,7 +263,15 @@
                             </Border>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                        <!-- Başka bir sunucu portu tutuyorsa başlatma çalışmaz; sebebini söyle. -->
+                        <Border Grid.Row="2" Background="#3A1F1F" BorderBrush="{StaticResource Danger}"
+                                BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10"
+                                IsVisible="{Binding HasForeignServer}">
+                            <TextBlock Text="{Binding ForeignServerWarning}" TextWrapping="Wrap"
+                                       FontSize="12" Foreground="#F5C2C2" />
+                        </Border>
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
                             <Button Classes="primary" Command="{Binding StartCommand}"
                                     Content="{Binding L[btn.start]}" />
                             <Button Classes="danger" Command="{Binding StopCommand}"

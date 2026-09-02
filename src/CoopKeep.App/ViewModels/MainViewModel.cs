@@ -61,11 +61,58 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             OnPropertyChanged(nameof(Uptime));
             SampleResources();
+            ExpireNotices();
         };
         _uptimeTimer.Start();
 
+        foreach (var entry in Settings.AuditLogStore.Load()) AuditLog.Add(entry);
+
         WireSupervisor();
         Detect();
+        CheckForForeignServer();
+    }
+
+    /// <summary>
+    /// Bu makinede CoopKeep dışında çalışan bir sunucu var mı?
+    /// </summary>
+    /// <remarks>
+    /// CoopKeep başlattığı sürece bağlanabiliyor; kendi başlatmadığı bir sunucuya
+    /// sonradan bağlanamıyor. Bunu söylemezsek kullanıcı "Başlat"a basıyor, sunucu
+    /// portu bağlayamadığı için açılmıyor ve sebebi anlaşılmıyor.
+    /// </remarks>
+    private void CheckForForeignServer()
+    {
+        try
+        {
+            var running = System.Diagnostics.Process.GetProcessesByName("BannerlordCoopServer");
+            foreach (var p in running) p.Dispose();
+
+            ForeignServerWarning = running.Length > 0 ? L["msg.alreadyRunning"] : "";
+        }
+        catch (InvalidOperationException)
+        {
+            // Süreç listesi okunamadı; kritik değil.
+        }
+
+        RaiseRunStateChanged();
+    }
+
+    /// <summary>
+    /// CoopKeep dışında çalışan bir sunucu varsa uyarı metni; yoksa boş.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="BusyMessage"/> kullanılmıyor: o, geçici bir işlem sürüyor demek
+    /// ve tüm düğmeleri kilitliyor. Bu ise kalıcı bir engel — yalnızca başlatmayı
+    /// engellemeli ve "Yenile" ile tekrar denetlenebilmeli.
+    /// </remarks>
+    [ObservableProperty] private string _foreignServerWarning = "";
+
+    public bool HasForeignServer => ForeignServerWarning.Length > 0;
+
+    partial void OnForeignServerWarningChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasForeignServer));
+        StartCommand.NotifyCanExecuteChanged();
     }
 
     public Loc L => Loc.Current;
@@ -283,7 +330,46 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         ReloadConfig();
         ReloadCampaigns();
+        CheckModules();
+        CheckForForeignServer();
+        ClearNotices();
     }
+
+    /// <summary>
+    /// Geçici bildirimleri temizler.
+    /// </summary>
+    /// <remarks>
+    /// Bunlar eskiden hiç silinmiyordu; "Kopyalandı." yazısı saatlerce ekranda
+    /// kalıp güncel bir şey olduğu izlenimi veriyordu.
+    /// </remarks>
+    private void ClearNotices()
+    {
+        CopyNotice = "";
+        SettingsNotice = "";
+        BackupNotice = "";
+        AdminNotice = "";
+    }
+
+    /// <summary>Bildirim yaşını takip eder; belirli süre sonra kendiliğinden silinirler.</summary>
+    private DateTimeOffset _noticeSetAt = DateTimeOffset.MinValue;
+
+    private static readonly TimeSpan NoticeLifetime = TimeSpan.FromSeconds(12);
+
+    private void TouchNotice() => _noticeSetAt = DateTimeOffset.UtcNow;
+
+    private void ExpireNotices()
+    {
+        if (_noticeSetAt == DateTimeOffset.MinValue) return;
+        if (DateTimeOffset.UtcNow - _noticeSetAt < NoticeLifetime) return;
+
+        _noticeSetAt = DateTimeOffset.MinValue;
+        ClearNotices();
+    }
+
+    partial void OnCopyNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
+    partial void OnSettingsNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
+    partial void OnBackupNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
+    partial void OnAdminNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
     private void Start()
@@ -300,9 +386,15 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             // kullanıcı şifreyi yazıp doğrudan Başlat'a bastığında sunucu şifresiz
             // açılıyordu ve bunu ancak biri şifresiz girince fark ediyordu.
             // Artık kural basit: ekranda ne yazıyorsa sunucu onunla açılır.
+            // SIRA ÖNEMLİ: önce yapılandırmanın var olduğundan emin ol, sonra ayarları yaz.
+            //
+            // Ters sırada, ilk kurulumda (server-config.json henüz yokken)
+            // ApplyEditedSettings sessizce atlanıyor ve ardından EnsureSaveName
+            // varsayılan dosyayı boş şifreyle oluşturuyordu — kullanıcının yazdığı
+            // şifre kayboluyordu.
+            _config.EnsureSaveName(SelectedCampaign.Name);
             ApplyEditedSettings();
 
-            _config.EnsureSaveName(SelectedCampaign.Name);
             ReloadConfig();
 
             Console.Clear();
@@ -321,7 +413,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    private bool CanStart() => InstallationFound && !IsRunning && SelectedCampaign is not null && !IsBusy;
+    private bool CanStart() =>
+        InstallationFound && !IsRunning && SelectedCampaign is not null && !IsBusy && !HasForeignServer;
 
     [RelayCommand(CanExecute = nameof(CanStop))]
     private async Task StopAsync()
@@ -382,7 +475,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             BusyMessage = L["msg.creating"];
+
+            // Yeni dünya kurulurken de sunucu gerçekten ayağa kalkıyor ve bu sırada
+            // bağlanılabilir. Ekrandaki şifre/port ayarları burada da geçerli olmalı.
             _config.EnsureSaveName(name);
+            ApplyEditedSettings();
+
             Console.Clear();
 
             _supervisor.PhaseChanged += OnPhase;
@@ -549,8 +647,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         if (SelectedPlayer is null) return;
 
-        var heroId = ResolveHeroId(SelectedPlayer);
-        if (heroId is null) { AdminNotice = L["msg.adminNoPlayer"]; return; }
+        // Çözemezsek SESSİZ KALMA. Kullanıcı düğmeye basıp bir şey olduğunu sanırdı.
+        var (heroId, problem) = ResolveHeroId(SelectedPlayer);
+        if (heroId is null) { AdminNotice = problem; return; }
 
         await SendAsync(AdminCommand.Heal(heroId));
         Audit(SelectedPlayer.Name, L["audit.heal"]);
@@ -560,13 +659,20 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     private async Task SetGoldAsync()
     {
         if (SelectedPlayer is null) return;
-        if (!int.TryParse(GoldAmount, out var gold)) return;
 
-        // SetGold kahramanın ADINI alıyor; oyuncu adı ile kahraman adı
-        // Coop'ta aynı görünüyor, ama emin olmak için önce eşlemeye bakıyoruz.
-        var heroName = ResolveHeroName(SelectedPlayer);
+        if (!int.TryParse(GoldAmount, out var gold))
+        {
+            AdminNotice = L["msg.goldInvalid"];
+            return;
+        }
 
-        await SendAsync(AdminCommand.SetGold(heroName, gold));
+        // Aynı belirsizlik altını da etkiliyor: hedefi kesin çözemiyorsak
+        // rastgele birine para vermektense hiç vermiyoruz.
+        var (_, problem) = ResolveHeroId(SelectedPlayer);
+        if (problem.Length > 0) { AdminNotice = problem; return; }
+
+        // SetGold kahramanın ADINI alıyor (set_hitpoints ise kimliğini).
+        await SendAsync(AdminCommand.SetGold(SelectedPlayer.Name, gold));
         Audit(SelectedPlayer.Name, string.Format(L["audit.gold"], gold));
     }
 
@@ -582,25 +688,35 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// tekil olduğu için güvenli; birden fazla oyuncuda sıraya güvenmek yanlış
     /// olur, bu yüzden yalnızca tek eşleşmede kesin sonuç dönüyoruz.
     /// </remarks>
-    private string? ResolveHeroId(ConnectedPlayer player)
+    private (string? HeroId, string Problem) ResolveHeroId(ConnectedPlayer player)
     {
         var save = SelectedCampaign ?? Campaigns.FirstOrDefault(c => c.Name == ActiveSaveName);
         var players = save?.Players;
 
-        if (players is null || players.Count == 0) return null;
-        if (players.Count == 1) return players[0].HeroId;
+        if (players is null || players.Count == 0)
+            return (null, L["msg.adminNoHero"]);
+
+        if (players.Count == 1)
+            return (players[0].HeroId, "");
 
         // Birden fazla kayıtlı oyuncu var; peer id'yi kahramana bağlayacak
-        // güvenilir bir veri yok. Yanlış kişiye işlem uygulamaktansa hiç uygulamıyoruz.
-        return null;
+        // güvenilir bir veri yok. Yanlış kişiye işlem uygulamaktansa hiç uygulamıyoruz —
+        // ama bunu kullanıcıya AÇIKÇA söylüyoruz.
+        return (null, L["msg.adminCantResolve"]);
     }
 
-    private string ResolveHeroName(ConnectedPlayer player) => player.Name;
-
+    /// <summary>
+    /// Yönetici işlemini kaydeder ve diske yazar.
+    /// </summary>
+    /// <remarks>
+    /// Kayıt kalıcı: uygulama kapanınca silinen bir denetim kaydının anlamı olmaz.
+    /// </remarks>
     private void Audit(string playerName, string description)
     {
         AuditLog.Insert(0, new AdminAuditEntry(DateTimeOffset.UtcNow, playerName, description));
-        while (AuditLog.Count > 50) AuditLog.RemoveAt(AuditLog.Count - 1);
+        while (AuditLog.Count > Settings.AuditLogStore.MaxEntries) AuditLog.RemoveAt(AuditLog.Count - 1);
+
+        Settings.AuditLogStore.Save(AuditLog);
 
         OnPropertyChanged(nameof(HasAuditEntries));
         AdminNotice = "";
