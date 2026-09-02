@@ -1,0 +1,74 @@
+# Bir "v*" etiketi gönderildiğinde exe'yi derler, test eder ve GitHub Release
+# olarak yayınlar.
+#
+# Bunun var olma sebebi somut: GitHub'ın etiketten ürettiği kaynak arşivinde
+# çalıştırılabilir dosya YOKTUR. İndiren kişi kodu görür ama programı
+# çalıştıramaz. Bu iş akışı, her sürümde exe'nin otomatik eklenmesini sağlar.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Etiketi yeniden göndermeden elle de çalıştırılabilsin.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Yayınlanacak etiket (örn. v0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write   # Release oluşturmak ve dosya eklemek için
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: .NET 8 kur
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Testleri çalıştır
+        # Testler geçmeden sürüm yayınlanmaz.
+        run: dotnet test --configuration Release --verbosity minimal
+
+      - name: Tek dosyalık exe üret
+        run: |
+          dotnet publish src/CoopKeep.App/CoopKeep.App.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            --output artifacts/publish `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=none
+
+      - name: Exe oluştu mu doğrula
+        shell: pwsh
+        run: |
+          $exe = "artifacts/publish/CoopKeep.exe"
+          if (-not (Test-Path $exe)) { throw "CoopKeep.exe üretilemedi" }
+          $mb = [math]::Round((Get-Item $exe).Length / 1MB, 1)
+          Write-Host "CoopKeep.exe hazır ($mb MB)"
+          if ($mb -lt 20) { throw "Exe beklenenden küçük ($mb MB) — derleme eksik olabilir" }
+
+      - name: Sürümü yayınla
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: CoopKeep ${{ inputs.tag || github.ref_name }}
+          body_path: .github/RELEASE_NOTES.md
+          files: artifacts/publish/CoopKeep.exe
+          draft: false
+          prerelease: false
