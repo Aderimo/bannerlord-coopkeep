@@ -217,6 +217,30 @@ public sealed class BackupService
         }
     }
 
+    /// <summary>
+    /// Bir dünyanın <b>tüm</b> yedeklerini ve yedek klasörünü siler.
+    /// </summary>
+    /// <remarks>
+    /// Dünya silindiğinde çağrılır. Aksi hâlde yedekler diskte kalır ve kullanıcı
+    /// "sildim ama yer boşalmadı" der — her yedek birkaç megabayt.
+    /// </remarks>
+    /// <returns>Silinen yedek sayısı.</returns>
+    public int DeleteAll(string saveName)
+    {
+        var folder = FolderFor(saveName);
+        if (!Directory.Exists(folder)) return 0;
+
+        var count = List(saveName).Count;
+
+        try { Directory.Delete(folder, recursive: true); }
+        catch (IOException) { return 0; }
+
+        return count;
+    }
+
+    /// <summary>Bir dünyanın yedeklerinin diskte kapladığı toplam alan.</summary>
+    public long TotalSizeOnDisk(string saveName) => List(saveName).Sum(b => b.SizeBytes);
+
     /// <summary>Kurala uymayan yedekleri siler ve silinen sayısını döndürür.</summary>
     public int Prune(string saveName)
     {

@@ -189,22 +189,33 @@
                         <TextBlock Grid.Row="0" Classes="h2" Text="{Binding L[sec.server]}" />
 
                         <StackPanel Grid.Row="1" Spacing="12" Margin="0,0,0,14">
-                            <UniformGrid Columns="4">
-                                <StackPanel Spacing="2">
+                            <UniformGrid Columns="3" Rows="2">
+                                <StackPanel Spacing="2" Margin="0,0,10,10">
                                     <TextBlock Classes="dim" Text="{Binding L[lbl.active]}" />
-                                    <TextBlock Classes="value" Text="{Binding ActiveSaveName}" />
+                                    <TextBlock Classes="value" Text="{Binding ActiveSaveName}"
+                                               TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <StackPanel Spacing="2">
+                                <StackPanel Spacing="2" Margin="0,0,10,10">
                                     <TextBlock Classes="dim" Text="{Binding L[lbl.port]}" />
                                     <TextBlock Classes="value" Text="{Binding DisplayedPort}" />
                                 </StackPanel>
-                                <StackPanel Spacing="2">
+                                <StackPanel Spacing="2" Margin="0,0,0,10">
                                     <TextBlock Classes="dim" Text="{Binding L[lbl.password]}" />
                                     <TextBlock Classes="value" Text="{Binding PasswordText}" />
                                 </StackPanel>
-                                <StackPanel Spacing="2">
+
+                                <StackPanel Spacing="2" Margin="0,0,10,0">
                                     <TextBlock Classes="dim" Text="{Binding L[lbl.steam]}" />
                                     <TextBlock Classes="value" Text="{Binding SteamText}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2" Margin="0,0,10,0">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.cpu]}" />
+                                    <TextBlock Classes="value" Text="{Binding CpuText}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Classes="dim" Text="{Binding L[lbl.ram]}" />
+                                    <TextBlock Classes="value" Text="{Binding RamText}"
+                                               ToolTip.Tip="{Binding L[msg.ramHint]}" />
                                 </StackPanel>
                             </UniformGrid>
 
@@ -398,7 +409,14 @@
                                     (kullanıcı adı dahil), oyuncu adresleri ve Steam lobi
                                     kimliği içeriyor — yayında görünmemeli.
                                 -->
-                                <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}">
+                                <!--
+                                    Yatay kaydırma açık: sunucu satırları uzun (dosya
+                                    yolları, paket profili) ve sağ tarafı kesilirse
+                                    okunamıyordu.
+                                -->
+                                <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto">
                                     <ItemsControl ItemsSource="{Binding Console}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>

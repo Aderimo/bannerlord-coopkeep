@@ -23,9 +23,9 @@ public sealed class SaveRepositoryTests : IDisposable
 
     public void Dispose() => Directory.Delete(_dizin, recursive: true);
 
-    private void CiftYaz(string ad, string? json = null)
+    private void CiftYaz(string ad, string? json = null, string sav = "sahte kaydedilmis dunya verisi")
     {
-        File.WriteAllText(Path.Combine(_dizin, ad + ".sav"), "sahte kaydedilmis dunya verisi");
+        File.WriteAllText(Path.Combine(_dizin, ad + ".sav"), sav);
         if (json is not null)
             File.WriteAllText(Path.Combine(_dizin, ad + ".json"), json);
     }
@@ -178,6 +178,56 @@ public sealed class SaveRepositoryTests : IDisposable
         Assert.False(File.Exists(Path.Combine(_dizin, "gidecek.sav")));
         Assert.False(File.Exists(Path.Combine(_dizin, "gidecek.json")));
         Assert.Empty(_depo.Discover());
+    }
+
+    [Fact]
+    public void silmek_coop_yedek_kusaklarini_da_temizler()
+    {
+        // Yalnızca .sav/.json silmek diskte iki kuşak yedek bırakıyordu
+        // (her biri asıl save kadar, ~5 MB) ve kullanıcı "sildim ama yer dolu" diyordu.
+        CiftYaz("Calradia", IkiOyunculuJson);
+        CiftYaz("Calradia.backup1", IkiOyunculuJson);
+        CiftYaz("Calradia.backup2", IkiOyunculuJson);
+
+        var silinen = _depo.Delete("Calradia");
+
+        Assert.Equal(6, silinen); // 3 çift × 2 dosya
+        Assert.Empty(Directory.GetFiles(_dizin));
+    }
+
+    [Fact]
+    public void istenirse_coop_yedekleri_korunabilir()
+    {
+        CiftYaz("Calradia", IkiOyunculuJson);
+        CiftYaz("Calradia.backup1", IkiOyunculuJson);
+
+        _depo.Delete("Calradia", includeCoopBackups: false);
+
+        Assert.False(File.Exists(Path.Combine(_dizin, "Calradia.sav")));
+        Assert.True(File.Exists(Path.Combine(_dizin, "Calradia.backup1.sav")));
+    }
+
+    [Fact]
+    public void baska_dunyanin_dosyalari_silinmez()
+    {
+        // "Calradia" silinirken "Calradia2" etkilenmemeli — önek eşleşmesi tuzağı.
+        CiftYaz("Calradia", IkiOyunculuJson);
+        CiftYaz("Calradia2", IkiOyunculuJson);
+
+        _depo.Delete("Calradia");
+
+        Assert.True(File.Exists(Path.Combine(_dizin, "Calradia2.sav")));
+        Assert.True(File.Exists(Path.Combine(_dizin, "Calradia2.json")));
+    }
+
+    [Fact]
+    public void diskte_kaplanan_alan_yedek_kusaklarini_da_sayar()
+    {
+        CiftYaz("Calradia", json: "{}", sav: "12345");
+        CiftYaz("Calradia.backup1", json: "{}", sav: "12345");
+
+        // 2 çift: (5 bayt .sav + 2 bayt .json) × 2 = 14 bayt
+        Assert.Equal(14, _depo.TotalSizeOnDisk("Calradia"));
     }
 
     [Fact]

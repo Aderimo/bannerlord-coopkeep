@@ -133,16 +133,93 @@ public sealed class SaveRepository(string gameSavesDirectory)
     }
 
     /// <summary>
-    /// Save'i siler. Çağıranın, save'in aktif server tarafından kullanılmadığını
-    /// doğrulaması gerekir — bu sınıf server durumunu bilmez.
+    /// Save'i ve ona ait Coop yedek kuşaklarını siler.
     /// </summary>
-    public void Delete(string name)
+    /// <param name="name">Silinecek dünyanın adı.</param>
+    /// <param name="includeCoopBackups">
+    /// Sunucunun kendi ürettiği <c>&lt;ad&gt;.backup1</c> / <c>.backup2</c> kuşakları da
+    /// silinsin mi? Varsayılan <see langword="true"/>.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Çağıranın, save'in aktif server tarafından kullanılmadığını doğrulaması gerekir —
+    /// bu sınıf server durumunu bilmez.
+    /// </para>
+    /// <para>
+    /// Coop yedek kuşakları da siliniyor: her biri asıl save kadar yer kaplıyor
+    /// (~5 MB × 2) ve dünya silindikten sonra hiçbir işe yaramıyor. Bunları bırakmak,
+    /// kullanıcının "sildim ama yer hâlâ dolu" demesine yol açıyordu.
+    /// </para>
+    /// </remarks>
+    /// <returns>Silinen dosya sayısı.</returns>
+    public int Delete(string name, bool includeCoopBackups = true)
     {
         var target = RequireExisting(name);
+        var removed = 0;
 
-        File.Delete(target.SavePath);
-        if (File.Exists(target.CompanionPath))
-            File.Delete(target.CompanionPath);
+        removed += TryDelete(target.SavePath);
+        removed += TryDelete(target.CompanionPath);
+
+        if (includeCoopBackups)
+        {
+            foreach (var generation in CoopBackupGenerations(name))
+            {
+                removed += TryDelete(ResolveSavePath(generation));
+                removed += TryDelete(ResolveCompanionPath(generation));
+            }
+        }
+
+        return removed;
+    }
+
+    /// <summary>Bir dünyanın Coop tarafından üretilen yedek kuşaklarının adları.</summary>
+    public static IEnumerable<string> CoopBackupGenerations(string name)
+    {
+        yield return name + ".backup1";
+        yield return name + ".backup2";
+    }
+
+    /// <summary>
+    /// Bir dünyanın diskte kapladığı toplam alan: kendisi, eş JSON'u ve Coop yedek kuşakları.
+    /// </summary>
+    public long TotalSizeOnDisk(string name)
+    {
+        long total = 0;
+
+        foreach (var candidate in AllRelatedPaths(name))
+        {
+            if (File.Exists(candidate)) total += new FileInfo(candidate).Length;
+        }
+
+        return total;
+    }
+
+    private IEnumerable<string> AllRelatedPaths(string name)
+    {
+        yield return ResolveSavePath(name);
+        yield return ResolveCompanionPath(name);
+
+        foreach (var generation in CoopBackupGenerations(name))
+        {
+            yield return ResolveSavePath(generation);
+            yield return ResolveCompanionPath(generation);
+        }
+    }
+
+    private static int TryDelete(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return 0;
+            File.Delete(path);
+            return 1;
+        }
+        catch (IOException)
+        {
+            // Dosya kilitliyse (sunucu hâlâ açık olabilir) sessizce geç;
+            // çağıran zaten sunucunun durduğunu varsayıyor.
+            return 0;
+        }
     }
 
     // ------------------------------------------------------------------

@@ -130,7 +130,13 @@ public sealed class Loc : INotifyPropertyChanged
         ["btn.openFolder"] = "Klasörü aç",
         ["btn.confirmDelete"] = "Silmeyi onayla",
         ["btn.cancel"] = "Vazgeç",
-        ["msg.deleteWarning"] = "Bu sunucu dünyası kalıcı olarak silinecek.",
+        ["msg.deleteWarning"] = "Bu sunucu dünyası, sunucunun kendi yedek kuşakları ve tüm yedekleri kalıcı olarak silinecek.",
+        ["msg.deleted"] = "{0} dünya dosyası ve {1} yedek silindi.",
+
+        // Kaynak kullanımı
+        ["lbl.cpu"] = "İşlemci",
+        ["lbl.ram"] = "Bellek",
+        ["msg.ramHint"] = "Bannerlord sunucusunun bellek sınırı ayarı yoktur; buradaki değer yalnızca anlık kullanımı gösterir.",
 
         // Gizlilik
         ["btn.privacy"] = "Gizle",
@@ -241,7 +247,13 @@ public sealed class Loc : INotifyPropertyChanged
         ["btn.openFolder"] = "Open folder",
         ["btn.confirmDelete"] = "Confirm delete",
         ["btn.cancel"] = "Cancel",
-        ["msg.deleteWarning"] = "This server world will be permanently deleted.",
+        ["msg.deleteWarning"] = "This server world, the server's own backup generations and all backups will be permanently deleted.",
+        ["msg.deleted"] = "Deleted {0} world files and {1} backups.",
+
+        // Resource usage
+        ["lbl.cpu"] = "CPU",
+        ["lbl.ram"] = "Memory",
+        ["msg.ramHint"] = "The Bannerlord server has no memory limit setting; this only shows current usage.",
 
         // Privacy
         ["btn.privacy"] = "Hide",
