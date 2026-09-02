@@ -9,13 +9,47 @@ namespace CoopKeep.App.Views;
 
 public partial class MainWindow : Window
 {
+    private bool _shutdownStarted;
+
     public MainWindow()
     {
         InitializeComponent();
 
         DataContextChanged += (_, _) => HookConsoleAutoScroll();
         Loc.Current.PropertyChanged += OnLanguageChanged;
+        Closing += OnClosingAsync;
         Closed += (_, _) => Loc.Current.PropertyChanged -= OnLanguageChanged;
+    }
+
+    /// <summary>
+    /// Pencere kapatılırken çalışan sunucuyu güvenle durdurur.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Bunu yapmazsak sunucu süreci arkada yetim kalıyor. CoopKeep kendi başlatmadığı
+    /// bir sunucuya sonradan bağlanamıyor, dolayısıyla kullanıcının onu durdurmak için
+    /// tek yolu Görev Yöneticisi'nden öldürmek olurdu — ve zorla öldürmek save
+    /// bozulmasına yol açabiliyor.
+    /// </para>
+    /// <para>
+    /// Kapanış iptal edilip önce <c>stop</c> gönderiliyor (dünya kaydediliyor),
+    /// ardından pencere gerçekten kapatılıyor.
+    /// </para>
+    /// </remarks>
+    private async void OnClosingAsync(object? sender, WindowClosingEventArgs e)
+    {
+        if (_shutdownStarted) return;
+        if (DataContext is not MainViewModel vm || !vm.IsRunning) return;
+
+        e.Cancel = true;
+        _shutdownStarted = true;
+
+        vm.BusyMessage = Loc.Current["msg.closingServer"];
+
+        try { await vm.DisposeAsync(); }
+        catch { /* kapanışta yutulur; aşağıda pencere yine de kapanıyor */ }
+
+        Close();
     }
 
     /// <summary>

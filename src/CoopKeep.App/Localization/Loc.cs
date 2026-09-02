@@ -161,6 +161,13 @@ public sealed class Loc : INotifyPropertyChanged
         ["msg.adminHint"] = "Bu işlemler oyunun dengesini değiştirir ve aşağıda kaydedilir.",
         ["msg.adminNoKill"] = "Öldürme yok: sunucu vanilla hile komutlarını reddediyor ve canı sıfırlamanın sonucu doğrulanmadı — başkasının karakterini geri dönüşü olmadan bozabilir.",
         ["msg.adminNeedsServing"] = "Sunucu yayında olmalı.",
+        ["msg.adminCantResolve"] = "Bu dünyada birden fazla kayıtlı oyuncu var ve hangi kahramanın kime ait olduğu güvenle belirlenemiyor. Yanlış oyuncuya uygulamamak için işlem yapılmadı.",
+        ["msg.adminNoHero"] = "Bu oyuncunun kahramanı save dosyasında bulunamadı. Oyuncu haritaya girdikten sonra tekrar deneyin.",
+        ["msg.goldInvalid"] = "Altın miktarı bir sayı olmalı.",
+
+        // Sunucu zaten çalışıyor
+        ["msg.alreadyRunning"] = "Bu bilgisayarda zaten çalışan bir Coop sunucusu var. CoopKeep ona bağlanamaz; önce Görev Yöneticisi'nden kapatın veya kendi penceresinden durdurun.",
+        ["msg.closingServer"] = "Sunucu güvenle kapatılıyor, dünya kaydediliyor...",
         ["sec.auditLog"] = "Yönetici kayıtları",
         ["msg.auditEmpty"] = "Henüz yönetici işlemi yapılmadı.",
         ["audit.heal"] = "tam can verildi",
@@ -306,6 +313,13 @@ public sealed class Loc : INotifyPropertyChanged
         ["msg.adminHint"] = "These actions change game balance and are logged below.",
         ["msg.adminNoKill"] = "No kill action: the server refuses vanilla cheat commands, and zeroing health has unverified consequences — it could permanently break someone's character.",
         ["msg.adminNeedsServing"] = "The server must be online.",
+        ["msg.adminCantResolve"] = "This world has more than one registered player and the hero-to-player mapping cannot be determined reliably. Nothing was done, to avoid affecting the wrong player.",
+        ["msg.adminNoHero"] = "This player's hero was not found in the save file. Try again once they are on the map.",
+        ["msg.goldInvalid"] = "The gold amount must be a number.",
+
+        // Server already running
+        ["msg.alreadyRunning"] = "A Coop server is already running on this machine. CoopKeep cannot attach to it; close it from Task Manager or stop it from its own window first.",
+        ["msg.closingServer"] = "Stopping the server safely, saving the world...",
         ["sec.auditLog"] = "Admin log",
         ["msg.auditEmpty"] = "No admin actions yet.",
         ["audit.heal"] = "given full health",
