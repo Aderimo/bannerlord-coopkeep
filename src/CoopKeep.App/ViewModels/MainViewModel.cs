@@ -147,6 +147,37 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     public bool HasBackups => Backups.Count > 0;
 
+    // --- bağlantı bilgisi ---
+
+    [ObservableProperty] private string _localIp = "-";
+    [ObservableProperty] private string _copyNotice = "";
+
+    public string DisplayedLocalIp => PrivacyMode ? L["val.masked"] : LocalIp;
+
+    /// <summary>Arkadaşlara gönderilecek tek satırlık bağlantı bilgisi.</summary>
+    public string ConnectSummary =>
+        SteamHostName.Length > 0
+            ? $"Steam: {SteamHostName}  ·  {LocalIp}:{PortText.Replace(" *", "")}"
+            : $"{LocalIp}:{PortText.Replace(" *", "")}";
+
+    // --- modül uyumu ---
+
+    [ObservableProperty] private string _moduleNotice = "";
+    [ObservableProperty] private bool _moduleProblem;
+
+    /// <summary>Sorun varsa kırmızı, yoksa sönük — göz taramada fark edilsin.</summary>
+    public IBrush ModuleNoticeBrush => new SolidColorBrush(
+        Color.Parse(ModuleProblem ? "#DC5B5B" : "#98A0AF"));
+
+    // --- yönetici işlemleri ---
+
+    [ObservableProperty] private string _goldAmount = "1000";
+    [ObservableProperty] private string _adminNotice = "";
+
+    public ObservableCollection<AdminAuditEntry> AuditLog { get; } = [];
+
+    public bool HasAuditEntries => AuditLog.Count > 0;
+
     public bool IsRunning => _supervisor.IsRunning;
     public bool IsServing => _supervisor.IsServing;
     public bool IsBusy => !string.IsNullOrEmpty(BusyMessage);
@@ -505,6 +536,113 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     public string AuthorUrl => "https://gitgit.me/aderimo";
     public string AuthorName => "aderimo";
 
+    // --- yönetici işlemleri ----------------------------------------------
+    //
+    // Söz dizimleri çalışan sunucudan okundu; tahmin değil:
+    //   coop.debug.hero.SetGold <heroName> <gold>
+    //   coop.debug.hero.set_hitpoints <heroId> <hitPoints>
+    // Vanilla hile komutları sunucu tarafından "Cheat mode is disabled!" ile
+    // reddediliyor, bu yüzden yalnızca Coop'un kendi komutları kullanılıyor.
+
+    [RelayCommand(CanExecute = nameof(CanAdminAct))]
+    private async Task HealPlayerAsync()
+    {
+        if (SelectedPlayer is null) return;
+
+        var heroId = ResolveHeroId(SelectedPlayer);
+        if (heroId is null) { AdminNotice = L["msg.adminNoPlayer"]; return; }
+
+        await SendAsync(AdminCommand.Heal(heroId));
+        Audit(SelectedPlayer.Name, L["audit.heal"]);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAdminAct))]
+    private async Task SetGoldAsync()
+    {
+        if (SelectedPlayer is null) return;
+        if (!int.TryParse(GoldAmount, out var gold)) return;
+
+        // SetGold kahramanın ADINI alıyor; oyuncu adı ile kahraman adı
+        // Coop'ta aynı görünüyor, ama emin olmak için önce eşlemeye bakıyoruz.
+        var heroName = ResolveHeroName(SelectedPlayer);
+
+        await SendAsync(AdminCommand.SetGold(heroName, gold));
+        Audit(SelectedPlayer.Name, string.Format(L["audit.gold"], gold));
+    }
+
+    private bool CanAdminAct() => IsServing && !IsBusy && SelectedPlayer is not null;
+
+    /// <summary>
+    /// Bağlı oyuncuyu save'deki kahraman kimliğiyle eşler.
+    /// </summary>
+    /// <remarks>
+    /// Canlı protokol (<c>@DS@ players</c>) kahraman kimliği vermiyor — yalnızca
+    /// peer id, ad, durum ve adres. Kalıcı eşleme save'in eş JSON dosyasında:
+    /// <c>ControllerId</c> (SteamID64) → <c>HeroId</c>. Tek oyuncu varsa eşleme
+    /// tekil olduğu için güvenli; birden fazla oyuncuda sıraya güvenmek yanlış
+    /// olur, bu yüzden yalnızca tek eşleşmede kesin sonuç dönüyoruz.
+    /// </remarks>
+    private string? ResolveHeroId(ConnectedPlayer player)
+    {
+        var save = SelectedCampaign ?? Campaigns.FirstOrDefault(c => c.Name == ActiveSaveName);
+        var players = save?.Players;
+
+        if (players is null || players.Count == 0) return null;
+        if (players.Count == 1) return players[0].HeroId;
+
+        // Birden fazla kayıtlı oyuncu var; peer id'yi kahramana bağlayacak
+        // güvenilir bir veri yok. Yanlış kişiye işlem uygulamaktansa hiç uygulamıyoruz.
+        return null;
+    }
+
+    private string ResolveHeroName(ConnectedPlayer player) => player.Name;
+
+    private void Audit(string playerName, string description)
+    {
+        AuditLog.Insert(0, new AdminAuditEntry(DateTimeOffset.UtcNow, playerName, description));
+        while (AuditLog.Count > 50) AuditLog.RemoveAt(AuditLog.Count - 1);
+
+        OnPropertyChanged(nameof(HasAuditEntries));
+        AdminNotice = "";
+    }
+
+    // --- bağlantı bilgisi -------------------------------------------------
+
+    [RelayCommand]
+    private async Task CopyConnectInfoAsync()
+    {
+        var top = Avalonia.Application.Current?.ApplicationLifetime
+            as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+
+        var clipboard = top?.MainWindow?.Clipboard;
+        if (clipboard is null) return;
+
+        await clipboard.SetTextAsync(ConnectSummary);
+        CopyNotice = L["msg.copied"];
+    }
+
+    /// <summary>Yerel ağ adresini bulur — doğrudan bağlanacak arkadaşlar için.</summary>
+    private static string DetectLocalIp()
+    {
+        try
+        {
+            // Dışarı bir UDP soketi "bağlamak" paket göndermez ama işletim sistemine
+            // hangi yerel arayüzün kullanılacağını sorar. Birden fazla ağ kartı
+            // olduğunda doğru olanı seçmenin en güvenilir yolu bu.
+            using var socket = new System.Net.Sockets.Socket(
+                System.Net.Sockets.AddressFamily.InterNetwork,
+                System.Net.Sockets.SocketType.Dgram,
+                System.Net.Sockets.ProtocolType.Udp);
+
+            socket.Connect("8.8.8.8", 65530);
+            return (socket.LocalEndPoint as System.Net.IPEndPoint)?.Address.ToString() ?? "-";
+        }
+        catch (System.Net.Sockets.SocketException)
+        {
+            return "-";
+        }
+    }
+
     // --- yedekleme -------------------------------------------------------
 
     [RelayCommand(CanExecute = nameof(CanBackupNow))]
@@ -637,12 +775,27 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(PrivacyIconBrush));
         OnPropertyChanged(nameof(DisplayedHostName));
         OnPropertyChanged(nameof(DisplayedPort));
+        OnPropertyChanged(nameof(DisplayedLocalIp));
         OnPropertyChanged(nameof(ConsoleEffect));
     }
 
-    partial void OnSteamHostNameChanged(string value) => OnPropertyChanged(nameof(DisplayedHostName));
+    partial void OnSteamHostNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayedHostName));
+        OnPropertyChanged(nameof(ConnectSummary));
+    }
 
-    partial void OnPortTextChanged(string value) => OnPropertyChanged(nameof(DisplayedPort));
+    partial void OnPortTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayedPort));
+        OnPropertyChanged(nameof(ConnectSummary));
+    }
+
+    partial void OnLocalIpChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayedLocalIp));
+        OnPropertyChanged(nameof(ConnectSummary));
+    }
 
     private bool CanModifyCampaign() =>
         !IsRunning && !IsBusy && SelectedCampaign is not null
@@ -898,9 +1051,48 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _backups = new BackupService(savesDir);
         _config = new ServerConfigStore(System.IO.Path.Combine(DataDirectory, "server-config.json"));
 
+        LocalIp = DetectLocalIp();
+        CheckModules();
+
         ReloadConfig();
         ReloadCampaigns();
         ReloadBackups();
+    }
+
+    /// <summary>
+    /// İstemcide seçili modülleri sunucunun yüklediklerine karşı denetler.
+    /// </summary>
+    /// <remarks>
+    /// Fazladan bir modül seçiliyse Coop'un modül doğrulaması bağlantıyı
+    /// reddedebiliyor ve oyunun hatası bunu açıkça söylemiyor.
+    /// </remarks>
+    private void CheckModules()
+    {
+        var result = ModuleCompatibility.Check();
+
+        if (result is null)
+        {
+            ModuleNotice = L["msg.modulesUnknown"];
+            ModuleProblem = false;
+            return;
+        }
+
+        if (!result.CoopEnabled)
+        {
+            ModuleNotice = L["msg.coopDisabled"];
+            ModuleProblem = true;
+            return;
+        }
+
+        if (result.ExtraModules.Count > 0)
+        {
+            ModuleNotice = string.Format(L["msg.modulesExtra"], string.Join(", ", result.ExtraModules));
+            ModuleProblem = true;
+            return;
+        }
+
+        ModuleNotice = L["msg.modulesOk"];
+        ModuleProblem = false;
     }
 
     private void ReloadConfig()
@@ -1017,6 +1209,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         PendingRestore = false;
         ReloadBackups();
         BackupNowCommand.NotifyCanExecuteChanged();
+        HealPlayerCommand.NotifyCanExecuteChanged();
+        SetGoldCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedBackupChanged(BackupEntry? value)
@@ -1038,7 +1232,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ui.Save();
     }
 
-    partial void OnSelectedPlayerChanged(ConnectedPlayer? value) => KickCommand.NotifyCanExecuteChanged();
+    partial void OnSelectedPlayerChanged(ConnectedPlayer? value)
+    {
+        KickCommand.NotifyCanExecuteChanged();
+        HealPlayerCommand.NotifyCanExecuteChanged();
+        SetGoldCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnAnnounceTextChanged(string value) => AnnounceCommand.NotifyCanExecuteChanged();
 

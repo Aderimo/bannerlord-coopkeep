@@ -138,6 +138,34 @@ public sealed class Loc : INotifyPropertyChanged
         ["lbl.ram"] = "Bellek",
         ["msg.ramHint"] = "Bannerlord sunucusunun bellek sınırı ayarı yoktur; buradaki değer yalnızca anlık kullanımı gösterir.",
 
+        // Bağlantı bilgisi
+        ["sec.connect"] = "Arkadaşlarına gönder",
+        ["btn.copy"] = "Kopyala",
+        ["msg.copied"] = "Kopyalandı.",
+        ["msg.connectHint"] = "Steam listesinde bu adı ararlar. Doğrudan bağlanacaklarsa IP ve portu ver.",
+        ["lbl.localIp"] = "Yerel IP",
+
+        // Modül uyumluluğu
+        ["sec.modules"] = "Modül uyumu",
+        ["msg.modulesOk"] = "Modüller sunucuyla uyumlu.",
+        ["msg.modulesExtra"] = "Sunucunun beklemediği modüller seçili: {0}. Bağlantı reddedilebilir — oyun başlatıcısından kapatmayı deneyin.",
+        ["msg.coopDisabled"] = "Coop modülü oyun başlatıcısında seçili değil. Sunucuya bağlanamazsınız.",
+        ["msg.modulesUnknown"] = "Modül listesi okunamadı.",
+
+        // Yönetici işlemleri
+        ["sec.admin"] = "Yönetici işlemleri",
+        ["lbl.selectedPlayer"] = "Seçili oyuncu",
+        ["btn.heal"] = "Tam can ver",
+        ["btn.setGold"] = "Altını ayarla",
+        ["msg.adminNoPlayer"] = "Bir oyuncu seçin.",
+        ["msg.adminHint"] = "Bu işlemler oyunun dengesini değiştirir ve aşağıda kaydedilir.",
+        ["msg.adminNoKill"] = "Öldürme yok: sunucu vanilla hile komutlarını reddediyor ve canı sıfırlamanın sonucu doğrulanmadı — başkasının karakterini geri dönüşü olmadan bozabilir.",
+        ["msg.adminNeedsServing"] = "Sunucu yayında olmalı.",
+        ["sec.auditLog"] = "Yönetici kayıtları",
+        ["msg.auditEmpty"] = "Henüz yönetici işlemi yapılmadı.",
+        ["audit.heal"] = "tam can verildi",
+        ["audit.gold"] = "altını {0} olarak ayarlandı",
+
         // Gizlilik
         ["btn.privacy"] = "Gizle",
         ["msg.privacyOn"] = "Gizli — yayın için güvenli",
@@ -254,6 +282,34 @@ public sealed class Loc : INotifyPropertyChanged
         ["lbl.cpu"] = "CPU",
         ["lbl.ram"] = "Memory",
         ["msg.ramHint"] = "The Bannerlord server has no memory limit setting; this only shows current usage.",
+
+        // Connection info
+        ["sec.connect"] = "Send to your friends",
+        ["btn.copy"] = "Copy",
+        ["msg.copied"] = "Copied.",
+        ["msg.connectHint"] = "They search for this name in the Steam list. For a direct join, give them the IP and port.",
+        ["lbl.localIp"] = "Local IP",
+
+        // Module compatibility
+        ["sec.modules"] = "Module check",
+        ["msg.modulesOk"] = "Modules match the server.",
+        ["msg.modulesExtra"] = "Modules the server does not expect are enabled: {0}. The connection may be refused — try disabling them in the game launcher.",
+        ["msg.coopDisabled"] = "The Coop module is not enabled in the game launcher. You will not be able to connect.",
+        ["msg.modulesUnknown"] = "Could not read the module list.",
+
+        // Admin actions
+        ["sec.admin"] = "Admin actions",
+        ["lbl.selectedPlayer"] = "Selected player",
+        ["btn.heal"] = "Full health",
+        ["btn.setGold"] = "Set gold",
+        ["msg.adminNoPlayer"] = "Select a player.",
+        ["msg.adminHint"] = "These actions change game balance and are logged below.",
+        ["msg.adminNoKill"] = "No kill action: the server refuses vanilla cheat commands, and zeroing health has unverified consequences — it could permanently break someone's character.",
+        ["msg.adminNeedsServing"] = "The server must be online.",
+        ["sec.auditLog"] = "Admin log",
+        ["msg.auditEmpty"] = "No admin actions yet.",
+        ["audit.heal"] = "given full health",
+        ["audit.gold"] = "gold set to {0}",
 
         // Privacy
         ["btn.privacy"] = "Hide",

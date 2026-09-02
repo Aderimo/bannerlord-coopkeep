@@ -121,7 +121,9 @@ public sealed class ServerSupervisor : IAsyncDisposable
     /// <exception cref="ArgumentException">Komut allow-list'te değilse veya satır sonu içeriyorsa.</exception>
     public async Task SendCommandAsync(string commandLine, CancellationToken cancellationToken = default)
     {
-        if (!ServerCommand.IsAllowed(commandLine))
+        // İki allow-list: yerleşik sunucu komutları ve açıkça izin verilen
+        // yönetici komutları. Geri kalan 590+ oyun konsol komutu erişilemez.
+        if (!ServerCommand.IsAllowed(commandLine) && !AdminCommand.IsAllowed(commandLine))
             throw new ArgumentException($"İzin verilmeyen komut: '{commandLine}'", nameof(commandLine));
 
         var process = _process;
