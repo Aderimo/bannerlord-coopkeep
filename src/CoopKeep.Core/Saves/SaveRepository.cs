@@ -115,6 +115,34 @@ public sealed class SaveRepository(string gameSavesDirectory)
         return Find(targetName)!;
     }
 
+    /// <summary>
+    /// Bu dizinin dışındaki bir save'i (örn. oyunun kendi tek oyunculu save'i) sunucuya kopyalar.
+    /// </summary>
+    /// <remarks>
+    /// Oyunda "Sandbox" ile açılmış bir kampanya, oyunun yeni kampanya ekranındaki tüm
+    /// seçimleri (zorluk, karakter, başlangıç) taşır. Eşi olan <c>.json</c> varsa o da
+    /// kopyalanır: oyunun "Host Co-op" düğmesiyle oynanmış bir save'in oyuncu
+    /// karakterleri o dosyada. Kaynak dosyalara dokunulmaz.
+    /// </remarks>
+    public SaveSet Import(string sourceSavePath, string targetName)
+    {
+        if (!File.Exists(sourceSavePath))
+            throw new FileNotFoundException("Save bulunamadı.", sourceSavePath);
+
+        var targetSave = ResolveSavePath(targetName);
+        if (File.Exists(targetSave))
+            throw new InvalidOperationException($"'{targetName}' adlı bir save zaten var.");
+
+        System.IO.Directory.CreateDirectory(Directory);
+
+        var sourceCompanion = Path.ChangeExtension(sourceSavePath, SaveSet.CompanionExtension);
+        File.Copy(sourceSavePath, targetSave);
+        if (File.Exists(sourceCompanion))
+            File.Copy(sourceCompanion, ResolveCompanionPath(targetName));
+
+        return Find(targetName)!;
+    }
+
     /// <summary>Save'i yeniden adlandırır. Çift birlikte taşınır.</summary>
     public SaveSet Rename(string oldName, string newName)
     {

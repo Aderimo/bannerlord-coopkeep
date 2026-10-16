@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.EulaOverlay"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Sunucunun lisans sözleşmesi. Onayı kullanıcı verir; CoopKeep sessizce kabul etmez.
+  -->
+  <Border Background="#E6090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderDim}"
+            BorderThickness="1" CornerRadius="16" Width="720" MaxHeight="680" Margin="24"
+            VerticalAlignment="Stretch" HorizontalAlignment="Center" BoxShadow="0 24 80 0 #99000000">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <StackPanel Grid.Row="0" Margin="30,26,30,14" Spacing="6">
+            <TextBlock Classes="eyebrow" Text="{Binding L[eula.eyebrow]}" />
+            <TextBlock Classes="h1" Text="{Binding L[eula.title]}" />
+            <TextBlock Classes="hint" Text="{Binding L[eula.sub]}" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Margin="30,0" Background="{StaticResource ConsoleBg}" CornerRadius="10"
+                BorderBrush="{StaticResource BorderDim}" BorderThickness="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <SelectableTextBlock Margin="16,14" Text="{Binding EulaText}" TextWrapping="Wrap" FontSize="12"
+                                     Foreground="{StaticResource TextDim}" LineHeight="18" />
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="30,18,30,22">
+            <Button Classes="ghost" Padding="0" Command="{Binding OpenLicenseCommand}">
+                <TextBlock Text="{Binding L[eula.license]}" Foreground="{StaticResource Accent}" FontSize="12.5" />
+            </Button>
+            <Button Grid.Column="2" Margin="0,0,8,0" Command="{Binding DeclineEulaCommand}" Content="{Binding L[btn.cancel]}" />
+            <Button Grid.Column="3" Classes="primary" Command="{Binding AcceptEulaCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Classes="icon" Data="{StaticResource IconCheck}" StrokeThickness="2.4" Width="13" />
+                    <TextBlock Text="{Binding L[eula.accept]}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+      </Grid>
+    </Border>
+  </Border>
+</UserControl>

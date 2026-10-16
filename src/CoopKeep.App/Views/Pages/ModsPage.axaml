@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.ModsPage"
+             x:DataType="vm:MainViewModel">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="36,28,36,40" Spacing="18" MaxWidth="1000">
+
+        <StackPanel Classes="enter" Spacing="4">
+            <TextBlock Classes="eyebrow" Text="{Binding L[nav.mods]}" />
+            <TextBlock Classes="display" Text="{Binding L[mods.title]}" />
+            <TextBlock Classes="dim" FontSize="13.5" Text="{Binding L[mods.sub]}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Özet -->
+        <Border Classes="card enter d1" BorderBrush="{Binding ModsCardBorder}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Width="42" Height="42" CornerRadius="21" Background="{Binding ModsIconBackground}">
+                    <Panel>
+                        <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2"
+                              Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding !ModuleProblem}" />
+                        <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.9"
+                              Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding ModuleProblem}" />
+                    </Panel>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Classes="h2" Text="{Binding ModsHeadline}" />
+                    <TextBlock Classes="hint" Text="{Binding ModuleNotice}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="primary" Command="{Binding ApplyCoopProfileCommand}" HorizontalAlignment="Stretch" IsVisible="{Binding HasModuleProblems}"
+                            HorizontalContentAlignment="Center" Content="{Binding L[mods.applyProfile]}" />
+                    <Button Command="{Binding RestoreModProfileCommand}" HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center" Content="{Binding L[mods.restoreProfile]}"
+                            IsVisible="{Binding HasProfileBackup}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TextBlock Classes="hint enter d1" Text="{Binding L[mods.profileHint]}" />
+
+        <!-- Liste -->
+        <Border Classes="card enter d2" Padding="8,8">
+            <StackPanel>
+                <Grid ColumnDefinitions="*,140,200" Margin="12,6,12,10">
+                    <TextBlock Classes="eyebrow" Text="{Binding L[mods.col.module]}" />
+                    <TextBlock Grid.Column="1" Classes="eyebrow" Text="{Binding L[mods.col.version]}" />
+                    <TextBlock Grid.Column="2" Classes="eyebrow" Text="{Binding L[mods.col.status]}" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Modules}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ModuleRow">
+                            <Border Padding="12,9" CornerRadius="8" Opacity="{Binding RowOpacity}">
+                                <Grid ColumnDefinitions="Auto,*,140,200">
+                                    <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center"
+                                            Background="{StaticResource Success}" IsVisible="{Binding IsSelected}" />
+                                    <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center"
+                                            BorderBrush="{StaticResource TextFaint}" BorderThickness="1.2"
+                                            IsVisible="{Binding !IsSelected}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Id}" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Classes="dim" Text="{Binding Version}" VerticalAlignment="Center" />
+                                    <Panel Grid.Column="3" HorizontalAlignment="Left">
+                                        <Border Classes="badge" Background="{StaticResource SuccessSoft}" IsVisible="{Binding IsOk}">
+                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding StatusText}" />
+                                        </Border>
+                                        <Border Classes="badge" Background="{StaticResource DangerSoft}" IsVisible="{Binding IsBlocked}">
+                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding StatusText}" />
+                                        </Border>
+                                        <Border Classes="badge" Background="{StaticResource WarningSoft}" IsVisible="{Binding IsRisky}">
+                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding StatusText}" />
+                                        </Border>
+                                    </Panel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="hint" Margin="12" Text="{Binding L[msg.modulesUnknown]}" IsVisible="{Binding !HasModules}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Açıklama -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="10">
+                <TextBlock Classes="h2" Text="{Binding L[mods.why]}" />
+                <TextBlock Classes="hint" Text="{Binding L[mods.why.body]}" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

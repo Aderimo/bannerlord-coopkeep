@@ -55,21 +55,26 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         PrivacyMode = _ui.PrivacyMode;
         AutoBackup = _ui.AutoBackup;
         AutoRestart = _ui.AutoRestart;
+        CheckUpdates = _ui.CheckUpdates;
 
         _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _uptimeTimer.Tick += (_, _) =>
         {
             OnPropertyChanged(nameof(Uptime));
             SampleResources();
-            ExpireNotices();
         };
         _uptimeTimer.Start();
 
         foreach (var entry in Settings.AuditLogStore.Load()) AuditLog.Add(entry);
+        foreach (var name in Settings.BlockListStore.Load()) BlockList.Add(name);
+
+        WorldEditor.Changed += () => SaveWorldSettingsCommand.NotifyCanExecuteChanged();
 
         WireSupervisor();
         Detect();
         CheckForForeignServer();
+
+        if (CheckUpdates) _ = CheckForUpdateAsync();
     }
 
     /// <summary>
@@ -82,6 +87,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// </remarks>
     private void CheckForForeignServer()
     {
+        if (IsRunning) { ForeignServerWarning = ""; return; }
+
         try
         {
             var running = System.Diagnostics.Process.GetProcessesByName("BannerlordCoopServer");
@@ -97,14 +104,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         RaiseRunStateChanged();
     }
 
-    /// <summary>
-    /// CoopKeep dışında çalışan bir sunucu varsa uyarı metni; yoksa boş.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="BusyMessage"/> kullanılmıyor: o, geçici bir işlem sürüyor demek
-    /// ve tüm düğmeleri kilitliyor. Bu ise kalıcı bir engel — yalnızca başlatmayı
-    /// engellemeli ve "Yenile" ile tekrar denetlenebilmeli.
-    /// </remarks>
+    /// <summary>CoopKeep dışında çalışan bir sunucu varsa uyarı metni; yoksa boş.</summary>
     [ObservableProperty] private string _foreignServerWarning = "";
 
     public bool HasForeignServer => ForeignServerWarning.Length > 0;
@@ -125,6 +125,17 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty] private bool _versionsMatch;
     [ObservableProperty] private string _dataDirectory = "";
 
+    public bool GameFound => _game is not null;
+    public bool CoopFound => _coop is not null;
+
+    public string GameCheckText => GameFound
+        ? string.Format(L["setup.gameOk"], GameVersion)
+        : L["setup.gameMissing"];
+
+    public string ModCheckText => CoopFound
+        ? string.Format(L["setup.modOk"], ModVersion)
+        : L["setup.modMissing"];
+
     // --- sunucu durumu ---------------------------------------------------
 
     [ObservableProperty] private ServerPhase _phase = ServerPhase.Unknown;
@@ -136,10 +147,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty] private string _busyMessage = "";
     [ObservableProperty] private string _announceText = "";
 
-    /// <summary>
-    /// Kampanya adı kutusu — yeni dünya yaratma, yeniden adlandırma ve kopyalamada
-    /// hedef ad olarak kullanılır.
-    /// </summary>
+    /// <summary>Kampanya adı kutusu — yeniden adlandırma ve kopyalamada hedef ad.</summary>
     [ObservableProperty] private string _campaignNameInput = "";
 
     /// <summary>Silme onayı bekleniyor mu? (iki adımlı silme)</summary>
@@ -149,6 +157,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     [ObservableProperty] private bool _showTutorial;
     [ObservableProperty] private bool _dontShowTutorialAgain;
+
+    /// <summary>Karşılama turunun adımı (0-2).</summary>
+    [ObservableProperty] private int _tutorialStep;
 
     /// <summary>
     /// Sunucunun Steam sunucu tarayıcısında göründüğü ad.
@@ -176,7 +187,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty] private string _editPort = "";
     [ObservableProperty] private string _editAutosave = "";
     [ObservableProperty] private bool _editSteam = true;
-    [ObservableProperty] private string _settingsNotice = "";
 
     // --- oyuncu arama ---
 
@@ -186,7 +196,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     [ObservableProperty] private bool _autoBackup = true;
     [ObservableProperty] private bool _autoRestart = true;
-    [ObservableProperty] private string _backupNotice = "";
     [ObservableProperty] private BackupEntry? _selectedBackup;
     [ObservableProperty] private bool _pendingRestore;
 
@@ -194,32 +203,54 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     public bool HasBackups => Backups.Count > 0;
 
+    // --- uyarı (çökme vb.) ---
+
+    /// <summary>Ana sayfada kalıcı uyarı: çökme, çökme döngüsü. Yeni başlatmayla silinir.</summary>
+    [ObservableProperty] private string _alertText = "";
+
+    public bool HasAlert => AlertText.Length > 0;
+
+    partial void OnAlertTextChanged(string value) => OnPropertyChanged(nameof(HasAlert));
+
     // --- bağlantı bilgisi ---
 
     [ObservableProperty] private string _localIp = "-";
-    [ObservableProperty] private string _copyNotice = "";
 
     public string DisplayedLocalIp => PrivacyMode ? L["val.masked"] : LocalIp;
 
-    /// <summary>Arkadaşlara gönderilecek tek satırlık bağlantı bilgisi.</summary>
-    public string ConnectSummary =>
-        SteamHostName.Length > 0
-            ? $"Steam: {SteamHostName}  ·  {LocalIp}:{PortText.Replace(" *", "")}"
-            : $"{LocalIp}:{PortText.Replace(" *", "")}";
+    public string DisplayedEndpoint => PrivacyMode ? L["val.masked"] : $"{LocalIp}:{PortText.Replace(" *", "")}";
+
+    /// <summary>
+    /// Arkadaşlara gönderilecek davet metni.
+    /// </summary>
+    /// <remarks>
+    /// En sık hata: arkadaşlar sunucu adını arıyor, oysa listede <b>Steam adı</b> görünüyor.
+    /// Davet metni bu yüzden aranacak adı açıkça yazar ve mod sürümünü de verir —
+    /// farklı sürüm, "Incompatible" görünmesinin sebebi.
+    /// </remarks>
+    public string ConnectSummary
+    {
+        get
+        {
+            var lines = new List<string> { L["invite.text.head"] };
+            lines.Add(string.Format(L["invite.text.mod"], ModVersion));
+            if (SteamHostName.Length > 0) lines.Add(string.Format(L["invite.text.steam"], SteamHostName));
+            lines.Add(string.Format(L["invite.text.ip"], LocalIp, PortText.Replace(" *", "")));
+            if (EditPassword.Length > 0) lines.Add(string.Format(L["invite.text.password"], EditPassword));
+            lines.Add(L["invite.text.mods"]);
+            return string.Join(Environment.NewLine, lines);
+        }
+    }
 
     // --- modül uyumu ---
 
     [ObservableProperty] private string _moduleNotice = "";
     [ObservableProperty] private bool _moduleProblem;
 
-    /// <summary>Sorun varsa kırmızı, yoksa sönük — göz taramada fark edilsin.</summary>
-    public IBrush ModuleNoticeBrush => new SolidColorBrush(
-        Color.Parse(ModuleProblem ? "#DC5B5B" : "#98A0AF"));
-
     // --- yönetici işlemleri ---
 
-    [ObservableProperty] private string _goldAmount = "1000";
-    [ObservableProperty] private string _adminNotice = "";
+    [ObservableProperty] private string _goldAmount = "10000";
+    [ObservableProperty] private string _ageAmount = "25";
 
     public ObservableCollection<AdminAuditEntry> AuditLog { get; } = [];
 
@@ -247,8 +278,15 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         ServerPhase.Serving => "#4ADE80",
         ServerPhase.Boot or ServerPhase.Loading or ServerPhase.Starting => "#FBBF24",
         ServerPhase.Stopping => "#FB923C",
-        _ => "#6B7280",
+        _ => IsRunning ? "#FBBF24" : "#6B7280",
     }));
+
+    private static IBrush StepBrush(bool done, bool active) => new SolidColorBrush(Color.Parse(
+        done ? "#D4AA32" : active ? "#5A4A1C" : "#2A2F39"));
+
+    public IBrush Step1Brush => StepBrush(Step1Done, Step1Active);
+    public IBrush Step2Brush => StepBrush(Step2Done, Step2Active);
+    public IBrush Step3Brush => StepBrush(Step3Done, false);
 
     [ObservableProperty] private string _cpuText = "-";
     [ObservableProperty] private string _ramText = "-";
@@ -314,103 +352,78 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ui.Language = Loc.Current.Language;
         _ui.Save();
 
-        // Bağlama zincirinin kökünü tazele. {Binding L[anahtar]} ifadeleri önce L'yi,
-        // sonra indeksleyiciyi okur; kökü bildirmek tüm zincirin yeniden
-        // değerlendirilmesini garanti eder.
+        // Bağlama zincirinin kökünü tazele; C# tarafında hesaplanan metinler ayrıca.
         OnPropertyChanged(nameof(L));
-
-        // C# tarafında hesaplanan metinler indeksleyici bağlaması kullanmıyor,
-        // bu yüzden ayrıca tazelenmeleri gerekiyor.
         OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(PrivacyLabel));
+        OnPropertyChanged(nameof(GameCheckText));
+        OnPropertyChanged(nameof(ModCheckText));
+        WorldEditor.RefreshTexts();
+        WizardSettings.RefreshTexts();
+        RaiseHomeChanged();
+        RaiseWizardChanged();
         ReloadConfig();
+        CheckModules();
     }
 
     [RelayCommand]
     private void Refresh()
     {
-        ReloadConfig();
-        ReloadCampaigns();
-        CheckModules();
+        Detect();
         CheckForForeignServer();
-        ClearNotices();
     }
-
-    /// <summary>
-    /// Geçici bildirimleri temizler.
-    /// </summary>
-    /// <remarks>
-    /// Bunlar eskiden hiç silinmiyordu; "Kopyalandı." yazısı saatlerce ekranda
-    /// kalıp güncel bir şey olduğu izlenimi veriyordu.
-    /// </remarks>
-    private void ClearNotices()
-    {
-        CopyNotice = "";
-        SettingsNotice = "";
-        BackupNotice = "";
-        AdminNotice = "";
-    }
-
-    /// <summary>Bildirim yaşını takip eder; belirli süre sonra kendiliğinden silinirler.</summary>
-    private DateTimeOffset _noticeSetAt = DateTimeOffset.MinValue;
-
-    private static readonly TimeSpan NoticeLifetime = TimeSpan.FromSeconds(12);
-
-    private void TouchNotice() => _noticeSetAt = DateTimeOffset.UtcNow;
-
-    private void ExpireNotices()
-    {
-        if (_noticeSetAt == DateTimeOffset.MinValue) return;
-        if (DateTimeOffset.UtcNow - _noticeSetAt < NoticeLifetime) return;
-
-        _noticeSetAt = DateTimeOffset.MinValue;
-        ClearNotices();
-    }
-
-    partial void OnCopyNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
-    partial void OnSettingsNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
-    partial void OnBackupNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
-    partial void OnAdminNoticeChanged(string value) { if (value.Length > 0) TouchNotice(); }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
-    private void Start()
+    private async Task StartAsync()
     {
         if (_coop is null || _config is null || SelectedCampaign is null) return;
+
+        // İlk başlatmada sunucunun lisans sözleşmesi gösterilir; onaydan sonra devam edilir.
+        if (!EulaAccepted)
+        {
+            await RequireEulaAsync(StartAsync);
+            return;
+        }
 
         try
         {
             BusyMessage = L["msg.readyIn"];
+            AlertText = "";
 
-            // Ekrandaki ayarları başlatmadan ÖNCE uygula.
-            //
-            // Önceden bunun için ayrı bir "Kaydet" düğmesine basmak gerekiyordu;
-            // kullanıcı şifreyi yazıp doğrudan Başlat'a bastığında sunucu şifresiz
-            // açılıyordu ve bunu ancak biri şifresiz girince fark ediyordu.
-            // Artık kural basit: ekranda ne yazıyorsa sunucu onunla açılır.
-            // SIRA ÖNEMLİ: önce yapılandırmanın var olduğundan emin ol, sonra ayarları yaz.
-            //
-            // Ters sırada, ilk kurulumda (server-config.json henüz yokken)
-            // ApplyEditedSettings sessizce atlanıyor ve ardından EnsureSaveName
-            // varsayılan dosyayı boş şifreyle oluşturuyordu — kullanıcının yazdığı
-            // şifre kayboluyordu.
+            // Ekrandaki ayarları başlatmadan ÖNCE uygula: ekranda ne yazıyorsa sunucu
+            // onunla açılır. SIRA ÖNEMLİ: önce yapılandırma var olmalı, sonra ayarlar yazılır;
+            // ters sırada ilk kurulumda kullanıcının yazdığı şifre kayboluyordu.
             _config.EnsureSaveName(SelectedCampaign.Name);
             ApplyEditedSettings();
 
+            // Dünyanın kendi oyun ayarları (zorluk, kurallar) — sunucu her açılışta okur.
+            ApplyWorldProfile(SelectedCampaign.Name);
+
             ReloadConfig();
-
-            Console.Clear();
-            _supervisor.Start(new ServerLaunchOptions
-            {
-                ExecutablePath = _coop.DedicatedServerExe,
-                DataDirectory = DataDirectory,
-            });
-
-            RaiseRunStateChanged();
+            LaunchServer();
+            CurrentPage = AppPage.Home;
         }
         catch (Exception ex)
         {
             AppendConsole("! " + ex.Message);
+            ShowToast(ex.Message, ToastKind.Error);
             BusyMessage = "";
         }
+    }
+
+    private void LaunchServer()
+    {
+        if (_coop is null) return;
+
+        Console.Clear();
+        _supervisor.Start(new ServerLaunchOptions
+        {
+            ExecutablePath = _coop.DedicatedServerExe,
+            DataDirectory = DataDirectory,
+            AcceptEula = EulaAccepted,
+        });
+
+        RaiseRunStateChanged();
     }
 
     private bool CanStart() =>
@@ -419,53 +432,86 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand(CanExecute = nameof(CanStop))]
     private async Task StopAsync()
     {
-        BusyMessage = L["status.stopping"];
+        _restartAfterExit = false;
+        BusyMessage = L["msg.closingServer"];
         await _supervisor.StopAsync();
         BusyMessage = "";
         RaiseRunStateChanged();
     }
 
-    private bool CanStop() => IsRunning && !IsBusy;
+    /// <summary>Açılış sırasında da durdurulabilmeli — yanlış dünyayı seçen beklemek zorunda kalmasın.</summary>
+    private bool CanStop() => IsRunning;
 
     [RelayCommand(CanExecute = nameof(CanCommand))]
-    private async Task SaveNowAsync() => await SendAsync(ServerCommand.Save());
+    private async Task SaveNowAsync()
+    {
+        await SendAsync(ServerCommand.Save());
+        ShowToast(L["msg.saveRequested"], ToastKind.Info);
+    }
 
     [RelayCommand(CanExecute = nameof(CanAnnounce))]
     private async Task AnnounceAsync()
     {
         await SendAsync(ServerCommand.Say(AnnounceText));
+        ShowToast(L["msg.announced"]);
         AnnounceText = "";
     }
 
     private bool CanAnnounce() => CanCommand() && !string.IsNullOrWhiteSpace(AnnounceText);
 
     [RelayCommand(CanExecute = nameof(CanKick))]
-    private async Task KickAsync()
+    private async Task KickAsync(ConnectedPlayer? player)
     {
-        if (SelectedPlayer is null) return;
-        await SendAsync(ServerCommand.Kick(SelectedPlayer.Id.ToString()));
+        player ??= SelectedPlayer;
+        if (player is null) return;
+
+        await SendAsync(ServerCommand.Kick(player.Id.ToString()));
+        ShowToast(string.Format(L["msg.kicked"], player.Name));
     }
 
-    private bool CanKick() => CanCommand() && SelectedPlayer is not null;
+    private bool CanKick(ConnectedPlayer? player) => CanCommand() && (player ?? SelectedPlayer) is not null;
 
     private bool CanCommand() => IsServing && !IsBusy;
 
+    // --- yeniden başlatma (oyunculara süre tanıyarak) ---------------------
+
+    /// <summary>Sunucu kendi kendine kapandıktan sonra yeniden başlatılsın mı?</summary>
+    private bool _restartAfterExit;
+
     /// <summary>
-    /// Yeni bir sandbox dünyası yaratır — oyuna hiç girmeden.
+    /// Oyuncuları uyarıp süre tanıyarak yeniden başlatır.
+    /// </summary>
+    /// <remarks>
+    /// Coop'un kendi komutu kullanılıyor (<c>coop.server.shutdown &lt;sn&gt;</c>, v0.1.6'da
+    /// doğrulandı): yeni girişleri kapatır, süre bitince oyuncuları düşürür ve kaydeder.
+    /// Sunucu kapanınca CoopKeep onu yeniden açar.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(CanCommand))]
+    private async Task RestartWithCountdownAsync()
+    {
+        const int seconds = 60;
+
+        await SendAsync(ServerCommand.Say(string.Format(L["msg.restartSay"], seconds)));
+        await SendAsync(AdminCommand.ScheduleShutdown(seconds));
+
+        _restartAfterExit = true;
+        BusyMessage = string.Format(L["msg.restartScheduled"], seconds);
+        ShowToast(BusyMessage, ToastKind.Info);
+    }
+
+    /// <summary>
+    /// Yeni bir dünya kurar: sunucuyu yazılan adla başlatır, <c>serving</c> fazını bekler ve
+    /// <c>stop</c> ile kaydettirir.
     /// </summary>
     /// <remarks>
     /// Server, yapılandırılan save diskte yoksa <c>default_new_game.sav</c>'dan taze bir
-    /// dünya kuruyor. Adı önceden yazıp başlatıyor, <c>serving</c> fazını bekleyip
-    /// <c>stop</c> ile kaydettiriyoruz. Bu sayede modun kurulum talimatındaki
-    /// "önce oyunda tek oyunculu bir save yarat" adımı tamamen gereksizleşiyor.
+    /// dünya kuruyor. Dünya ayarları önceden profil olarak kaydedildiği için ilk açılışta
+    /// <c>mod-config.json</c>'a yazılıyor ve dünya bu ayarlarla kuruluyor.
     /// </remarks>
-    [RelayCommand(CanExecute = nameof(CanCreateWorld))]
-    private async Task NewWorldAsync()
+    private async Task<bool> CreateWorldAsync(string name)
     {
-        if (_coop is null || _config is null || _saves is null) return;
-
-        var name = CampaignNameInput.Trim();
-        if (!SaveSet.IsValidSaveName(name) || _saves.Exists(name)) return;
+        if (_coop is null || _config is null || _saves is null) return false;
+        if (!SaveSet.IsValidSaveName(name) || _saves.Exists(name)) return false;
 
         var ready = new TaskCompletionSource();
         void OnPhase(ServerPhase p) { if (p == ServerPhase.Serving) ready.TrySetResult(); }
@@ -480,30 +526,27 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             // bağlanılabilir. Ekrandaki şifre/port ayarları burada da geçerli olmalı.
             _config.EnsureSaveName(name);
             ApplyEditedSettings();
-
-            Console.Clear();
+            ApplyWorldProfile(name);
 
             _supervisor.PhaseChanged += OnPhase;
             _supervisor.Exited += OnExit;
 
-            _supervisor.Start(new ServerLaunchOptions
-            {
-                ExecutablePath = _coop.DedicatedServerExe,
-                DataDirectory = DataDirectory,
-            });
+            LaunchServer();
 
-            var timeout = Task.Delay(TimeSpan.FromMinutes(5));
+            var timeout = Task.Delay(TimeSpan.FromMinutes(8));
             if (await Task.WhenAny(ready.Task, timeout) == timeout)
-                throw new TimeoutException();
+                throw new TimeoutException(L["msg.createTimeout"]);
 
             await ready.Task;
             await _supervisor.StopAsync();
-
-            CampaignNameInput = "";
+            return true;
         }
         catch (Exception ex)
         {
             AppendConsole("! " + ex.Message);
+            ShowToast(ex.Message, ToastKind.Error);
+            if (IsRunning) await _supervisor.StopAsync();
+            return false;
         }
         finally
         {
@@ -517,26 +560,26 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    private bool CanCreateWorld() =>
-        InstallationFound && !IsRunning && !IsBusy && SaveSet.IsValidSaveName(CampaignNameInput.Trim());
-
     // --- kampanya dosya işlemleri ---------------------------------------
     //
     // Hepsi .sav + .json çiftini birlikte taşır ve yalnızca sunucu duruyorken
     // çalışır: açık bir kampanyanın dosyalarını değiştirmek save bozulmasına yol açar.
+    // Dünyanın ayar profili de onunla birlikte taşınır.
 
     [RelayCommand(CanExecute = nameof(CanModifyCampaign))]
     private void RenameCampaign()
     {
         if (_saves is null || SelectedCampaign is null) return;
 
+        var source = SelectedCampaign.Name;
         var target = CampaignNameInput.Trim();
         if (!SaveSet.IsValidSaveName(target) || _saves.Exists(target)) return;
 
         try
         {
-            var wasActive = string.Equals(SelectedCampaign.Name, ActiveSaveName, StringComparison.OrdinalIgnoreCase);
-            _saves.Rename(SelectedCampaign.Name, target);
+            var wasActive = string.Equals(source, ActiveSaveName, StringComparison.OrdinalIgnoreCase);
+            _saves.Rename(source, target);
+            _profiles.Rename(source, target);
 
             // Aktif kampanyanın adı değiştiyse yapılandırma da güncellenmeli,
             // yoksa sunucu var olmayan bir save aramaya çalışır.
@@ -546,8 +589,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             ReloadConfig();
             ReloadCampaigns();
             SelectedCampaign = Campaigns.FirstOrDefault(c => c.Name == target) ?? SelectedCampaign;
+            ShowToast(string.Format(L["msg.renamed"], target));
         }
-        catch (Exception ex) { AppendConsole("! " + ex.Message); }
+        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
     }
 
     [RelayCommand(CanExecute = nameof(CanModifyCampaign))]
@@ -561,10 +605,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             _saves.Duplicate(SelectedCampaign.Name, target);
+            _profiles.Duplicate(SelectedCampaign.Name, target);
             CampaignNameInput = "";
             ReloadCampaigns();
+            ShowToast(string.Format(L["msg.duplicated"], target));
         }
-        catch (Exception ex) { AppendConsole("! " + ex.Message); }
+        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
     }
 
     /// <summary>Silmeyi başlatır — asıl silme onaydan sonra yapılır.</summary>
@@ -583,64 +629,51 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             var name = SelectedCampaign.Name;
 
-            // Dünyanın kendisi + Coop'un yedek kuşakları + bizim yedeklerimiz.
-            // Yalnızca .sav/.json silmek diskte megabaytlarca artık bırakıyordu.
+            // Dünyanın kendisi + Coop'un yedek kuşakları + bizim yedeklerimiz + ayar profili.
             var files = _saves.Delete(name);
             var backups = _backups?.DeleteAll(name) ?? 0;
+            _profiles.Delete(name);
 
             PendingDelete = false;
-            BackupNotice = string.Format(L["msg.deleted"], files, backups);
+            ShowToast(string.Format(L["msg.deleted"], files, backups));
 
             ReloadCampaigns();
             ReloadBackups();
         }
         catch (Exception ex)
         {
-            AppendConsole("! " + ex.Message);
+            ShowToast(ex.Message, ToastKind.Error);
             PendingDelete = false;
         }
     }
 
     [RelayCommand]
-    private void OpenSavesFolder()
-    {
-        var folder = System.IO.Path.Combine(DataDirectory, "Game Saves");
-        if (!System.IO.Directory.Exists(folder)) return;
+    private void OpenSavesFolder() =>
+        OpenPath(System.IO.Path.Combine(DataDirectory, "Game Saves"));
 
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(folder)
-            {
-                UseShellExecute = true,
-            });
-        }
-        catch (Exception ex) { AppendConsole("! " + ex.Message); }
-    }
-
-    /// <summary>Geliştiricinin sayfasını varsayılan tarayıcıda açar.</summary>
     [RelayCommand]
-    private void OpenAuthorPage()
+    private void OpenAuthorPage() => OpenPath(AuthorUrl);
+
+    /// <summary>Coop modunun Workshop sayfası — kurulum eksikse ilk adım.</summary>
+    [RelayCommand]
+    private void OpenWorkshopPage() => OpenPath("steam://url/CommunityFilePage/3770450698");
+
+    private void OpenPath(string target)
     {
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AuthorUrl)
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(target)
             {
                 UseShellExecute = true,
             });
         }
-        catch (Exception ex) { AppendConsole("! " + ex.Message); }
+        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
     }
 
     public string AuthorUrl => "https://gitgit.me/aderimo";
     public string AuthorName => "aderimo";
 
-    /// <summary>
-    /// Uygulama sürümü — <c>Directory.Build.props</c> içindeki tek kaynaktan gelir.
-    /// </summary>
-    /// <remarks>
-    /// Hata bildiren kullanıcının hangi sürümü kullandığını görebilmek için arayüzde
-    /// gösteriliyor; "bende çalışmıyor" raporlarının ilk sorusu bu.
-    /// </remarks>
+    /// <summary>Uygulama sürümü — <c>Directory.Build.props</c> içindeki tek kaynaktan gelir.</summary>
     public static string AppVersion
     {
         get
@@ -648,94 +681,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             var v = typeof(MainViewModel).Assembly.GetName().Version;
             return v is null ? "" : $"v{v.Major}.{v.Minor}.{v.Build}";
         }
-    }
-
-    // --- yönetici işlemleri ----------------------------------------------
-    //
-    // Söz dizimleri çalışan sunucudan okundu; tahmin değil:
-    //   coop.debug.hero.SetGold <heroName> <gold>
-    //   coop.debug.hero.set_hitpoints <heroId> <hitPoints>
-    // Vanilla hile komutları sunucu tarafından "Cheat mode is disabled!" ile
-    // reddediliyor, bu yüzden yalnızca Coop'un kendi komutları kullanılıyor.
-
-    [RelayCommand(CanExecute = nameof(CanAdminAct))]
-    private async Task HealPlayerAsync()
-    {
-        if (SelectedPlayer is null) return;
-
-        // Çözemezsek SESSİZ KALMA. Kullanıcı düğmeye basıp bir şey olduğunu sanırdı.
-        var (heroId, problem) = ResolveHeroId(SelectedPlayer);
-        if (heroId is null) { AdminNotice = problem; return; }
-
-        await SendAsync(AdminCommand.Heal(heroId));
-        Audit(SelectedPlayer.Name, L["audit.heal"]);
-    }
-
-    [RelayCommand(CanExecute = nameof(CanAdminAct))]
-    private async Task SetGoldAsync()
-    {
-        if (SelectedPlayer is null) return;
-
-        if (!int.TryParse(GoldAmount, out var gold))
-        {
-            AdminNotice = L["msg.goldInvalid"];
-            return;
-        }
-
-        // Aynı belirsizlik altını da etkiliyor: hedefi kesin çözemiyorsak
-        // rastgele birine para vermektense hiç vermiyoruz.
-        var (_, problem) = ResolveHeroId(SelectedPlayer);
-        if (problem.Length > 0) { AdminNotice = problem; return; }
-
-        // SetGold kahramanın ADINI alıyor (set_hitpoints ise kimliğini).
-        await SendAsync(AdminCommand.SetGold(SelectedPlayer.Name, gold));
-        Audit(SelectedPlayer.Name, string.Format(L["audit.gold"], gold));
-    }
-
-    private bool CanAdminAct() => IsServing && !IsBusy && SelectedPlayer is not null;
-
-    /// <summary>
-    /// Bağlı oyuncuyu save'deki kahraman kimliğiyle eşler.
-    /// </summary>
-    /// <remarks>
-    /// Canlı protokol (<c>@DS@ players</c>) kahraman kimliği vermiyor — yalnızca
-    /// peer id, ad, durum ve adres. Kalıcı eşleme save'in eş JSON dosyasında:
-    /// <c>ControllerId</c> (SteamID64) → <c>HeroId</c>. Tek oyuncu varsa eşleme
-    /// tekil olduğu için güvenli; birden fazla oyuncuda sıraya güvenmek yanlış
-    /// olur, bu yüzden yalnızca tek eşleşmede kesin sonuç dönüyoruz.
-    /// </remarks>
-    private (string? HeroId, string Problem) ResolveHeroId(ConnectedPlayer player)
-    {
-        var save = SelectedCampaign ?? Campaigns.FirstOrDefault(c => c.Name == ActiveSaveName);
-        var players = save?.Players;
-
-        if (players is null || players.Count == 0)
-            return (null, L["msg.adminNoHero"]);
-
-        if (players.Count == 1)
-            return (players[0].HeroId, "");
-
-        // Birden fazla kayıtlı oyuncu var; peer id'yi kahramana bağlayacak
-        // güvenilir bir veri yok. Yanlış kişiye işlem uygulamaktansa hiç uygulamıyoruz —
-        // ama bunu kullanıcıya AÇIKÇA söylüyoruz.
-        return (null, L["msg.adminCantResolve"]);
-    }
-
-    /// <summary>
-    /// Yönetici işlemini kaydeder ve diske yazar.
-    /// </summary>
-    /// <remarks>
-    /// Kayıt kalıcı: uygulama kapanınca silinen bir denetim kaydının anlamı olmaz.
-    /// </remarks>
-    private void Audit(string playerName, string description)
-    {
-        AuditLog.Insert(0, new AdminAuditEntry(DateTimeOffset.UtcNow, playerName, description));
-        while (AuditLog.Count > Settings.AuditLogStore.MaxEntries) AuditLog.RemoveAt(AuditLog.Count - 1);
-
-        Settings.AuditLogStore.Save(AuditLog);
-
-        OnPropertyChanged(nameof(HasAuditEntries));
-        AdminNotice = "";
     }
 
     // --- bağlantı bilgisi -------------------------------------------------
@@ -750,7 +695,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         if (clipboard is null) return;
 
         await clipboard.SetTextAsync(ConnectSummary);
-        CopyNotice = L["msg.copied"];
+        ShowToast(L["msg.inviteCopied"]);
     }
 
     /// <summary>Yerel ağ adresini bulur — doğrudan bağlanacak arkadaşlar için.</summary>
@@ -759,8 +704,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             // Dışarı bir UDP soketi "bağlamak" paket göndermez ama işletim sistemine
-            // hangi yerel arayüzün kullanılacağını sorar. Birden fazla ağ kartı
-            // olduğunda doğru olanı seçmenin en güvenilir yolu bu.
+            // hangi yerel arayüzün kullanılacağını sorar.
             using var socket = new System.Net.Sockets.Socket(
                 System.Net.Sockets.AddressFamily.InterNetwork,
                 System.Net.Sockets.SocketType.Dgram,
@@ -785,10 +729,10 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             _backups.Create(SelectedCampaign.Name);
-            BackupNotice = L["msg.backupTaken"];
+            ShowToast(L["msg.backupTaken"]);
             ReloadBackups();
         }
-        catch (Exception ex) { BackupNotice = ex.Message; }
+        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
     }
 
     private bool CanBackupNow() => _backups is not null && SelectedCampaign is not null && !IsBusy;
@@ -814,7 +758,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             _backups.Restore(SelectedBackup);
-            BackupNotice = L["msg.restored"];
+            ShowToast(L["msg.restored"]);
             PendingRestore = false;
 
             ReloadBackups();
@@ -822,7 +766,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            BackupNotice = ex.Message;
+            ShowToast(ex.Message, ToastKind.Error);
             PendingRestore = false;
         }
     }
@@ -883,11 +827,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ui.Save();
     }
 
-    /// <summary>
-    /// Göz simgesinin rengi: gizliyken vurgulu (dikkat çeksin), açıkken sönük.
-    /// </summary>
+    /// <summary>Göz simgesinin rengi: gizliyken vurgulu (dikkat çeksin), açıkken sönük.</summary>
     public IBrush PrivacyIconBrush => new SolidColorBrush(
-        Color.Parse(PrivacyMode ? "#C9A227" : "#98A0AF"));
+        Color.Parse(PrivacyMode ? "#D4AA32" : "#9AA2B1"));
+
+    public string PrivacyLabel => L[PrivacyMode ? "privacy.on" : "privacy.off"];
 
     /// <summary>Steam adı — gizli moddayken maskelenir.</summary>
     public string DisplayedHostName =>
@@ -896,57 +840,87 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>Port — gizli moddayken maskelenir.</summary>
     public string DisplayedPort => PrivacyMode ? "••••" : PortText;
 
-    /// <summary>
-    /// Konsola uygulanan bulanıklık. Gizli modda okunamaz hâle getirir.
-    /// </summary>
-    public Avalonia.Media.IEffect? ConsoleEffect =>
-        PrivacyMode ? new Avalonia.Media.BlurEffect { Radius = 9 } : null;
+    /// <summary>Konsola uygulanan bulanıklık. Gizli modda okunamaz hâle getirir.</summary>
+    public IEffect? ConsoleEffect => PrivacyMode ? new BlurEffect { Radius = 9 } : null;
 
     partial void OnPrivacyModeChanged(bool value)
     {
         OnPropertyChanged(nameof(PrivacyIconBrush));
+        OnPropertyChanged(nameof(PrivacyLabel));
         OnPropertyChanged(nameof(DisplayedHostName));
         OnPropertyChanged(nameof(DisplayedPort));
         OnPropertyChanged(nameof(DisplayedLocalIp));
+        OnPropertyChanged(nameof(DisplayedEndpoint));
         OnPropertyChanged(nameof(ConsoleEffect));
     }
 
-    partial void OnSteamHostNameChanged(string value)
-    {
-        OnPropertyChanged(nameof(DisplayedHostName));
-        OnPropertyChanged(nameof(ConnectSummary));
-    }
+    partial void OnSteamHostNameChanged(string value) => OnPropertyChanged(nameof(DisplayedHostName));
+
+    partial void OnEditSteamChanged(bool value) => OnPropertyChanged(nameof(HostNamePlaceholder));
 
     partial void OnPortTextChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayedPort));
-        OnPropertyChanged(nameof(ConnectSummary));
+        OnPropertyChanged(nameof(DisplayedEndpoint));
     }
 
     partial void OnLocalIpChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayedLocalIp));
-        OnPropertyChanged(nameof(ConnectSummary));
+        OnPropertyChanged(nameof(DisplayedEndpoint));
     }
 
     private bool CanModifyCampaign() =>
         !IsRunning && !IsBusy && SelectedCampaign is not null
-        && SaveSet.IsValidSaveName(CampaignNameInput.Trim());
+        && SaveSet.IsValidSaveName(CampaignNameInput.Trim())
+        && _saves?.Exists(CampaignNameInput.Trim()) != true;
 
     private bool CanDeleteCampaign() => !IsRunning && !IsBusy && SelectedCampaign is not null;
 
     // --- karşılama ekranı ------------------------------------------------
+
+    public const int TutorialLastStep = 2;
+
+    public bool TutorialStep0 => TutorialStep == 0;
+    public bool TutorialStep1 => TutorialStep == 1;
+    public bool TutorialStep2 => TutorialStep == 2;
+    public bool TutorialIsLast => TutorialStep == TutorialLastStep;
+    public bool TutorialNotLast => !TutorialIsLast;
+
+    partial void OnTutorialStepChanged(int value)
+    {
+        OnPropertyChanged(nameof(TutorialStep0));
+        OnPropertyChanged(nameof(TutorialStep1));
+        OnPropertyChanged(nameof(TutorialStep2));
+        OnPropertyChanged(nameof(TutorialIsLast));
+        OnPropertyChanged(nameof(TutorialNotLast));
+    }
+
+    [RelayCommand]
+    private void TutorialNext()
+    {
+        if (TutorialStep < TutorialLastStep) TutorialStep++;
+        else CloseTutorial();
+    }
 
     [RelayCommand]
     private void CloseTutorial()
     {
         ShowTutorial = false;
 
-        if (DontShowTutorialAgain)
+        // Turu sonuna kadar izleyen bir daha görmek istemez.
+        if (DontShowTutorialAgain || TutorialIsLast)
         {
             _ui.TutorialDismissed = true;
             _ui.Save();
         }
+    }
+
+    [RelayCommand]
+    private void ShowWelcome()
+    {
+        TutorialStep = 0;
+        ShowTutorial = true;
     }
 
     /// <summary>
@@ -954,8 +928,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     /// <remarks>
     /// Sunucu bu dosyayı yalnızca açılışta okuyor, dolayısıyla değişiklikler ancak yeniden
-    /// başlatınca geçerli oluyor. Bu yüzden komut yalnızca sunucu duruyorken çalışabiliyor —
-    /// aksi hâlde kullanıcı ayarı değiştirip hiçbir şey olmadığını görürdü.
+    /// başlatınca geçerli oluyor. Bu yüzden komut yalnızca sunucu duruyorken çalışabiliyor.
     /// </remarks>
     [RelayCommand(CanExecute = nameof(CanApplySettings))]
     private void ApplySettings()
@@ -964,11 +937,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             ApplyEditedSettings();
             ReloadConfig();
-            SettingsNotice = L["msg.settingsSaved"];
+            ShowToast(L["msg.settingsSaved"]);
         }
         catch (Exception ex)
         {
-            SettingsNotice = ex.Message;
+            ShowToast(ex.Message, ToastKind.Error);
         }
     }
 
@@ -1012,18 +985,26 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _supervisor.PhaseChanged += phase => Dispatcher.UIThread.Post(() =>
         {
             Phase = phase;
-            if (phase == ServerPhase.Serving) BusyMessage = "";
+            if (phase == ServerPhase.Serving)
+            {
+                BusyMessage = "";
+                if (!IsCreatingWorld) ShowToast(L["msg.online"]);
+                _ = RefreshHeroesAsync();
+            }
 
-            OnPropertyChanged(nameof(StatusText));
-            OnPropertyChanged(nameof(StatusBrush));
             RaiseRunStateChanged();
         });
 
         _supervisor.PlayersChanged += players => Dispatcher.UIThread.Post(() =>
         {
+            var joined = players.Where(p => _allPlayers.All(o => o.Id != p.Id)).ToList();
+
             _allPlayers.Clear();
             _allPlayers.AddRange(players);
             ApplyPlayerFilter();
+            RaiseHomeChanged();
+
+            foreach (var p in joined) OnPlayerJoined(p);
         });
 
         _supervisor.Exited += info => Dispatcher.UIThread.Post(async () =>
@@ -1037,15 +1018,31 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             _allPlayers.Clear();
             ApplyPlayerFilter();
 
-            OnPropertyChanged(nameof(StatusText));
-            OnPropertyChanged(nameof(StatusBrush));
             RaiseRunStateChanged();
             ReloadCampaigns();
             ReloadBackups();
 
+            // Sözleşme değişmiş ya da onay silinmiş: yeniden sor.
+            if (info.Kind == ServerExitKind.EulaRequired)
+            {
+                _ui.AcceptedEulaFingerprint = null;
+                _ui.Save();
+                await RequireEulaAsync(StartAsync);
+                return;
+            }
+
+            if (_restartAfterExit && !info.IsCrash)
+            {
+                _restartAfterExit = false;
+                await StartAsync();
+                return;
+            }
+
             await HandleCrashAsync(info);
         });
     }
+
+    private bool IsCreatingWorld => WizardCreating;
 
     /// <summary>
     /// Açılışta basılan "Cannot load: X.dll" satırları zararsızdır: hemen ardından
@@ -1064,9 +1061,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         while (Console.Count > MaxConsoleLines) Console.RemoveAt(0);
     }
 
-    /// <summary>
-    /// Çöküş sonrası politikayı uygular: gerekiyorsa bekleyip yeniden başlatır.
-    /// </summary>
+    /// <summary>Çöküş sonrası politikayı uygular: gerekiyorsa bekleyip yeniden başlatır.</summary>
     private async Task HandleCrashAsync(ServerExitInfo info)
     {
         _crashPolicy.Enabled = AutoRestart;
@@ -1079,21 +1074,21 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
                 return;
 
             case CrashDecisionReason.NotRecoverable:
-                BusyMessage = L["msg.noAutoRestart"];
+                AlertText = L["msg.noAutoRestart"] + " " + ServerExit.Describe(info.Kind);
                 return;
 
             case CrashDecisionReason.CrashLoop:
-                BusyMessage = L["msg.crashLoop"];
+                AlertText = L["msg.crashLoop"];
                 return;
 
             case CrashDecisionReason.Disabled:
-                BusyMessage = L["msg.crashed"];
+                AlertText = L["msg.crashed"];
                 return;
         }
 
         if (!decision.ShouldRestart || _coop is null) return;
 
-        BusyMessage = L["msg.crashed"] + " " + L["msg.restartingIn"];
+        AlertText = L["msg.crashed"] + " " + L["msg.restartingIn"];
         await Task.Delay(decision.Delay);
 
         // Kullanıcı bu arada elle başlattıysa araya girme.
@@ -1101,14 +1096,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         try
         {
-            _supervisor.Start(new ServerLaunchOptions
-            {
-                ExecutablePath = _coop.DedicatedServerExe,
-                DataDirectory = DataDirectory,
-            });
-
+            LaunchServer();
             BusyMessage = L["msg.readyIn"];
-            RaiseRunStateChanged();
         }
         catch (Exception ex)
         {
@@ -1153,6 +1142,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         OnPropertyChanged(nameof(HasPlayers));
         OnPropertyChanged(nameof(FilterHidesAll));
+        OnPropertyChanged(nameof(OnlinePlayerCount));
         KickCommand.NotifyCanExecuteChanged();
     }
 
@@ -1176,12 +1166,16 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             if (serverRoot is not null) _resources = new ServerResourceMonitor(serverRoot);
         }
 
-        DataDirectory = CoopInstallation.DefaultDataDirectory;
+        // Geliştirme ve test için: gerçek dünyalara dokunmadan ayrı bir klasörle çalışmak.
+        DataDirectory = Environment.GetEnvironmentVariable("COOPKEEP_DATA_DIR") is { Length: > 0 } custom
+            ? custom
+            : CoopInstallation.DefaultDataDirectory;
 
         var savesDir = System.IO.Path.Combine(DataDirectory, "Game Saves");
         _saves = new SaveRepository(savesDir);
         _backups = new BackupService(savesDir);
         _config = new ServerConfigStore(System.IO.Path.Combine(DataDirectory, "server-config.json"));
+        _modConfig = new ModConfigStore(CoopInstallation.DefaultModConfigPath);
 
         LocalIp = DetectLocalIp();
         CheckModules();
@@ -1189,6 +1183,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         ReloadConfig();
         ReloadCampaigns();
         ReloadBackups();
+
+        OnPropertyChanged(nameof(GameFound));
+        OnPropertyChanged(nameof(CoopFound));
+        OnPropertyChanged(nameof(GameCheckText));
+        OnPropertyChanged(nameof(ModCheckText));
+        RaiseRunStateChanged();
     }
 
     /// <summary>
@@ -1201,6 +1201,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     private void CheckModules()
     {
         var result = ModuleCompatibility.Check();
+        ReloadModules(result);
 
         if (result is null)
         {
@@ -1235,6 +1236,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             PasswordText = L["val.noPassword"];
             AutosaveText = "-";
             SteamText = "-";
+            EditPort = ServerConfig.DefaultPort.ToString();
+            EditAutosave = ServerConfig.DefaultAutosaveMinutes.ToString();
             return;
         }
 
@@ -1277,6 +1280,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             _suppressSelectionWrite = false;
         }
+
+        RaiseHomeChanged();
     }
 
     private void RaiseRunStateChanged()
@@ -1285,25 +1290,35 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(IsServing));
         OnPropertyChanged(nameof(IsBusy));
         OnPropertyChanged(nameof(Uptime));
+        OnPropertyChanged(nameof(Step1Brush));
+        OnPropertyChanged(nameof(Step2Brush));
+        OnPropertyChanged(nameof(Step3Brush));
+        RaiseHomeChanged();
 
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
         SaveNowCommand.NotifyCanExecuteChanged();
         AnnounceCommand.NotifyCanExecuteChanged();
         KickCommand.NotifyCanExecuteChanged();
-        NewWorldCommand.NotifyCanExecuteChanged();
+        RestartWithCountdownCommand.NotifyCanExecuteChanged();
+        OpenWizardCommand.NotifyCanExecuteChanged();
         ApplySettingsCommand.NotifyCanExecuteChanged();
         RenameCampaignCommand.NotifyCanExecuteChanged();
         DuplicateCampaignCommand.NotifyCanExecuteChanged();
         RequestDeleteCommand.NotifyCanExecuteChanged();
         ConfirmDeleteCommand.NotifyCanExecuteChanged();
+        RequestRestoreCommand.NotifyCanExecuteChanged();
+        ConfirmRestoreCommand.NotifyCanExecuteChanged();
+        BackupNowCommand.NotifyCanExecuteChanged();
+        NotifyAdminCommands();
     }
+
+    partial void OnPhaseChanged(ServerPhase value) => RaiseRunStateChanged();
 
     partial void OnPlayerFilterChanged(string value) => ApplyPlayerFilter();
 
     partial void OnCampaignNameInputChanged(string value)
     {
-        NewWorldCommand.NotifyCanExecuteChanged();
         RenameCampaignCommand.NotifyCanExecuteChanged();
         DuplicateCampaignCommand.NotifyCanExecuteChanged();
     }
@@ -1312,11 +1327,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// Kampanya seçimi anında <c>server-config.json</c>'a yazılır.
     /// </summary>
     /// <remarks>
-    /// Önceden seçim yalnızca "Başlat"a basınca uygulanıyordu; kullanıcı listede
-    /// gezindiğinde sunucu panelindeki "Aktif kampanya" değişmiyor ve hiçbir şey
-    /// olmuyormuş gibi görünüyordu. Artık seçtiğin kampanya <b>açılacak olandır</b>.
-    /// Sunucu çalışırken yazmıyoruz: çalışan bir sunucunun save'ini değiştirmek
-    /// ancak yeniden başlatınca geçerli olur ve yanıltıcı olurdu.
+    /// Seçtiğin kampanya <b>açılacak olandır</b>. Sunucu çalışırken yazmıyoruz: çalışan bir
+    /// sunucunun save'ini değiştirmek ancak yeniden başlatınca geçerli olur ve yanıltıcı olurdu.
     /// </remarks>
     partial void OnSelectedCampaignChanged(SaveSet? value)
     {
@@ -1332,6 +1344,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             catch (Exception ex) { AppendConsole("! " + ex.Message); }
         }
 
+        LoadWorldEditor();
+        if (!IsRunning) ReloadHeroes();
+
         StartCommand.NotifyCanExecuteChanged();
         RenameCampaignCommand.NotifyCanExecuteChanged();
         DuplicateCampaignCommand.NotifyCanExecuteChanged();
@@ -1341,8 +1356,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         PendingRestore = false;
         ReloadBackups();
         BackupNowCommand.NotifyCanExecuteChanged();
-        HealPlayerCommand.NotifyCanExecuteChanged();
-        SetGoldCommand.NotifyCanExecuteChanged();
+        RaiseHomeChanged();
     }
 
     partial void OnSelectedBackupChanged(BackupEntry? value)
@@ -1364,12 +1378,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ui.Save();
     }
 
-    partial void OnSelectedPlayerChanged(ConnectedPlayer? value)
-    {
-        KickCommand.NotifyCanExecuteChanged();
-        HealPlayerCommand.NotifyCanExecuteChanged();
-        SetGoldCommand.NotifyCanExecuteChanged();
-    }
+    partial void OnSelectedPlayerChanged(ConnectedPlayer? value) => KickCommand.NotifyCanExecuteChanged();
 
     partial void OnAnnounceTextChanged(string value) => AnnounceCommand.NotifyCanExecuteChanged();
 

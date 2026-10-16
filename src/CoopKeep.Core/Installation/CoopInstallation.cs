@@ -19,6 +19,50 @@ public sealed record CoopInstallation
     /// <summary><c>SubModule.xml</c>'in bağımlı olduğu oyun sürümü (örn. <c>v1.4.8</c>).</summary>
     public string? RequiredGameVersion { get; init; }
 
+    /// <summary>Sunucunun lisans sözleşmesi.</summary>
+    public string EulaPath => Path.Combine(Path.GetDirectoryName(DedicatedServerExe)!, "EULA.md");
+
+    public string LicensePath => Path.Combine(Path.GetDirectoryName(DedicatedServerExe)!, "LICENSE.txt");
+
+    /// <summary>
+    /// EULA + LICENSE metinlerinin parmak izi. Mod güncellenip sözleşme değişirse
+    /// kullanıcıdan yeniden onay istemek için.
+    /// </summary>
+    public string? EulaFingerprint()
+    {
+        try
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var bytes = File.ReadAllBytes(EulaPath).Concat(File.Exists(LicensePath) ? File.ReadAllBytes(LicensePath) : []).ToArray();
+            return Convert.ToHexString(sha.ComputeHash(bytes));
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Veri klasöründe sunucunun kendi kaydettiği bir EULA onayı var mı?
+    /// </summary>
+    /// <remarks>
+    /// Sunucu onayı <c>eula.txt</c>'ye <c>eula=true</c> olarak yazıyor. Kullanıcı daha önce
+    /// sunucuyu kendisi açıp onayladıysa CoopKeep tekrar sormaz.
+    /// </remarks>
+    public static bool HasAcceptedEula(string dataDirectory)
+    {
+        var path = Path.Combine(dataDirectory, "eula.txt");
+        try
+        {
+            return File.Exists(path) && File.ReadLines(path)
+                .Any(l => l.Trim().Equals("eula=true", StringComparison.OrdinalIgnoreCase));
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>Server'ın <c>--data-dir</c> verilmediğinde kullandığı dizin.</summary>
     public static string DefaultDataDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),

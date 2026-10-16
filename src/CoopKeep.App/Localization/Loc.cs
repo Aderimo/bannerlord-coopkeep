@@ -17,7 +17,7 @@ namespace CoopKeep.App.Localization;
 /// <b>sunucu</b> diyoruz — kullanıcının zihnindeki karşılığı bu.
 /// </para>
 /// </remarks>
-public sealed class Loc : INotifyPropertyChanged
+public sealed partial class Loc : INotifyPropertyChanged
 {
     public static Loc Current { get; } = new();
 
@@ -49,7 +49,10 @@ public sealed class Loc : INotifyPropertyChanged
 
     /// <summary>Anahtar bulunamazsa anahtarın kendisi döner — eksik çeviri görünür olur, çökmez.</summary>
     public string this[string key] =>
-        (IsTurkish ? Turkish : English).TryGetValue(key, out var value) ? value : key;
+        (IsTurkish ? Turkish : English).TryGetValue(key, out var value) ? value
+        : (IsTurkish ? TurkishV2 : EnglishV2).TryGetValue(key, out var v2) ? v2
+        : (IsTurkish ? TurkishUi : EnglishUi).TryGetValue(key, out var ui) ? ui
+        : key;
 
     private static string DetectSystemLanguage() =>
         System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "tr" ? "tr" : "en";
@@ -88,7 +91,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["sec.settings"] = "Ayarlar",
         ["sec.backups"] = "Yedekler",
 
-        ["col.players"] = "Oyuncu",
+        ["col.players"] = "oyuncu",
 
         ["lbl.port"] = "Port",
         ["lbl.password"] = "Şifre",
@@ -110,7 +113,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["val.autosaveOff"] = "Kapalı",
         ["val.minutes"] = "dakikada bir",
 
-        ["msg.noCampaigns"] = "Henüz sunucun yok. Alttaki kutuya bir ad yazıp \"Yeni sunucu\"ya bas.",
+        ["msg.noCampaigns"] = "Henüz bir dünyan yok. Aşağıdaki \"Yeni dünya\" ile başla.",
         ["msg.noPlayers"] = "Bağlı oyuncu yok.",
         ["msg.creating"] = "Sunucu dünyası kuruluyor, yaklaşık bir dakika sürüyor...",
         ["msg.announcePlaceholder"] = "Oyunculara gönderilecek mesaj",
@@ -262,7 +265,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["val.autosaveOff"] = "Off",
         ["val.minutes"] = "min interval",
 
-        ["msg.noCampaigns"] = "No servers yet. Type a name below and press \"New server\".",
+        ["msg.noCampaigns"] = "No worlds yet. Start with \"New world\" below.",
         ["msg.noPlayers"] = "No players connected.",
         ["msg.creating"] = "Building the server world, this takes about a minute...",
         ["msg.announcePlaceholder"] = "Message to broadcast to players",

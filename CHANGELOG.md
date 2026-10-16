@@ -8,6 +8,90 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v0.2.0 — 2026-10-16
+
+A redesign driven by user feedback: the app was hard to follow, worlds could not be
+configured, and admin actions did not work. Every server-side behaviour below was
+verified against a running Coop v0.1.6 server.
+
+*Kullanıcı geri bildirimiyle yeniden tasarım: arayüz karmaşıktı, dünya ayarı
+yapılamıyordu ve yönetici işlemleri çalışmıyordu. Aşağıdaki her sunucu davranışı
+çalışan bir Coop v0.1.6 sunucusunda doğrulandı.*
+
+### Added · Eklenenler
+
+- **New world wizard**, like starting a campaign in the game: start type, name,
+  difficulty presets (Very easy / Easy / Realistic) with every option adjustable,
+  rules (battle death, aging, executions, battle size, bandits, wanderers, economy,
+  fast forward, voice, cheats…), server settings and a summary.
+  *Oyundaki gibi yeni dünya sihirbazı: zorluk, kurallar, sunucu ayarları ve özet.*
+- **Per-world settings.** Each world keeps its own difficulty and rules and they can be
+  changed later on the Worlds page. They are written to Coop's `mod-config.json`
+  right before the server starts (the host applies them on every boot).
+  *Her dünyanın kendi ayarları; sonradan değiştirilebilir.*
+- **Import a single-player save.** Continue a sandbox campaign you started in the
+  game. Saves made with third-party mods are detected from the save header and
+  refused, because the server crashes while loading them.
+  *Tek oyunculu save'i içe aktarma; modlu save'ler önceden tespit edilip engellenir.*
+- **Cheats for players:** the `clientsCanUseCheats` world setting.
+  *Oyuncu hileleri dünya ayarlarından açılır.*
+- **Characters list** with name, gold, health and age read live from the server;
+  actions: full health, add/set gold, set age. Results are read back from the server
+  and only successful actions are written to the audit log.
+  *Karakter listesi ve doğrulanan yönetici işlemleri.*
+- **Block list:** blocked names are kicked automatically when they connect.
+  *Engel listesi: engelli adlar bağlanınca otomatik atılır.*
+- **Restart with warning:** players get a 60-second notice, the world is saved and
+  the server comes back up (Coop's own `coop.server.shutdown`).
+  *Oyuncuları uyararak yeniden başlatma.*
+- **Mods page** with a status for every launcher module and a one-click
+  "Set up for Coop" that turns problem mods off (with a backup and a restore button).
+  *Modlar sayfası ve tek tıkla Coop profili.*
+- **Server license (EULA) consent:** shown once before the first start; CoopKeep
+  never accepts it on the user's behalf.
+  *Sunucu EULA'sı ilk başlatmada gösterilir, kullanıcı onaylar.*
+- **Bug report** zip (logs, settings, module list; password and Steam IDs masked),
+  **update check** against GitHub releases (can be turned off), invite text with
+  everything friends need.
+  *Hata raporu paketi, güncelleme denetimi, davet metni.*
+
+### Changed · Değişenler
+
+- **New interface:** sidebar navigation with one page per task, a home page that
+  always shows the single next step, animated page transitions, toasts, a startup
+  progress indicator, a pulsing online indicator and a three-step welcome tour.
+  *Yeni arayüz: yan menü, her sayfada tek iş, animasyonlar, bildirimler.*
+- New app icon.
+  *Yeni uygulama ikonu.*
+- The module check now uses Coop's own rules (War Sails, Birth and Aging Options and
+  Fast Mode are refused; other mods are not on the server).
+  *Modül denetimi Coop'un kendi kurallarına göre.*
+
+### Fixed · Düzeltilenler
+
+- **Gold did nothing:** Coop removed `coop.debug.hero.SetGold`; CoopKeep now uses
+  `coop.debug.hero.set_gold_state <hero_id>` and targets the character by id instead
+  of the player's Steam name.
+  *Altın işlemi çalışmıyordu: kaldırılan komut yerine kimlikle çalışan komut.*
+- **Admin actions refused with more than one player:** actions now target registered
+  characters, so they work for any number of players.
+  *Birden fazla oyuncuda yönetici işlemleri yapılamıyordu.*
+- "Full health" no longer lowers health above 100.
+  *"Tam can" 100'ün üstündeki canı düşürmüyor.*
+- Failed admin actions were logged as done.
+  *Başarısız işlemler yapıldı diye kaydediliyordu.*
+
+### Known limitations · Bilinen sınırlar
+
+- The game's own console cheats stay disabled on the server (`Cheat mode is disabled!`)
+  and no command enables them. Player cheat menus are available through the world
+  setting above.
+  *Oyunun konsol hileleri sunucuda kapalı ve açılamıyor.*
+- Mods cannot be added to the server; clients must run the same official modules.
+  *Sunucuya mod eklenemiyor.*
+
+---
+
 ## v0.1.0 — 2026-09-02
 
 First release. A desktop app that manages the Bannerlord Coop dedicated server

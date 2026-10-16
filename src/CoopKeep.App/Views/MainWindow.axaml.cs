@@ -1,40 +1,91 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CoopKeep.App.Localization;
 using CoopKeep.App.ViewModels;
+using CoopKeep.App.Views.Pages;
 
 namespace CoopKeep.App.Views;
 
 public partial class MainWindow : Window
 {
     private bool _shutdownStarted;
+    private MainViewModel? _vm;
+
+    /// <summary>
+    /// Sayfalar bir kez oluşturulur ve yeniden kullanılır: kaydırma konumu ve form
+    /// içerikleri sayfa değişince kaybolmasın.
+    /// </summary>
+    private readonly Dictionary<AppPage, Control> _pages = new();
 
     public MainWindow()
     {
         InitializeComponent();
 
-        DataContextChanged += (_, _) => HookConsoleAutoScroll();
+        DataContextChanged += (_, _) => Attach(DataContext as MainViewModel);
         Loc.Current.PropertyChanged += OnLanguageChanged;
         Closing += OnClosingAsync;
         Closed += (_, _) => Loc.Current.PropertyChanged -= OnLanguageChanged;
+    }
+
+    private void Attach(MainViewModel? vm)
+    {
+        if (ReferenceEquals(vm, _vm)) return;
+
+        if (_vm is not null)
+        {
+            _vm.PropertyChanged -= OnViewModelPropertyChanged;
+            _vm.Console.CollectionChanged -= OnConsoleChanged;
+        }
+
+        _vm = vm;
+        if (vm is null) return;
+
+        vm.PropertyChanged += OnViewModelPropertyChanged;
+        vm.Console.CollectionChanged += OnConsoleChanged;
+        ShowPage(vm.CurrentPage);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.CurrentPage) && _vm is not null)
+            ShowPage(_vm.CurrentPage);
+    }
+
+    /// <summary>Sayfayı geçiş animasyonuyla gösterir.</summary>
+    private void ShowPage(AppPage page)
+    {
+        if (!_pages.TryGetValue(page, out var control))
+        {
+            control = page switch
+            {
+                AppPage.Worlds => new WorldsPage(),
+                AppPage.Players => new PlayersPage(),
+                AppPage.Backups => new BackupsPage(),
+                AppPage.Mods => new ModsPage(),
+                AppPage.Settings => new SettingsPage(),
+                AppPage.Console => new ConsolePage(),
+                _ => new HomePage(),
+            };
+            _pages[page] = control;
+        }
+
+        PageHost.Content = control;
+
+        if (page == AppPage.Console) ScrollConsoleToEnd();
     }
 
     /// <summary>
     /// Pencere kapatılırken çalışan sunucuyu güvenle durdurur.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Bunu yapmazsak sunucu süreci arkada yetim kalıyor. CoopKeep kendi başlatmadığı
-    /// bir sunucuya sonradan bağlanamıyor, dolayısıyla kullanıcının onu durdurmak için
-    /// tek yolu Görev Yöneticisi'nden öldürmek olurdu — ve zorla öldürmek save
-    /// bozulmasına yol açabiliyor.
-    /// </para>
-    /// <para>
-    /// Kapanış iptal edilip önce <c>stop</c> gönderiliyor (dünya kaydediliyor),
-    /// ardından pencere gerçekten kapatılıyor.
-    /// </para>
+    /// Bunu yapmazsak sunucu süreci arkada yetim kalıyor ve kullanıcının onu durdurmak için
+    /// tek yolu Görev Yöneticisi'nden öldürmek olurdu — zorla öldürmek save bozabilir.
+    /// Kapanış iptal edilip önce <c>stop</c> gönderiliyor, ardından pencere kapatılıyor.
     /// </remarks>
     private async void OnClosingAsync(object? sender, WindowClosingEventArgs e)
     {
@@ -56,17 +107,9 @@ public partial class MainWindow : Window
     /// Dil değişince tüm bağlamaları yeniden değerlendirir.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Arayüzdeki metinler <c>{Binding L[anahtar]}</c> ile, yani bir indeksleyici
-    /// üzerinden bağlanıyor. İndeksleyici bağlamalarının değişiklik bildirimiyle
-    /// tazelenmesi ("Item[]") güvenilir çalışmadı — dil değiştiğinde metinlerin çoğu
-    /// eski dilde kalıyordu.
-    /// </para>
-    /// <para>
-    /// Bu yüzden kesin çözüm uygulanıyor: <see cref="StyledElement.DataContext"/> bir an
-    /// için boşaltılıp geri veriliyor. Bu, penceredeki her bağlamayı sıfırdan kurar.
-    /// Küçük bir pencere için maliyeti ihmal edilebilir ve sonucu garantidir.
-    /// </para>
+    /// İndeksleyici bağlamalarının "Item[]" bildirimiyle tazelenmesi güvenilir çalışmadı.
+    /// Kesin çözüm: <see cref="StyledElement.DataContext"/> bir an boşaltılıp geri verilir.
+    /// Önbellekteki sayfalar da kendi bağlamalarını yeniden kursun diye atılır.
     /// </remarks>
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -75,8 +118,10 @@ public partial class MainWindow : Window
         var context = DataContext;
         if (context is null) return;
 
+        _pages.Clear();
         DataContext = null;
         DataContext = context;
+        if (_vm is not null) ShowPage(_vm.CurrentPage);
     }
 
     /// <summary>
@@ -84,20 +129,22 @@ public partial class MainWindow : Window
     /// </summary>
     /// <remarks>
     /// Kaydırma bir sonraki düzen geçişine erteleniyor: satır eklendiği anda
-    /// ScrollViewer'ın kapsamı henüz büyümemiş oluyor ve hemen kaydırmak
-    /// bir satır geride kalıyor.
+    /// ScrollViewer'ın kapsamı henüz büyümemiş oluyor.
     /// </remarks>
-    private void HookConsoleAutoScroll()
+    private void OnConsoleChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (DataContext is not MainViewModel vm) return;
+        if (e.Action != NotifyCollectionChangedAction.Add) return;
+        if (_vm?.CurrentPage != AppPage.Console) return;
 
-        vm.Console.CollectionChanged += (_, e) =>
+        ScrollConsoleToEnd();
+    }
+
+    private void ScrollConsoleToEnd()
+    {
+        Dispatcher.UIThread.Post(() =>
         {
-            if (e.Action != NotifyCollectionChangedAction.Add) return;
-
-            Dispatcher.UIThread.Post(
-                () => this.FindControl<ScrollViewer>("ConsoleScroll")?.ScrollToEnd(),
-                DispatcherPriority.Background);
-        };
+            if (_pages.TryGetValue(AppPage.Console, out var page))
+                page.FindControl<ScrollViewer>("ConsoleScroll")?.ScrollToEnd();
+        }, DispatcherPriority.Background);
     }
 }

@@ -24,6 +24,10 @@ var dataDir = dataDirIndex >= 0 && dataDirIndex + 1 < args.Length
     ? args[dataDirIndex + 1]
     : CoopInstallation.DefaultDataDirectory;
 
+// Sunucu lisans sözleşmesinin onayı (Coop v0.1.6+). Kullanıcı bayrağı kendisi verir;
+// onay yoksa sunucu "exit 6" ile kapanır ve CLI bunu açıklar.
+var acceptEula = args.Contains("--accept-eula");
+
 try
 {
     return command switch
@@ -32,8 +36,8 @@ try
         "saves" => ListSaves(dataDir),
         "config" => ShowConfig(dataDir),
         "use" => UseSave(dataDir, rest),
-        "new" => await NewWorldAsync(dataDir, rest),
-        "run" => await RunAsync(dataDir),
+        "new" => await NewWorldAsync(dataDir, rest, acceptEula),
+        "run" => await RunAsync(dataDir, acceptEula),
         _ => Help(),
     };
 }
@@ -60,6 +64,8 @@ static int Help()
 
         Seçenekler:
           --data-dir <yol>         server veri dizinini geçersiz kıl
+          --accept-eula            sunucunun lisans sözleşmesini kabul et
+                                   (Coop modundaki DedicatedServer\EULA.md)
         """);
     return 0;
 }
@@ -214,7 +220,7 @@ static int UseSave(string dataDir, string[] rest)
 /// dünya kuruyor. Biz de tam bunu tetikliyoruz: adı ayarla, başlat, <c>serving</c>
 /// fazını bekle, <c>stop</c> ile kaydettir.
 /// </remarks>
-static async Task<int> NewWorldAsync(string dataDir, string[] rest)
+static async Task<int> NewWorldAsync(string dataDir, string[] rest, bool acceptEula)
 {
     if (rest.Length == 0 || rest[0].StartsWith("--"))
     {
@@ -270,6 +276,7 @@ static async Task<int> NewWorldAsync(string dataDir, string[] rest)
     {
         ExecutablePath = coop.DedicatedServerExe,
         DataDirectory = dataDir,
+        AcceptEula = acceptEula,
     });
 
     var timeout = Task.Delay(TimeSpan.FromMinutes(5));
@@ -298,7 +305,7 @@ static async Task<int> NewWorldAsync(string dataDir, string[] rest)
 }
 
 /// <summary>Server'ı başlatır, çıktısını gösterir ve klavyeden komut kabul eder.</summary>
-static async Task<int> RunAsync(string dataDir)
+static async Task<int> RunAsync(string dataDir, bool acceptEula)
 {
     var coop = GameLocator.FindCoop();
     if (coop is null) { Error("Coop kurulumu bulunamadı."); return 1; }
@@ -333,6 +340,7 @@ static async Task<int> RunAsync(string dataDir)
     {
         ExecutablePath = coop.DedicatedServerExe,
         DataDirectory = dataDir,
+        AcceptEula = acceptEula,
     });
 
     Head("Server çalışıyor");

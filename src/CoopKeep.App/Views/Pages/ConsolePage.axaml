@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.ConsolePage"
+             x:DataType="vm:MainViewModel">
+
+  <Grid RowDefinitions="Auto,*" Margin="36,28,36,28">
+    <Grid Classes="enter" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+        <StackPanel Spacing="4">
+            <TextBlock Classes="eyebrow" Text="{Binding L[nav.console]}" />
+            <TextBlock Classes="display" Text="{Binding L[sec.console]}" />
+            <TextBlock Classes="dim" FontSize="13.5" Text="{Binding L[console.sub]}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Button Grid.Column="1" VerticalAlignment="Bottom" Command="{Binding OpenLogsFolderCommand}"
+                Content="{Binding L[btn.openLogs]}" />
+    </Grid>
+
+    <Border Grid.Row="1" Classes="enter d1" Background="{StaticResource ConsoleBg}" CornerRadius="12"
+            BorderBrush="{StaticResource BorderDim}" BorderThickness="1" Padding="14" ClipToBounds="True">
+        <Panel>
+            <!--
+                Gizli modda bulanıklaştırılır: konsol dosya yolları (kullanıcı adı dahil),
+                oyuncu adresleri ve Steam lobi kimliği içeriyor — yayında görünmemeli.
+            -->
+            <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Console}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas, monospace"
+                                       FontSize="11.5" Foreground="#A9B4C4" TextWrapping="NoWrap" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border IsVisible="{Binding PrivacyMode}" Background="#B00C0D10" CornerRadius="8">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                    <Path Data="{StaticResource IconEye}" Stroke="{StaticResource TextDim}" StrokeThickness="1.5"
+                          Width="32" Height="32" Stretch="Uniform" />
+                    <TextBlock Text="{Binding L[msg.consoleHidden]}" Classes="hint" TextAlignment="Center" MaxWidth="340" />
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Border>
+  </Grid>
+</UserControl>

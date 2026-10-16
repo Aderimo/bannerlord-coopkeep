@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace CoopKeep.Core.Server;
 
 /// <summary>
@@ -5,23 +7,29 @@ namespace CoopKeep.Core.Server;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Bu komutlar sunucunun oyun konsoluna gider. Söz dizimleri <b>tahmin edilmedi</b>;
-/// 2026-09-02'de çalışan sunucuya argümansız gönderilerek kullanım metinleri
-/// doğrudan sunucudan okundu:
+/// Söz dizimleri <b>tahmin edilmedi</b>; 2026-10-16'da Coop v0.1.6 sunucusuna argümansız
+/// gönderilerek kullanım metinleri doğrudan sunucudan okundu ve her komut gerçek bir
+/// dünyada denenip sonucu <c>coop.debug.hero.info</c> ile doğrulandı:
 /// </para>
 /// <code>
-/// Usage: coop.debug.hero.SetGold &lt;heroName&gt; &lt;gold&gt;
-/// Usage: coop.debug.hero.set_hitpoints &lt;heroId&gt; &lt;hitPoints&gt;
-/// Usage: coop.debug.hero.info &lt;heroId&gt;
+/// Usage: coop.debug.hero.set_gold_state &lt;hero_id&gt; &lt;gold&gt;       → HERO_GOLD_SET hero=… oldGold=… newGold=…
+/// Usage: coop.debug.hero.set_hitpoints &lt;hero_id&gt; &lt;hit_points&gt;   → Hero HitPoints changed to: 60
+/// Usage: coop.debug.hero.set_age &lt;hero_name_or_id&gt; &lt;age&gt;         → Set age to 30 for 1 hero(es) matching '…'
+/// Usage: coop.debug.hero.info &lt;hero_id&gt;                           → _name = … / _gold = … / _health = …
 /// </code>
 /// <para>
-/// <b>Dikkat: SetGold isim, set_hitpoints kimlik alıyor.</b> İkisini karıştırmak
-/// sessizce işe yaramayan bir komut üretir.
+/// <b>v0.1.0'daki hata:</b> altın komutu <c>coop.debug.hero.SetGold</c> idi. Coop bu komutu
+/// kaldırdı (<c>no game console command 'coop.debug.hero.SetGold'</c>) ve yerine isim alan
+/// <c>set_gold</c> ile kimlik alan <c>set_gold_state</c> geldi. Ayrıca eski kod hedef olarak
+/// oyuncunun Steam adını gönderiyordu; oysa komut karakterin oyun içi adını istiyordu.
+/// Artık <b>kimlik</b> alan <c>set_gold_state</c> kullanılıyor: aynı adlı iki karakter
+/// olsa bile yanlış kişiye uygulanamaz.
 /// </para>
 /// <para>
-/// Vanilla hile komutları (<c>campaign.add_gold_to_hero</c>, <c>campaign.kill_hero</c>,
-/// <c>campaign.heal_player_party</c>) sunucu tarafından <c>"Cheat mode is disabled!"</c>
-/// ile reddediliyor — bu yüzden yalnızca Coop'un kendi komutları kullanılıyor.
+/// Vanilla hile komutları (<c>campaign.add_gold_to_hero</c> vb.) sunucuda
+/// <c>Cheat mode is disabled!</c> ile reddediliyor ve hile modunu açacak bir konsol komutu
+/// yok. Oyuncuların kendi hile menüleri ise <c>mod-config.json</c>'daki
+/// <c>clientsCanUseCheats</c> ile açılıyor (dünya ayarlarında).
 /// </para>
 /// </remarks>
 public static class AdminCommand
@@ -30,76 +38,74 @@ public static class AdminCommand
     /// Yönetici işlemleri için izin verilen komut önekleri.
     /// </summary>
     /// <remarks>
-    /// Sunucu 594 oyun konsol komutunun tamamını kabul ediyor. Yalnızca bu üçüne
-    /// izin veriyoruz; geri kalanı arayüzden erişilebilir olmamalı.
+    /// Sunucu her oyun konsol komutunu kabul ediyor. Yalnızca bunlara izin veriyoruz;
+    /// geri kalanı arayüzden erişilebilir olmamalı.
     /// </remarks>
     public static readonly IReadOnlySet<string> Allowed = new HashSet<string>(StringComparer.Ordinal)
     {
-        "coop.debug.hero.SetGold",
+        "coop.debug.hero.set_gold_state",
         "coop.debug.hero.set_hitpoints",
+        "coop.debug.hero.set_age",
         "coop.debug.hero.info",
-        "coop.debug.hero.list",
         "coop.debug.players.list",
+        "coop.debug.campaign_options.list",
+        "coop.debug.mod_config.list",
+        "coop.server.shutdown",
     };
 
-    /// <summary>Bannerlord'da bir kahramanın normal azami can puanı.</summary>
+    /// <summary>"Tam can" için kullanılan değer.</summary>
+    /// <remarks>
+    /// <c>hero.info</c> azami canı vermiyor. Mevcut can bundan yüksekse (perklerle 100'ü
+    /// geçebiliyor) iyileştirme <b>uygulanmaz</b> — "tam can" düğmesi canı düşürmemeli.
+    /// </remarks>
     public const int FullHitPoints = 100;
 
     /// <summary>Altın için üst sınır — kazara girilen uçuk değerleri engeller.</summary>
     public const int MaxGold = 10_000_000;
 
-    /// <summary>
-    /// Bir kahramanın altınını <b>belirtilen değere ayarlar</b>.
-    /// </summary>
-    /// <remarks>
-    /// Komut ekleme değil <i>atama</i> yapıyor. "1000 ekle" gibi bir işlem için
-    /// çağıranın önce mevcut altını okuması gerekir.
-    /// </remarks>
-    /// <param name="heroName">Kahramanın <b>adı</b> (kimliği değil).</param>
-    public static string SetGold(string heroName, int gold)
-    {
-        var name = ServerCommand.SanitizeArgument(heroName, 64);
-        if (name.Length == 0)
-            throw new ArgumentException("Kahraman adı boş olamaz.", nameof(heroName));
+    public const int MinAge = 18;
+    public const int MaxAge = 90;
 
-        var amount = Math.Clamp(gold, 0, MaxGold);
-        return $"coop.debug.hero.SetGold {name} {amount}";
-    }
+    /// <summary>Kahramanın altınını <b>belirtilen değere ayarlar</b>.</summary>
+    /// <param name="heroId">Kayıtlı kahraman kimliği (örn. <c>main_hero</c>).</param>
+    public static string SetGold(string heroId, int gold) =>
+        $"coop.debug.hero.set_gold_state {RequireId(heroId)} {Math.Clamp(gold, 0, MaxGold).ToString(CultureInfo.InvariantCulture)}";
 
-    /// <summary>
-    /// Bir kahramanın can puanını ayarlar.
-    /// </summary>
-    /// <param name="heroId">Kahramanın <b>kimliği</b> (adı değil), örn. <c>Hero_Player</c>.</param>
+    /// <summary>Kahramanın can puanını ayarlar.</summary>
     /// <param name="hitPoints">
-    /// 1 ile 100 arası. <b>Sıfıra izin verilmiyor:</b> sıfır canın ne yapacağı
-    /// (yaralama mı, kalıcı ölüm mü) doğrulanmadı ve başkasının karakterini geri
-    /// dönüşü olmadan bozabilir.
+    /// 1 ile 100 arası. <b>Sıfıra izin verilmiyor:</b> öldürmek için Coop'un ayrı bir
+    /// komutu var (<c>kill_player</c>); canı sıfırlamanın ne yapacağı belirsiz.
     /// </param>
-    public static string SetHitPoints(string heroId, int hitPoints)
-    {
-        var id = ServerCommand.SanitizeArgument(heroId, 64);
-        if (id.Length == 0)
-            throw new ArgumentException("Kahraman kimliği boş olamaz.", nameof(heroId));
-
-        var hp = Math.Clamp(hitPoints, 1, FullHitPoints);
-        return $"coop.debug.hero.set_hitpoints {id} {hp}";
-    }
+    public static string SetHitPoints(string heroId, int hitPoints) =>
+        $"coop.debug.hero.set_hitpoints {RequireId(heroId)} {Math.Clamp(hitPoints, 1, FullHitPoints).ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>Kahramanı tam cana getirir.</summary>
     public static string Heal(string heroId) => SetHitPoints(heroId, FullHitPoints);
 
-    /// <summary>Tek bir kahramanın ayrıntılarını sorgular (mevcut altın dahil).</summary>
-    public static string HeroInfo(string heroId)
-    {
-        var id = ServerCommand.SanitizeArgument(heroId, 64);
-        if (id.Length == 0)
-            throw new ArgumentException("Kahraman kimliği boş olamaz.", nameof(heroId));
+    /// <summary>Kahramanın yaşını ayarlar.</summary>
+    public static string SetAge(string heroId, int age) =>
+        $"coop.debug.hero.set_age {RequireId(heroId)} {Math.Clamp(age, MinAge, MaxAge).ToString(CultureInfo.InvariantCulture)}";
 
-        return $"coop.debug.hero.info {id}";
-    }
+    /// <summary>Tek bir kahramanın ayrıntılarını sorgular (ad, altın, can, yaş).</summary>
+    public static string HeroInfo(string heroId) => $"coop.debug.hero.info {RequireId(heroId)}";
 
     /// <summary>Bağlı oyuncuların kahraman eşlemesini sorgular.</summary>
     public static string PlayersList() => "coop.debug.players.list";
+
+    /// <summary>Sunucuda o an geçerli zorluk ayarları.</summary>
+    public static string CampaignOptionsList() => "coop.debug.campaign_options.list";
+
+    /// <summary>Sunucuda o an geçerli Coop ayarları.</summary>
+    public static string ModConfigList() => "coop.debug.mod_config.list";
+
+    /// <summary>
+    /// Oyunculara süre tanıyarak güvenli kapatma: yeni girişleri kapatır, süre bitince
+    /// herkesi düşürür ve kaydeder.
+    /// </summary>
+    public static string ScheduleShutdown(int seconds) =>
+        "coop.server.shutdown " + Math.Clamp(seconds, 5, 3600).ToString(CultureInfo.InvariantCulture);
+
+    public static string CancelShutdown() => "coop.server.shutdown cancel";
 
     /// <summary>Komut satırının yönetici allow-list'inden geçip geçmediği.</summary>
     public static bool IsAllowed(string? commandLine)
@@ -109,6 +115,21 @@ public static class AdminCommand
 
         var verb = commandLine.Split(' ', 2)[0];
         return Allowed.Contains(verb);
+    }
+
+    /// <summary>
+    /// Kahraman kimliğini doğrular. Kimlikler boşluk ve tırnak içermez; içeriyorsa bu
+    /// bir kimlik değil, büyük olasılıkla bir isimdir — sessizce yanlış komut üretmeyelim.
+    /// </summary>
+    private static string RequireId(string? heroId)
+    {
+        var id = ServerCommand.SanitizeArgument(heroId, 64);
+        if (id.Length == 0)
+            throw new ArgumentException("Kahraman kimliği boş olamaz.", nameof(heroId));
+        if (id.Any(c => c is ' ' or '"' or '\''))
+            throw new ArgumentException($"Geçersiz kahraman kimliği: '{id}'", nameof(heroId));
+
+        return id;
     }
 }
 

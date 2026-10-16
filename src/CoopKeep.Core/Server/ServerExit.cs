@@ -24,6 +24,12 @@ public enum ServerExitKind
     /// </summary>
     ModuleVerificationFailed,
 
+    /// <summary>
+    /// 6 — sunucu lisans sözleşmesi (EULA) kabul edilmemiş. Coop v0.1.6'da eklendi;
+    /// sunucunun kendi çıktısı: <c>EULA acceptance required; server will not start (exit 6).</c>
+    /// </summary>
+    EulaRequired,
+
     /// <summary>Belgelenmemiş bir kod.</summary>
     Unknown,
 }
@@ -36,6 +42,7 @@ public static class ServerExit
         2 => ServerExitKind.LoadFailure,
         3 => ServerExitKind.FatalWhileServing,
         4 => ServerExitKind.ModuleVerificationFailed,
+        6 => ServerExitKind.EulaRequired,
         _ => ServerExitKind.Unknown,
     };
 
@@ -64,6 +71,7 @@ public static class ServerExit
         ServerExitKind.Clean => false,                     // kasıtlı duruş
         ServerExitKind.LoadFailure => false,               // save şüpheli
         ServerExitKind.ModuleVerificationFailed => false,  // kurulum sorunu
+        ServerExitKind.EulaRequired => false,              // kullanıcı onayı gerekli
         ServerExitKind.FatalWhileServing => true,
         ServerExitKind.Unknown => true,
         _ => false,
@@ -80,6 +88,8 @@ public static class ServerExit
             "Server çalışırken beklenmedik şekilde çöktü.",
         ServerExitKind.ModuleVerificationFailed =>
             "Coop modülü doğrulaması başarısız oldu. Mod güncellenmiş veya dosyaları değişmiş olabilir; tüm oyuncuların aynı sürümde olması gerekir.",
+        ServerExitKind.EulaRequired =>
+            "Sunucu lisans sözleşmesi kabul edilmediği için sunucu açılmadı.",
         _ =>
             "Server bilinmeyen bir kodla kapandı.",
     };

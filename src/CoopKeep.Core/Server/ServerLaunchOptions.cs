@@ -42,12 +42,23 @@ public sealed class ServerLaunchOptions
     /// </summary>
     public bool Trace { get; init; }
 
+    /// <summary>
+    /// Kullanıcı sunucunun EULA'sını CoopKeep'te okuyup kabul etti mi?
+    /// </summary>
+    /// <remarks>
+    /// Sunucu ilk açılışta EULA onayı istiyor ve onayı veri klasöründeki <c>eula.txt</c>'ye
+    /// yazıyor. CoopKeep bunu <b>kullanıcı adına sessizce</b> kabul etmez: metni gösterir,
+    /// kullanıcı onaylarsa <c>--accept-eula</c> ile başlatır.
+    /// </remarks>
+    public bool AcceptEula { get; init; }
+
     public IReadOnlyList<string> BuildArguments()
     {
         var args = new List<string>();
 
         if (NoTui) args.Add("--no-tui");
         if (Trace) args.Add("--trace");
+        if (AcceptEula) args.Add("--accept-eula");
 
         if (!string.IsNullOrWhiteSpace(DataDirectory))
         {

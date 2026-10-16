@@ -4,7 +4,7 @@
 
 **Bannerlord Coop sunucu yöneticisi**
 
-[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.1.0-C9A227)](../../releases)
+[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.2.0-C9A227)](../../releases)
 [![Lisans](https://img.shields.io/badge/lisans-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#kurulum)
 
@@ -56,66 +56,74 @@ olup oyundan bağlanır.
 
 ## Nasıl kullanılır
 
-### 1 · Sunucu seç veya yarat
+### 1 · Dünyanı kur
 
-Sol paneldeki listeden bir sunucu seç. Hiç yoksa alttaki kutuya bir ad yazıp
-**Yeni sunucu**'ya bas.
+İlk açılışta ana sayfa **Dünya oluştur** der. Sihirbaz, oyunda yeni kampanya açmak gibi
+ilerler:
 
-> Oyuna girmene gerek yok — dünyayı sunucu sıfırdan kurar. Yaklaşık bir dakika sürer.
+1. **Başlangıç** — sıfırdan yeni bir sandbox ya da oyunda başlattığın bir kampanya
+2. **Ad**
+3. **Zorluk** — Çok kolay / Kolay / Gerçekçi ya da her ayarı tek tek seç
+   (hasar, savaş yapay zekâsı, asker toplama, harita hızı, ikna…)
+4. **Kurallar** — savaşta ölüm, yaşlanma, infaz, savaş boyutu, haydutlar, gezginler,
+   ekonomi, hızlı ileri sarma, sesli sohbet, **oyuncu hileleri**
+5. **Sunucu** — şifre ve Steam görünürlüğü, ardından özet
 
-### 2 · Ayarları yap (isteğe bağlı)
+> Oyuna girmene gerek yok — dünyayı sunucu sıfırdan kurar. Her dünyanın ayarları
+> kendine aittir; **Dünyalar** sayfasından istediğin zaman değiştirebilirsin.
 
-**Ayarlar** bölümünden şifre, port, otomatik kayıt aralığı ve Steam görünürlüğünü
-belirle. Sunucu duruyorken değiştirilir; **Başlat'a bastığında ekranda ne yazıyorsa
-sunucu onunla açılır.**
+### 2 · Başlat
 
-### 3 · Başlat
+**Sunucuyu başlat**'a bas. İlk seferde Coop sunucusunun lisans sözleşmesi gösterilir;
+onaylamadan sunucu açılmaz. Ana sayfa ilerlemeyi gösterir (`Motor açılıyor` →
+`Dünya yükleniyor` → **`Yayında`**). Yaklaşık bir dakika.
 
-**Başlat**'a bas ve bekle. Durum sırayla `Motor açılıyor` → `Dünya yükleniyor` →
-**`Yayında`** olur. Toplam yaklaşık bir dakika.
+### 3 · Arkadaşlarını çağır
 
-### 4 · Arkadaşların nasıl girer
+**Daveti kopyala**, arkadaşlarının ihtiyaç duyduğu her şeyi tek mesajda verir. Oyunu
+açıp **Coop** → **Steam Lobileri**'ne girerler ve **senin Steam adını** ararlar —
+sunucu adını değil.
 
-Oyunu açarlar → **Coop** menüsü → **Steam Lobbies** sekmesi.
-
-> ⚠️ **En sık yapılan hata:** Aradıkları isim **senin Steam adın**, sunucu adı değil.
-> CoopKeep bunu "Arkadaşlarına gönder" kutusunda gösterir ve **Kopyala** ile
-> panoya alabilirsin.
-
-Doğrudan IP ile bağlanacaklarsa: router'ından **UDP 4200** portunu yönlendirmen
-gerekir. Steam üzerinden gelenler için gerekmez.
+Doğrudan IP ile bağlanacaklarsa router'ından **UDP 4200** portunu yönlendirmen gerekir.
+Steam üzerinden gelenler için gerekmez.
 
 ---
 
 ## Neler yapabilir
 
+### Dünyalar
+- Zorluk ön ayarları ve Coop modunun tüm oyun ayarlarıyla **yeni dünya sihirbazı**
+- **Dünyaya özel ayarlar**; o dünya her başladığında otomatik uygulanır
+- **Tek oyunculu save'i içe aktarma**; üçüncü parti modlarla yapılmış save'ler tespit
+  edilip engellenir (sunucu onları yüklerken çöküyor)
+- Yeniden adlandırma, kopyalama, silme, klasörünü açma
+
 ### Sunucu
-- Başlat, güvenle durdur (dünya kaydedilerek), canlı durum ve faz göstergesi
-- İşlemci ve bellek kullanımı
+- Başlat, güvenle durdur (dünya kaydedilerek), canlı durum, işlemci ve bellek
+- **Uyararak yeniden başlat:** oyunculara 60 saniye önceden duyuru, dünya kaydedilir
 - **Çökerse otomatik yeniden başlatma** — üstel bekleme ve çökme döngüsü koruması
 
 ### Oyuncular
-- Canlı liste, arama, **oyuncu atma** (`kick`)
-- Tüm oyunculara duyuru gönderme
-- **Yönetici işlemleri:** seçili oyuncuya tam can verme ve altın ayarlama.
-  Her işlem kalıcı bir denetim kaydına yazılır ve arayüzde görünür.
+- Canlı liste, arama, atma, duyuru
+- **Karakterler:** ad, altın, can ve yaş sunucudan okunur; tam can, altın ekle/ayarla,
+  yaşı ayarla. Kaç oyuncu olursa olsun çalışır; sonuç sunucudan doğrulanır ve her
+  işlem kalıcı denetim kaydına yazılır
+- **Engel listesi:** listedeki adlar bağlanınca otomatik atılır
+- **Hileler:** dünya ayarından oyuncuların hile menüleri açılır
 
-### Dünyalar ve yedekler
-- Yeni dünya yaratma, yeniden adlandırma, kopyalama, silme, klasörünü açma
-- **Her kayıttan sonra otomatik yedek**, işlemsel geri yükleme
-- Sayı *ve* yaş bazlı otomatik temizleme
+### Modlar
+- Oyun başlatıcındaki her modun durumu (uyumlu / sunucuda yok / Coop reddediyor)
+- **Coop için düzenle:** sorunlu modları tek tıkla kapat, sonra geri aç
 
-### Yayın yapanlar için
-- **Göz düğmesi:** IP, port ve Steam adını maskeler, konsolu bulanıklaştırır.
-  Varsayılan olarak açıktır.
+### Yedekler
+- **Her kayıttan sonra otomatik yedek**, işlemsel geri yükleme, sayı *ve* yaş bazlı temizleme
 
-### Kurulum denetimi
-- Steam, oyun ve mod otomatik bulunur; sürüm uyumu denetlenir
-- **Modül uyumu denetimi:** oyun başlatıcında sunucunun beklemediği modüller
-  seçiliyse uyarır — bağlantı reddedilmelerinin en olası sebebi budur
+### Diğer
+- **Yayın modu:** IP, port ve Steam adını maskeler, konsolu bulanıklaştırır
+- **Hata raporu:** loglar ve ayarlar tek zip'te (şifre ve Steam kimlikleri gizlenir)
+- Güncelleme denetimi (kapatılabilir), Türkçe ve İngilizce
 
 ---
-
 ## Komut satırı
 
 Arayüz istemeyenler için `CoopKeep.Cli`:
@@ -135,9 +143,11 @@ coopkeep run             # başlat ve konsolu sür
 | Sorun | Sebep ve çözüm |
 |---|---|
 | **Arkadaşım sunucuyu bulamıyor** | Sunucu listesinde **senin Steam adını** aratıyor mu? Sunucu adını değil. |
-| **Bağlanamıyor** | CoopKeep'teki **Modül uyumu** bölümüne bak. Oyun başlatıcında fazladan mod seçiliyse kapat. |
+| **Bağlanamıyor** | CoopKeep'teki **Modlar** sayfasına bak. Oyun başlatıcında fazladan mod seçiliyse kapat. |
 | **Başlat çalışmıyor** | Zaten çalışan bir Coop sunucusu olabilir — CoopKeep uyarır. Görev Yöneticisi'nden kapat. |
 | **Şifre işe yaramıyor** | Şifreyi yazdıktan sonra **Başlat**'a bas; sunucu ayarları yalnızca açılışta okur. |
+| **Sunucu hemen kapanıyor (kod 6)** | Coop sunucusunun lisans sözleşmesi onaylanmamış. CoopKeep'ten tekrar başlat ve onayla. |
+| **Save içe aktarılmıyor** | Save, sunucunun yükleyemediği modlarla yapılmış. Oyunda modsuz yeni bir sandbox başlat, kaydet ve onu içe aktar. |
 | **Mod DLL'leri yüklenmiyor** | Windows indirilen DLL'leri bloke etmiş olabilir. Mod klasöründe:<br>`Get-ChildItem "<mod klasörü>" -Recurse \| Unblock-File` |
 
 ---
@@ -150,8 +160,11 @@ Bunlar CoopKeep'in eksiği değil, **modun kendi sınırları** — araştırmay
   bağlantı reddedilemiyor.
 - **Ban yok, yalnızca kick var.** Steam kimliği canlı protokole yazılmıyor, bu
   yüzden kalıcı ban ancak isim bazlı olabilirdi.
-- **Öldürme işlemi yok.** Sunucu vanilla hile komutlarını reddediyor
-  (`Cheat mode is disabled!`) ve canı sıfırlamanın sonucu doğrulanamadı.
+- **Oyunun kendi konsol hileleri sunucuda kapalı** (`Cheat mode is disabled!`) ve
+  açacak bir komut yok. Oyuncuların hile menüleri dünya ayarından, altın/can/yaş ise
+  Oyuncular sayfasından.
+- **Sunucuya mod eklenemiyor.** Yalnızca resmî modülleri ve Coop'u yüklüyor;
+  oyuncuların diğer modları kapatması gerekir (Modlar sayfası yardım eder).
 - **"Sadece arkadaşlar" görünürlüğü** dedicated server'da doğrulanamadı.
 - **Bellek sınırı ayarlanamıyor** — sunucunun böyle bir seçeneği yok.
 - Yalnızca **Steam** kurulumları tespit ediliyor (Epic/GOG desteği yok).
@@ -170,9 +183,9 @@ ile açılmayı reddediyor. Bu yüzden entegrasyon yüzeyi kod değil:
 | Kanal | Ne için |
 |---|---|
 | Süreç yaşam döngüsü | Başlatma, durdurma, çökme tespiti (çıkış kodları 0/2/3/4) |
-| stdin komutları | `status` · `players` · `save` · `say` · `kick` · `stop` |
+| stdin komutları | `status` · `players` · `save` · `say` · `kick` · `stop` ve izin listesindeki Coop konsol komutları (`coop.debug.hero.*`, `coop.server.shutdown`) |
 | stdout `@DS@` olayları | Durum fazı, canlı oyuncu listesi (JSON) |
-| Dosya sistemi | `server-config.json`, `Game Saves\`, yedekler |
+| Dosya sistemi | `server-config.json`, `Game Saves\`, yedekler ve Coop'un oyun ayarları `CoopData\mod-config.json` |
 
 Yapılandırma dosyası **yorumları, sırası ve tanımadığımız anahtarları korunarak**
 düzenlenir; mod güncellendiğinde ayarların kaybolmaz.
@@ -182,7 +195,7 @@ düzenlenir; mod güncellendiğinde ayarların kaybolmaz.
 ## Geliştirme
 
 ```bash
-dotnet test                                    # 178 test
+dotnet test                                    # 213 test
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # tek dosyalık exe üretir
 ```
@@ -192,7 +205,7 @@ powershell -File publish.ps1                   # tek dosyalık exe üretir
 | `src/CoopKeep.Core` | Süreç yönetimi, protokol, yedekleme, kurulum tespiti — **UI'dan bağımsız** |
 | `src/CoopKeep.App` | Avalonia arayüzü (Türkçe/İngilizce, koyu tema) |
 | `src/CoopKeep.Cli` | Komut satırı aracı |
-| `tests/CoopKeep.Core.Tests` | 178 test |
+| `tests/CoopKeep.Core.Tests` | 213 test |
 
 Sürüm numarasının tek kaynağı `Directory.Build.props`.
 

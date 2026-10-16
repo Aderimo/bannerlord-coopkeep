@@ -136,6 +136,83 @@ public sealed class ServerSupervisor : IAsyncDisposable
     }
 
     /// <summary>
+    /// Komutu gönderir ve sunucunun yanıt satırlarını toplar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Konsol yanıtları ayrı bir kanal değil, normal log akışının içinde geliyor. Sunucu
+    /// önce komutu <c>[DedicatedServer] &gt; komut</c> diye yankılıyor; toplama o satırdan
+    /// sonra başlar. Yanıt, <paramref name="isTerminal"/> eşleşince ya da satırlar bir
+    /// süre kesilince biter.
+    /// </para>
+    /// <para>
+    /// Arada başka log satırları da gelebilir; çağıran yalnızca tanıdığı satırları
+    /// yorumlamalı (bkz. <see cref="AdminResponseParser"/>).
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<string>> SendAndCollectAsync(
+        string commandLine,
+        Func<string, bool>? isTerminal = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var lines = new List<string>();
+        var gate = new object();
+        var echoSeen = false;
+        var lastLineAt = DateTimeOffset.UtcNow;
+        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var echo = "> " + commandLine;
+
+        void OnLine(string line)
+        {
+            lock (gate)
+            {
+                if (!echoSeen)
+                {
+                    if (line.EndsWith(echo, StringComparison.Ordinal)) echoSeen = true;
+                    return;
+                }
+
+                // Sonraki komutun yankısı: bu komutun yanıtı bitti.
+                if (line.StartsWith("[DedicatedServer] > ", StringComparison.Ordinal))
+                {
+                    done.TrySetResult();
+                    return;
+                }
+
+                lines.Add(line);
+                lastLineAt = DateTimeOffset.UtcNow;
+                if (isTerminal?.Invoke(line) == true) done.TrySetResult();
+            }
+        }
+
+        LineReceived += OnLine;
+        try
+        {
+            await SendCommandAsync(commandLine, cancellationToken).ConfigureAwait(false);
+
+            var deadline = DateTimeOffset.UtcNow + (timeout ?? TimeSpan.FromSeconds(4));
+            while (!done.Task.IsCompleted && DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.WhenAny(done.Task, Task.Delay(100, cancellationToken)).ConfigureAwait(false);
+
+                lock (gate)
+                {
+                    // Yanıt geldiyse ve 500 ms yeni satır yoksa bitmiş say.
+                    if (lines.Count > 0 && DateTimeOffset.UtcNow - lastLineAt > TimeSpan.FromMilliseconds(500))
+                        break;
+                }
+            }
+        }
+        finally
+        {
+            LineReceived -= OnLine;
+        }
+
+        lock (gate) return lines.ToList();
+    }
+
+    /// <summary>
     /// Server'ı güvenle durdurur: <c>stop</c> komutu gönderir, dünyanın kaydedilmesini bekler,
     /// süre aşılırsa process'i sonlandırır.
     /// </summary>

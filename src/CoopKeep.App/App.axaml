@@ -9,17 +9,73 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <!-- Koyu palet. Bannerlord'un sıcak/toprak tonlarına yakın bir gri-kahve zemin. -->
-        <SolidColorBrush x:Key="BgDeep"    Color="#14161A" />
-        <SolidColorBrush x:Key="BgPanel"   Color="#1C1F26" />
-        <SolidColorBrush x:Key="BgRaised"  Color="#242832" />
-        <SolidColorBrush x:Key="BorderDim" Color="#2E333F" />
-        <SolidColorBrush x:Key="TextMain"  Color="#E6E8EC" />
-        <SolidColorBrush x:Key="TextDim"   Color="#98A0AF" />
-        <SolidColorBrush x:Key="Accent"    Color="#C9A227" />
-        <SolidColorBrush x:Key="AccentDim" Color="#8A6F1B" />
-        <SolidColorBrush x:Key="Danger"    Color="#DC5B5B" />
-        <SolidColorBrush x:Key="ConsoleBg" Color="#0F1115" />
+        <!--
+            Palet: Bannerlord'un sıcak, toprak tonlarına yakın koyu zemin + altın vurgu.
+            Tüm renkler buradan gelir; görünümlerde sabit renk yazılmaz.
+        -->
+        <SolidColorBrush x:Key="BgDeep"     Color="#101114" />
+        <SolidColorBrush x:Key="BgNav"      Color="#14161B" />
+        <SolidColorBrush x:Key="BgPanel"    Color="#1A1D23" />
+        <SolidColorBrush x:Key="BgRaised"   Color="#232730" />
+        <SolidColorBrush x:Key="BgHover"    Color="#2C313C" />
+        <SolidColorBrush x:Key="BorderDim"  Color="#2A2F39" />
+        <SolidColorBrush x:Key="TextMain"   Color="#ECEEF2" />
+        <SolidColorBrush x:Key="TextDim"    Color="#9AA2B1" />
+        <SolidColorBrush x:Key="TextFaint"  Color="#646B7A" />
+        <SolidColorBrush x:Key="Accent"     Color="#D4AA32" />
+        <SolidColorBrush x:Key="AccentHover" Color="#E7BF45" />
+        <SolidColorBrush x:Key="AccentDim"  Color="#8A6F1B" />
+        <SolidColorBrush x:Key="AccentSoft" Color="#2B2516" />
+        <SolidColorBrush x:Key="OnAccent"   Color="#1A1608" />
+        <SolidColorBrush x:Key="Success"    Color="#4ADE80" />
+        <SolidColorBrush x:Key="SuccessSoft" Color="#15291D" />
+        <SolidColorBrush x:Key="Warning"    Color="#FBBF24" />
+        <SolidColorBrush x:Key="WarningSoft" Color="#2E2614" />
+        <SolidColorBrush x:Key="Danger"     Color="#E06262" />
+        <SolidColorBrush x:Key="DangerSoft" Color="#331C1E" />
+        <SolidColorBrush x:Key="ConsoleBg"  Color="#0C0D10" />
+
+        <LinearGradientBrush x:Key="HeroGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#2A2416" Offset="0" />
+            <GradientStop Color="#1A1D23" Offset="0.55" />
+            <GradientStop Color="#171A20" Offset="1" />
+        </LinearGradientBrush>
+
+        <BoxShadows x:Key="CardShadow">0 6 24 0 #40000000</BoxShadows>
+
+        <!-- Simgeler: 24x24 vektör yollar. Emoji yazı tipine bağlı, bu yüzden kullanılmıyor. -->
+        <StreamGeometry x:Key="IconHome">M3,11 L12,3.5 L21,11 M5.5,9 V20 H10 V14 H14 V20 H18.5 V9</StreamGeometry>
+        <StreamGeometry x:Key="IconGlobe">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M3,12 H21 M12,3 C9,6 9,18 12,21 M12,3 C15,6 15,18 12,21</StreamGeometry>
+        <StreamGeometry x:Key="IconUsers">M9,11 A3.5,3.5 0 1 0 9,4 A3.5,3.5 0 1 0 9,11 Z M2.5,20 C2.5,16 5.5,14 9,14 C12.5,14 15.5,16 15.5,20 M16,4.3 A3.4,3.4 0 0 1 16,10.7 M18,14.3 C20,15 21.5,16.8 21.5,20</StreamGeometry>
+        <StreamGeometry x:Key="IconArchive">M3,4 H21 V8 H3 Z M5,8 V20 H19 V8 M10,12 H14</StreamGeometry>
+        <StreamGeometry x:Key="IconPuzzle">M5,8 H9 A2,2 0 1 1 13,8 H17 V12 A2,2 0 1 1 17,16 V20 H13 A2,2 0 1 0 9,20 H5 V16 A2,2 0 1 0 5,12 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconSliders">M4,6 H14 M18,6 H20 M16,4 V8 M4,12 H6 M10,12 H20 M8,10 V14 M4,18 H12 M16,18 H20 M14,16 V20</StreamGeometry>
+        <StreamGeometry x:Key="IconTerminal">M3,5 H21 V19 H3 Z M7,9.5 L10,12 L7,14.5 M12,15 H16</StreamGeometry>
+        <StreamGeometry x:Key="IconPlay">M7,4.5 L19,12 L7,19.5 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconStop">M6,6 H18 V18 H6 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconPlus">M12,5 V19 M5,12 H19</StreamGeometry>
+        <StreamGeometry x:Key="IconCopy">M8,8 H19 V20 H8 Z M5,16 V4 H16</StreamGeometry>
+        <StreamGeometry x:Key="IconCheck">M5,12.5 L10,17 L19,7</StreamGeometry>
+        <StreamGeometry x:Key="IconWarn">M12,3.5 L21.5,20 H2.5 Z M12,10 V14 M12,16.8 V17.2</StreamGeometry>
+        <StreamGeometry x:Key="IconSave">M5,4 H16 L20,8 V20 H5 Z M8,4 V9 H15 V4 M8,20 V14 H16 V20</StreamGeometry>
+        <StreamGeometry x:Key="IconImport">M12,3 V15 M7.5,10.5 L12,15 L16.5,10.5 M4,17 V20 H20 V17</StreamGeometry>
+        <StreamGeometry x:Key="IconFolder">M3,6 H10 L12,8 H21 V19 H3 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconShield">M12,3 L20,6 V11.5 C20,16 16.5,19.5 12,21 C7.5,19.5 4,16 4,11.5 V6 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconSword">M20,4 L11,13 M20,4 H15.5 M20,4 V8.5 M7,13 L11,17 M9,15 L4.5,19.5</StreamGeometry>
+        <StreamGeometry x:Key="IconHeart">M12,20 C5,15 3,11.5 3,8.5 C3,6 5,4 7.5,4 C9.5,4 11,5.2 12,6.8 C13,5.2 14.5,4 16.5,4 C19,4 21,6 21,8.5 C21,11.5 19,15 12,20 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconCoin">M12,4 A8,8 0 1 0 12,20 A8,8 0 1 0 12,4 Z M12,8 V16 M9.5,10 C9.5,8.5 14.5,8.5 14.5,10 C14.5,12 9.5,12 9.5,14 C9.5,15.5 14.5,15.5 14.5,14</StreamGeometry>
+        <StreamGeometry x:Key="IconBan">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M5.6,5.6 L18.4,18.4</StreamGeometry>
+        <StreamGeometry x:Key="IconMegaphone">M3,10 V14 H7 L15,18 V6 L7,10 Z M18,9 C19.5,10.5 19.5,13.5 18,15</StreamGeometry>
+        <StreamGeometry x:Key="IconEye">M1,12 C4,6.5 8,4 12,4 C16,4 20,6.5 23,12 C20,17.5 16,20 12,20 C8,20 4,17.5 1,12 Z M12,8.5 A3.5,3.5 0 1 0 12,15.5 A3.5,3.5 0 1 0 12,8.5 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconRefresh">M19,8 A8,8 0 1 0 20,13 M19,3 V8 H14</StreamGeometry>
+        <StreamGeometry x:Key="IconBug">M8,9 H16 V15 A4,4 0 0 1 8,15 Z M10,9 V7 A2,2 0 0 1 14,7 V9 M4,12 H8 M16,12 H20 M5,7 L8,9 M19,7 L16,9 M5,18 L8,16 M19,18 L16,16</StreamGeometry>
+        <StreamGeometry x:Key="IconTrash">M4,7 H20 M9,7 V4 H15 V7 M6,7 L7,20 H17 L18,7</StreamGeometry>
+        <StreamGeometry x:Key="IconEdit">M4,20 H8 L19,9 L15,5 L4,16 Z M13,7 L17,11</StreamGeometry>
+        <StreamGeometry x:Key="IconClose">M6,6 L18,18 M18,6 L6,18</StreamGeometry>
+        <StreamGeometry x:Key="IconArrowRight">M5,12 H19 M13,6 L19,12 L13,18</StreamGeometry>
+        <StreamGeometry x:Key="IconArrowLeft">M19,12 H5 M11,6 L5,12 L11,18</StreamGeometry>
+        <StreamGeometry x:Key="IconInfo">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M12,11 V16.5 M12,7.6 V8</StreamGeometry>
+        <StreamGeometry x:Key="IconSparkle">M12,3 L13.8,10.2 L21,12 L13.8,13.8 L12,21 L10.2,13.8 L3,12 L10.2,10.2 Z</StreamGeometry>
     </Application.Resources>
 
     <Application.Styles>
@@ -27,99 +83,449 @@
 
         <Style Selector="Window">
             <Setter Property="Background" Value="{StaticResource BgDeep}" />
-            <Setter Property="FontFamily" Value="Segoe UI, Inter, sans-serif" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, Inter, sans-serif" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
 
-        <!-- Panel: içeriği gruplayan kart -->
-        <Style Selector="Border.panel">
+        <!-- ================= Tipografi ================= -->
+
+        <Style Selector="TextBlock.display">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        </Style>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="21" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        </Style>
+        <Style Selector="TextBlock.eyebrow">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LetterSpacing" Value="0.8" />
+            <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+        </Style>
+        <Style Selector="TextBlock.body">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.dim">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="18" />
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="TextBlock.stat">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.accent">
+            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+        </Style>
+
+        <!-- ================= Kartlar ve giriş animasyonu ================= -->
+
+        <Style Selector="Border.card">
             <Setter Property="Background" Value="{StaticResource BgPanel}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="14" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BoxShadow" Value="{StaticResource CardShadow}" />
         </Style>
 
-        <Style Selector="TextBlock.h1">
-            <Setter Property="FontSize" Value="19" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        <Style Selector="Border.inset">
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,12" />
         </Style>
 
-        <Style Selector="TextBlock.h2">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-            <Setter Property="Margin" Value="0,0,0,8" />
+        <!--
+            Sayfa açıldığında kartlar hafifçe aşağıdan süzülerek gelir.
+            Animasyon stil uygulandığında, yani kontrol ekrana bağlandığında çalışır;
+            sayfa her açıldığında yeniden oynar.
+        -->
+        <Style Selector=":is(Control).enter">
+            <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+            <Style.Animations>
+                <Animation Duration="0:0:0.38" Easing="CubicEaseOut" FillMode="Both">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                        <Setter Property="TranslateTransform.Y" Value="10" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                        <Setter Property="TranslateTransform.Y" Value="0" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector=":is(Control).enter.d1"><Style.Animations><Animation Duration="0:0:0.46" Easing="CubicEaseOut" FillMode="Both"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="12" /></KeyFrame><KeyFrame Cue="18%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="12" /></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /><Setter Property="TranslateTransform.Y" Value="0" /></KeyFrame></Animation></Style.Animations></Style>
+        <Style Selector=":is(Control).enter.d2"><Style.Animations><Animation Duration="0:0:0.54" Easing="CubicEaseOut" FillMode="Both"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="14" /></KeyFrame><KeyFrame Cue="30%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="14" /></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /><Setter Property="TranslateTransform.Y" Value="0" /></KeyFrame></Animation></Style.Animations></Style>
+        <Style Selector=":is(Control).enter.d3"><Style.Animations><Animation Duration="0:0:0.62" Easing="CubicEaseOut" FillMode="Both"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="16" /></KeyFrame><KeyFrame Cue="40%"><Setter Property="Opacity" Value="0" /><Setter Property="TranslateTransform.Y" Value="16" /></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /><Setter Property="TranslateTransform.Y" Value="0" /></KeyFrame></Animation></Style.Animations></Style>
+
+        <!-- Yayında: nabız atan durum noktası -->
+        <Style Selector="Border.pulse">
+            <Style.Animations>
+                <Animation Duration="0:0:1.8" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.55" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="2.6" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="2.6" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
         </Style>
 
-        <Style Selector="TextBlock.dim">
-            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-            <Setter Property="FontSize" Value="12" />
+        <!-- Açılırken dönen halka -->
+        <Style Selector="Path.spin">
+            <Style.Animations>
+                <Animation Duration="0:0:1" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
         </Style>
 
-        <Style Selector="TextBlock.value">
-            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
-            <Setter Property="FontSize" Value="12" />
+        <!-- Simge -->
+        <Style Selector="PathIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
         </Style>
+        <!--
+            Çizgi simgeleri. Renk, içinde bulundukları kontrolün durumuna göre stillerle
+            verilir (bağlama ile değil: ContentPresenter'ın Foreground'u şablona göre değişiyor
+            ve simgeler görünmez kalıyordu).
+        -->
+        <Style Selector="Path.icon">
+            <Setter Property="Stroke" Value="{StaticResource TextMain}" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+        </Style>
+
+        <Style Selector="Button.primary Path.icon">
+            <Setter Property="Stroke" Value="{StaticResource OnAccent}" />
+        </Style>
+        <Style Selector="Button.danger Path.icon">
+            <Setter Property="Stroke" Value="#F0A5A5" />
+        </Style>
+        <Style Selector="Button.danger:pointerover Path.icon">
+            <Setter Property="Stroke" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="Button:disabled Path.icon">
+            <Setter Property="Stroke" Value="#555C69" />
+        </Style>
+        <Style Selector="Button.primary:disabled Path.icon">
+            <Setter Property="Stroke" Value="#7A7158" />
+        </Style>
+        <Style Selector="RadioButton.nav Path.icon">
+            <Setter Property="Stroke" Value="{StaticResource TextDim}" />
+        </Style>
+        <Style Selector="RadioButton.nav:pointerover Path.icon">
+            <Setter Property="Stroke" Value="{StaticResource TextMain}" />
+        </Style>
+        <Style Selector="RadioButton.nav:checked Path.icon">
+            <Setter Property="Stroke" Value="{StaticResource Accent}" />
+        </Style>
+
+        <!-- Bağlantı gibi görünen aç/kapa düğmesi (ayrıntılı ayarlar vb.) -->
+        <Style Selector="ToggleButton.disclosure">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0,4" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.disclosure /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ToggleButton.disclosure:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ToggleButton.disclosure:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ToggleButton.disclosure Path.chevron">
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton.disclosure:checked Path.chevron">
+            <Setter Property="RenderTransform" Value="rotate(90deg)" />
+        </Style>
+
+        <!-- ================= Düğmeler ================= -->
 
         <Style Selector="Button">
             <Setter Property="Background" Value="{StaticResource BgRaised}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,8" />
             <Setter Property="MinWidth" Value="0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
         </Style>
-
+        <Style Selector="Button /template/ ContentPresenter">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
         <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2E333F" />
-            <Setter Property="TextBlock.Foreground" Value="{StaticResource TextMain}" />
+            <Setter Property="Background" Value="{StaticResource BgHover}" />
+            <Setter Property="BorderBrush" Value="#3A404C" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
-
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.97)" />
+        </Style>
         <Style Selector="Button:disabled /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1A1D24" />
-            <Setter Property="TextBlock.Foreground" Value="#5A6070" />
+            <Setter Property="Background" Value="#181A1F" />
+            <Setter Property="BorderBrush" Value="#22262E" />
+            <Setter Property="Foreground" Value="#555C69" />
         </Style>
 
-        <!-- Birincil eylem: başlat -->
+        <!-- Birincil: sayfadaki tek ana eylem -->
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{StaticResource Accent}" />
-            <Setter Property="Foreground" Value="#1A1608" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentDim}" />
         </Style>
-
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#DFB633" />
-            <Setter Property="TextBlock.Foreground" Value="#1A1608" />
+            <Setter Property="Background" Value="{StaticResource AccentHover}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentHover}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
+        </Style>
+        <Style Selector="Button.primary:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3A3320" />
+            <Setter Property="BorderBrush" Value="#3A3320" />
+            <Setter Property="Foreground" Value="#7A7158" />
         </Style>
 
+        <Style Selector="Button.big">
+            <Setter Property="Padding" Value="26,13" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style Selector="Button.danger">
+            <Setter Property="Foreground" Value="#F0A5A5" />
+        </Style>
         <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource Danger}" />
-            <Setter Property="TextBlock.Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
+        <Style Selector="Button.dangerSolid">
+            <Setter Property="Background" Value="{StaticResource Danger}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.dangerSolid:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#EC7676" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <!-- ================= Yan menü ================= -->
+
+        <Style Selector="RadioButton.nav">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="bg" Background="Transparent" CornerRadius="9" Padding="12,10"
+                            Cursor="Hand">
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition Property="Background" Duration="0:0:0.18" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Name="bar" Grid.Column="0" Width="3" Height="18" CornerRadius="2"
+                                    Margin="-12,0,9,0" Background="{StaticResource Accent}" Opacity="0">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                    </Transitions>
+                                </Border.Transitions>
+                            </Border>
+                            <ContentPresenter Name="PART_ContentPresenter" Grid.Column="1"
+                                              Content="{TemplateBinding Content}"
+                                              Foreground="{TemplateBinding Foreground}" />
+                            <ContentPresenter Grid.Column="2" Content="{TemplateBinding Tag}" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="RadioButton.nav:pointerover /template/ Border#bg">
+            <Setter Property="Background" Value="#1D2027" />
+        </Style>
+        <Style Selector="RadioButton.nav:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        </Style>
+        <Style Selector="RadioButton.nav:checked /template/ Border#bg">
+            <Setter Property="Background" Value="#22252D" />
+        </Style>
+        <Style Selector="RadioButton.nav:checked /template/ Border#bar">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="RadioButton.nav:checked">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+        </Style>
+
+        <!-- Seçim kartları (zorluk ön ayarları vb.) -->
+        <Style Selector="RadioButton.choice">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="bg" Background="{StaticResource BgRaised}" BorderBrush="{StaticResource BorderDim}"
+                            BorderThickness="1.5" CornerRadius="10" Padding="14,12" Cursor="Hand">
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition Property="Background" Duration="0:0:0.18" />
+                                <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="RadioButton.choice:pointerover /template/ Border#bg">
+            <Setter Property="BorderBrush" Value="#454B58" />
+        </Style>
+        <Style Selector="RadioButton.choice:checked /template/ Border#bg">
+            <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        </Style>
+
+        <!-- ================= Giriş alanları ================= -->
 
         <Style Selector="TextBox">
             <Setter Property="Background" Value="{StaticResource BgRaised}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="11,8" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        </Style>
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{StaticResource BgHover}" />
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="ToggleSwitch">
+            <Setter Property="OnContent" Value="" />
+            <Setter Property="OffContent" Value="" />
+        </Style>
+        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="{StaticResource Accent}" />
         </Style>
 
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
         </Style>
-
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style Selector="ListBoxItem /template/ ContentPresenter">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1F2229" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#332B18" />
         </Style>
 
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2E333F" />
+        <Style Selector="ProgressBar">
+            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="MinHeight" Value="6" />
+            <!-- Fluent'in varsayılanı 200 px; dar adım çubuklarını taşırıyordu. -->
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Value" Duration="0:0:0.6" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="True" />
+        </Style>
+
+        <!-- Rozet -->
+        <Style Selector="Border.badge">
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
         </Style>
     </Application.Styles>
 </Application>

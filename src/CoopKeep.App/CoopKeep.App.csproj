@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,7 +7,9 @@
     <AssemblyName>CoopKeep</AssemblyName>
     <RootNamespace>CoopKeep.App</RootNamespace>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+    <!-- Bağlama hataları çalışırken değil derlemede yakalansın. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>Assets\coopkeep.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,12 +17,12 @@
   </ItemGroup>
 
   <!--
-    Avalonia 11.3.x kullanılıyor, 12.x değil.
+    Avalonia 11.3.x kullanÄ±lÄ±yor, 12.x deÄŸil.
 
-    Sebep: Avalonia 12'nin kaynak üreteçleri Roslyn 4.14 gerektiriyor, .NET 8 SDK ise
-    Roslyn 4.11 ile geliyor. Üreteç sessizce çalışmıyor ve InitializeComponent hiç
-    üretilmediği için derleme "adı geçerli bağlamda yok" hatasıyla düşüyor.
-    Avalonia 12'ye geçmek istenirse önce .NET 10 SDK'ya çıkılmalı.
+    Sebep: Avalonia 12'nin kaynak Ã¼reteÃ§leri Roslyn 4.14 gerektiriyor, .NET 8 SDK ise
+    Roslyn 4.11 ile geliyor. ÃœreteÃ§ sessizce Ã§alÄ±ÅŸmÄ±yor ve InitializeComponent hiÃ§
+    Ã¼retilmediÄŸi iÃ§in derleme "adÄ± geÃ§erli baÄŸlamda yok" hatasÄ±yla dÃ¼ÅŸÃ¼yor.
+    Avalonia 12'ye geÃ§mek istenirse Ã¶nce .NET 10 SDK'ya Ã§Ä±kÄ±lmalÄ±.
   -->
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.0" />

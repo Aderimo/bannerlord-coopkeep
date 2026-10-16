@@ -1,0 +1,297 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.HomePage"
+             x:DataType="vm:MainViewModel">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="36,30,36,36" Spacing="18" MaxWidth="1000">
+
+        <!-- Sayfa başlığı -->
+        <StackPanel Classes="enter" Spacing="4">
+            <TextBlock Classes="eyebrow" Text="{Binding L[nav.home]}" />
+            <TextBlock Classes="display" Text="{Binding HeroTitle}" />
+            <TextBlock Classes="dim" FontSize="14" Text="{Binding HeroSubtitle}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- ============ ANA DURUM KARTI ============ -->
+        <Border Classes="card enter d1" Background="{StaticResource HeroGradient}" Padding="28,26">
+            <Panel>
+
+                <!-- Kurulum bulunamadı -->
+                <StackPanel Spacing="14" IsVisible="{Binding HomeSetup}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="1.8"
+                              Width="22" Height="22" Stretch="Uniform" />
+                        <TextBlock Classes="h2" Text="{Binding L[home.setup.head]}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="2,0,0,0">
+                        <Panel Width="14" Height="14" Margin="0,2,10,0" VerticalAlignment="Top">
+                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2"
+                                  Stretch="Uniform" IsVisible="{Binding GameFound}" />
+                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2.2"
+                                  Stretch="Uniform" IsVisible="{Binding !GameFound}" />
+                        </Panel>
+                        <TextBlock Grid.Column="1" Classes="body" Text="{Binding GameCheckText}" />
+                        <Panel Grid.Row="1" Width="14" Height="14" Margin="0,10,10,0" VerticalAlignment="Top">
+                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2"
+                                  Stretch="Uniform" IsVisible="{Binding CoopFound}" />
+                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2.2"
+                                  Stretch="Uniform" IsVisible="{Binding !CoopFound}" />
+                        </Panel>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Classes="body" Margin="0,8,0,0" Text="{Binding ModCheckText}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Classes="primary" Command="{Binding OpenWorkshopPageCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconArrowRight}" />
+                                <TextBlock Text="{Binding L[home.setup.workshop]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding RefreshCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+                                <TextBlock Text="{Binding L[home.setup.recheck]}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Hiç dünya yok -->
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HomeNoWorld}">
+                    <StackPanel Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Classes="h2" Text="{Binding L[home.noworld.head]}" />
+                        <TextBlock Classes="hint" FontSize="13" MaxWidth="520" Text="{Binding L[home.noworld.body]}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="primary big" Command="{Binding OpenWizardCommand}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Path Classes="icon" Data="{StaticResource IconPlus}" StrokeThickness="2.2" />
+                            <TextBlock Text="{Binding L[home.noworld.cta]}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Hazır: başlat -->
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HomeReady}">
+                    <StackPanel Spacing="12" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Classes="h1" Text="{Binding SelectedCampaign.Name, FallbackValue=''}" />
+                            <Border Classes="badge" Background="{StaticResource AccentSoft}" VerticalAlignment="Center">
+                                <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Accent}"
+                                           Text="{Binding WorldEditor.PresetText}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Classes="dim" Text="{Binding WorldEditor.Summary}" />
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <Button Classes="ghost" Padding="0" Command="{Binding NavigateCommand}"
+                                    CommandParameter="{x:Static vm:AppPage.Worlds}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Path Classes="icon" Data="{StaticResource IconSliders}" Stroke="{StaticResource Accent}" Width="14" />
+                                    <TextBlock Text="{Binding L[home.ready.edit]}" Foreground="{StaticResource Accent}" FontSize="12.5" />
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ghost" Padding="0" Command="{Binding OpenWizardCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Path Classes="icon" Data="{StaticResource IconPlus}" Stroke="{StaticResource TextDim}" Width="13" />
+                                    <TextBlock Text="{Binding L[home.ready.another]}" Foreground="{StaticResource TextDim}" FontSize="12.5" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="primary big" Command="{Binding StartCommand}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Path Data="{StaticResource IconPlay}" Fill="{StaticResource OnAccent}" Width="14" Height="14" Stretch="Uniform" />
+                            <TextBlock Text="{Binding L[btn.startServer]}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Açılıyor: adımlar -->
+                <StackPanel Spacing="20" IsVisible="{Binding HomeStarting}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Panel Width="26" Height="26" VerticalAlignment="Center">
+                            <Path Classes="spin" Data="M12,2 A10,10 0 0 1 22,12" Stroke="{StaticResource Accent}"
+                                  StrokeThickness="2.6" StrokeLineCap="Round" Width="26" Height="26" Stretch="None"
+                                  RenderTransformOrigin="50%,50%" Margin="1,1,0,0" />
+                        </Panel>
+                        <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Classes="h2" Text="{Binding StatusText}" />
+                            <TextBlock Classes="dim" Text="{Binding L[msg.readyIn]}" />
+                        </StackPanel>
+                        <Button Grid.Column="2" Classes="danger" Command="{Binding StopCommand}"
+                                Content="{Binding L[btn.cancel]}" VerticalAlignment="Center" />
+                    </Grid>
+                    <ProgressBar Value="{Binding BootProgress}" Maximum="100" Height="6" />
+                    <UniformGrid Columns="3">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="20" Height="20" CornerRadius="10"
+                                    Background="{Binding Step1Brush}">
+                                <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4"
+                                      Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding Step1Done}" />
+                            </Border>
+                            <TextBlock Classes="dim" Text="{Binding L[status.boot]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="20" Height="20" CornerRadius="10"
+                                    Background="{Binding Step2Brush}">
+                                <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4"
+                                      Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding Step2Done}" />
+                            </Border>
+                            <TextBlock Classes="dim" Text="{Binding L[status.loading]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="20" Height="20" CornerRadius="10"
+                                    Background="{Binding Step3Brush}">
+                                <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4"
+                                      Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding Step3Done}" />
+                            </Border>
+                            <TextBlock Classes="dim" Text="{Binding L[status.serving]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+
+                <!-- Yayında -->
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HomeOnline}">
+                    <StackPanel Spacing="10" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Panel Width="14" Height="14" VerticalAlignment="Center">
+                                <Border Classes="pulse" Width="12" Height="12" CornerRadius="6" Background="{StaticResource Success}"
+                                        RenderTransformOrigin="50%,50%" />
+                                <Border Width="12" Height="12" CornerRadius="6" Background="{StaticResource Success}" />
+                            </Panel>
+                            <TextBlock Classes="h1" Text="{Binding ActiveSaveName}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="22">
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="eyebrow" Text="{Binding L[home.stat.players]}" />
+                                <TextBlock Classes="stat" Text="{Binding OnlinePlayerCount}" />
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="eyebrow" Text="{Binding L[home.stat.uptime]}" />
+                                <TextBlock Classes="stat" Text="{Binding Uptime}" />
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="eyebrow" Text="{Binding L[lbl.cpu]}" />
+                                <TextBlock Classes="stat" Text="{Binding CpuText}" />
+                            </StackPanel>
+                            <StackPanel Spacing="1" ToolTip.Tip="{Binding L[msg.ramHint]}">
+                                <TextBlock Classes="eyebrow" Text="{Binding L[lbl.ram]}" />
+                                <TextBlock Classes="stat" Text="{Binding RamText}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+                        <Button Command="{Binding SaveNowCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconSave}" />
+                                <TextBlock Text="{Binding L[btn.saveWorld]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="danger" Command="{Binding StopCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconStop}" Width="12" Height="12" />
+                                <TextBlock Text="{Binding L[btn.stopServer]}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Panel>
+        </Border>
+
+        <!-- Uyarı: çöküş, döngü vb. -->
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#5A4A1C" BorderThickness="1"
+                CornerRadius="10" Padding="16,12" IsVisible="{Binding HasAlert}">
+            <Grid ColumnDefinitions="Auto,*">
+                <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="1.8"
+                      Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Top" />
+                <TextBlock Grid.Column="1" Margin="12,0,0,0" Classes="body" Text="{Binding AlertText}" />
+            </Grid>
+        </Border>
+
+        <!-- ============ DAVET KARTI ============ -->
+        <Border Classes="card enter d2">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                <StackPanel Grid.ColumnSpan="2" Spacing="3" Margin="0,0,0,16">
+                    <TextBlock Classes="h2" Text="{Binding L[invite.title]}" />
+                    <TextBlock Classes="hint" Text="{Binding L[invite.sub]}" />
+                </StackPanel>
+
+                <!-- 3 adım -->
+                <UniformGrid Grid.Row="1" Grid.ColumnSpan="2" Columns="3" Margin="0,0,0,16">
+                    <Border Classes="inset" Margin="0,0,8,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Classes="eyebrow" Text="1" Foreground="{StaticResource Accent}" />
+                            <TextBlock Classes="body" Text="{Binding L[invite.step1]}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="inset" Margin="4,0,4,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Classes="eyebrow" Text="2" Foreground="{StaticResource Accent}" />
+                            <TextBlock Classes="body" Text="{Binding L[invite.step2]}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="inset" Margin="8,0,0,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Classes="eyebrow" Text="3" Foreground="{StaticResource Accent}" />
+                            <TextBlock Classes="body" Text="{Binding L[invite.step3]}" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Arayacakları ad + diğer bilgiler -->
+                <StackPanel Grid.Row="2" Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Classes="dim" Text="{Binding L[lbl.hostName]}" VerticalAlignment="Center" />
+                        <Border Classes="badge" Background="{StaticResource AccentSoft}" Padding="12,5">
+                            <Panel>
+                                <TextBlock FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource Accent}"
+                                           Text="{Binding DisplayedHostName}"
+                                           IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock FontSize="12.5" Foreground="{StaticResource TextDim}"
+                                           Text="{Binding HostNamePlaceholder}"
+                                           IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                            </Panel>
+                        </Border>
+                    </StackPanel>
+                    <WrapPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,22,0">
+                            <TextBlock Classes="dim" Text="{Binding L[lbl.password]}" />
+                            <TextBlock Classes="value" Text="{Binding PasswordText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,22,0">
+                            <TextBlock Classes="dim" Text="{Binding L[lbl.modVersion]}" />
+                            <TextBlock Classes="value" Text="{Binding ModVersion}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="dim" Text="{Binding L[lbl.directIp]}" />
+                            <TextBlock Classes="value" Text="{Binding DisplayedEndpoint}" />
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+
+                <Button Grid.Row="2" Grid.Column="1" Classes="primary" VerticalAlignment="Bottom"
+                        Command="{Binding CopyConnectInfoCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Classes="icon" Data="{StaticResource IconCopy}" />
+                        <TextBlock Text="{Binding L[invite.copy]}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ============ MOD UYARISI (yalnızca sorun varsa) ============ -->
+        <Border Classes="card enter d3" IsVisible="{Binding ModuleProblem}" BorderBrush="#5A2A2A">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Path Data="{StaticResource IconPuzzle}" Stroke="{StaticResource Danger}" StrokeThickness="1.8"
+                      Width="22" Height="22" Stretch="Uniform" VerticalAlignment="Top" />
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="3">
+                    <TextBlock Classes="h2" Text="{Binding L[home.mods.head]}" />
+                    <TextBlock Classes="hint" Text="{Binding ModuleNotice}" />
+                </StackPanel>
+                <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding NavigateCommand}"
+                        CommandParameter="{x:Static vm:AppPage.Mods}" Content="{Binding L[home.mods.fix]}" />
+            </Grid>
+        </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

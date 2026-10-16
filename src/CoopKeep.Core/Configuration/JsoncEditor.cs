@@ -68,6 +68,44 @@ public sealed class JsoncEditor
     }
 
     /// <summary>
+    /// İç içe bir nesnedeki anahtarı değiştirir: <c>{ "section": { "key": ... } }</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>mod-config.json</c> ayarları <c>difficulty</c> ve <c>modOptions</c> nesnelerinde
+    /// duruyor. Anahtar bölümde yoksa bölümün kapanış parantezinden önce eklenir —
+    /// kök nesneye eklemek mod tarafından okunmayan bir ayar üretirdi.
+    /// </remarks>
+    public void SetRawValue(string section, string key, string jsonLiteral)
+    {
+        if (!FindValueSpan(section, 0, _text.Length, out var sectionStart, out var sectionLength, anyDepth: true) ||
+            _text[sectionStart] != '{')
+        {
+            AppendKey(section, "{ \"" + key + "\": " + jsonLiteral + " }");
+            return;
+        }
+
+        var sectionEnd = sectionStart + sectionLength;
+        if (FindValueSpan(key, sectionStart + 1, sectionEnd - 1, out var start, out var length))
+        {
+            _text = _text[..start] + jsonLiteral + _text[(start + length)..];
+            return;
+        }
+
+        InsertBefore(sectionStart, sectionEnd - 1, key, jsonLiteral);
+    }
+
+    /// <summary>İç içe bir anahtarın değer metni; yoksa <see langword="null"/>.</summary>
+    public string? GetRawValue(string section, string key)
+    {
+        if (!FindValueSpan(section, 0, _text.Length, out var ss, out var sl, anyDepth: true) || _text[ss] != '{')
+            return null;
+
+        return FindValueSpan(key, ss + 1, ss + sl - 1, out var start, out var length)
+            ? _text.Substring(start, length)
+            : null;
+    }
+
+    /// <summary>
     /// Dosyayı yazar. Üzerine yazmadan önce <c>.bak</c> kopyası alınır — config kaybı
     /// kullanıcının server'ını açılmaz hâle getirebilir.
     /// </summary>
@@ -90,26 +128,39 @@ public sealed class JsoncEditor
     /// <c>"key"</c> : &lt;değer&gt; kalıbını bulup <i>değerin</i> metindeki konumunu döndürür.
     /// Yorum içindeki ve string literal içindeki eşleşmeler atlanır.
     /// </summary>
-    private bool FindValueSpan(string key, out int valueStart, out int valueLength)
+    private bool FindValueSpan(string key, out int valueStart, out int valueLength) =>
+        FindValueSpan(key, 0, _text.Length, out valueStart, out valueLength, anyDepth: true);
+
+    /// <summary>
+    /// Aramayı <c>[from, to)</c> aralığıyla sınırlar. <paramref name="anyDepth"/> kapalıyken
+    /// yalnızca aralığın <b>kendi</b> düzeyindeki anahtarlar eşleşir; daha derin nesneler atlanır.
+    /// </summary>
+    private bool FindValueSpan(string key, int from, int to, out int valueStart, out int valueLength,
+        bool anyDepth = false)
     {
         valueStart = 0;
         valueLength = 0;
 
         var needle = "\"" + key + "\"";
-        var i = 0;
+        var i = from;
+        var depth = 0;
 
-        while (i < _text.Length)
+        while (i < to)
         {
             // Yorumları atla
             if (IsAt(i, "//")) { i = SkipLineComment(i); continue; }
             if (IsAt(i, "/*")) { i = SkipBlockComment(i); continue; }
+
+            if (_text[i] is '{' or '[') { depth++; i++; continue; }
+            if (_text[i] is '}' or ']') { depth--; i++; continue; }
 
             if (_text[i] == '"')
             {
                 var tokenStart = i;
                 var tokenEnd = SkipString(i);
 
-                if (tokenEnd - tokenStart == needle.Length &&
+                if ((anyDepth || depth == 0) &&
+                    tokenEnd - tokenStart == needle.Length &&
                     string.CompareOrdinal(_text, tokenStart, needle, 0, needle.Length) == 0)
                 {
                     // Anahtar adayı: ardından ':' gelmeli (aradaki boşluk ve yorumlar atlanır)
@@ -251,6 +302,29 @@ public sealed class JsoncEditor
                         + newline + indent + "\"" + key + "\": " + jsonLiteral + newline;
 
         _text = _text[..(k + 1)] + insertion + _text[lastBrace..];
+    }
+
+    /// <summary>
+    /// Bir nesnenin kapanış parantezinden (<paramref name="closeBrace"/>) önce anahtar ekler.
+    /// </summary>
+    private void InsertBefore(int openBrace, int closeBrace, string key, string jsonLiteral)
+    {
+        var k = closeBrace - 1;
+        while (k > openBrace && char.IsWhiteSpace(_text[k])) k--;
+
+        var needsComma = _text[k] != ',' && _text[k] != '{';
+        var newline = _text.Contains("\r\n") ? "\r\n" : "\n";
+
+        // Bölümün kendi girintisi: kapanış parantezinin satır başı + bir düzey.
+        var lineStart = _text.LastIndexOf('\n', closeBrace) + 1;
+        var closeIndent = _text[lineStart..closeBrace];
+        if (closeIndent.Trim().Length > 0) closeIndent = "";
+        var indent = closeIndent + (DetectIndent() is { Length: > 0 } unit && unit.Length <= 4 ? unit : "  ");
+
+        var insertion = (needsComma ? "," : string.Empty)
+                        + newline + indent + "\"" + key + "\": " + jsonLiteral + newline + closeIndent;
+
+        _text = _text[..(k + 1)] + insertion + _text[closeBrace..];
     }
 
     /// <summary>Dosyadaki mevcut girinti stilini taklit eder.</summary>

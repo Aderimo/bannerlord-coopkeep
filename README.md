@@ -4,7 +4,7 @@
 
 **Bannerlord Coop server manager**
 
-[![Version](https://img.shields.io/badge/version-v0.1.0-C9A227)](../../releases)
+[![Version](https://img.shields.io/badge/version-v0.2.0-C9A227)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#install)
 
@@ -56,32 +56,32 @@ from the game.
 
 ## How to use
 
-### 1 · Pick or create a server
+### 1 · Create a world
 
-Choose a server in the left panel. If you have none, type a name in the box below
-and press **New server**.
+On first launch the home page offers **Create a world**. The wizard works like starting
+a new campaign in the game:
+
+1. **Start** — a fresh sandbox, or continue a campaign you started in single player
+2. **Name**
+3. **Difficulty** — Very easy / Easy / Realistic, or fine-tune each option
+   (damage, combat AI, recruitment, map speed, persuasion…)
+4. **Rules** — death in battle, aging, executions, battle size, bandits, wanderers,
+   economy, fast forward, voice chat, **cheats for players**
+5. **Server** — password and Steam visibility, then a summary
 
 > You never have to enter the game — the server builds the world from scratch.
-> Takes about a minute.
+> Each world keeps its own settings; change them any time on the **Worlds** page.
 
-### 2 · Configure (optional)
+### 2 · Start
 
-Set a password, port, autosave interval and Steam visibility in **Settings**.
-Changes are made while the server is stopped, and **whatever is on screen is what
-the server starts with.**
+Press **Start server**. The first time, the Coop server's license agreement is shown;
+the server will not host until you accept it. The home page shows the progress
+(`Booting engine` → `Loading world` → **`Online`**). About a minute.
 
-### 3 · Start
+### 3 · Invite your friends
 
-Press **Start** and wait. The status goes `Booting engine` → `Loading world` →
-**`Online`**. About a minute in total.
-
-### 4 · How your friends join
-
-They open the game → **Coop** menu → **Steam Lobbies** tab.
-
-> ⚠️ **The most common mistake:** the name they search for is **your Steam name**,
-> not the server name. CoopKeep shows it in the "Send to your friends" box, with a
-> **Copy** button.
+**Copy invite** puts everything they need in one message. They open the game →
+**Coop** → **Steam Lobbies** and search for **your Steam name** — not the server name.
 
 For a direct IP join, forward **UDP 4200** on your router. Not needed for Steam joins.
 
@@ -89,33 +89,39 @@ For a direct IP join, forward **UDP 4200** on your router. Not needed for Steam 
 
 ## Features
 
+### Worlds
+- **New world wizard** with difficulty presets and every gameplay option of the Coop mod
+- **Per-world settings**, applied automatically each time that world starts
+- **Import a single-player save**; saves made with third-party mods are detected and
+  refused (the server crashes loading them)
+- Rename, duplicate, delete, open folder
+
 ### Server
-- Start, stop safely (the world is saved), live status and phase indicator
-- CPU and memory usage
+- Start, stop safely (the world is saved), live status, CPU and memory
+- **Restart with warning:** players get a 60-second notice, the world is saved
 - **Automatic restart on crash** — exponential backoff with crash-loop protection
 
 ### Players
-- Live list, search, **kick**
-- Broadcast messages to everyone
-- **Admin actions:** give full health or set gold for the selected player.
-  Every action is written to a persistent audit log, visible in the UI.
+- Live list, search, kick, broadcast
+- **Characters:** name, gold, health and age read from the server; full health,
+  add/set gold, set age. Works with any number of players; results are verified and
+  every action goes to a persistent audit log
+- **Block list:** blocked names are kicked automatically
+- **Cheats:** let players use cheat menus via the world setting
 
-### Worlds and backups
-- Create, rename, duplicate, delete, open folder
-- **Automatic backup after every save**, transactional restore
-- Pruning by both count *and* age
+### Mods
+- Status of every module in your launcher (compatible / not on server / refused by Coop)
+- **Set up for Coop:** turn off problem mods in one click, restore them later
 
-### For streamers
-- **Eye button:** masks your IP, port and Steam name, and blurs the console.
-  On by default.
+### Backups
+- **Automatic backup after every save**, transactional restore, pruning by count *and* age
 
-### Installation checks
-- Steam, game and mod are found automatically; version compatibility is verified
-- **Module check:** warns when your game launcher has modules enabled that the
-  server does not expect — the most likely cause of failed connections
+### Other
+- **Streamer mode** masks your IP, port and Steam name and blurs the console
+- **Bug report** zip with logs and settings (password and Steam IDs masked)
+- Update check (can be turned off), English and Turkish
 
 ---
-
 ## Command line
 
 For people who prefer a terminal, `CoopKeep.Cli`:
@@ -138,6 +144,8 @@ coopkeep run             # start and drive the console
 | **They can't connect** | Check the **Module check** panel. Disable extra mods in the game launcher. |
 | **Start does nothing** | A Coop server may already be running — CoopKeep warns about this. Close it from Task Manager. |
 | **The password doesn't work** | Press **Start** after typing it; the server only reads settings at boot. |
+| **The server closes right away (code 6)** | The Coop server's license agreement was not accepted. Start again from CoopKeep and accept it. |
+| **Importing a save is refused** | The save was made with mods the server can't load. Start a new sandbox without mods in the game, save, and import that. |
 | **Mod DLLs fail to load** | Windows may have blocked the downloaded DLLs. In the mod folder, run:<br>`Get-ChildItem "<mod folder>" -Recurse \| Unblock-File` |
 
 ---
@@ -150,8 +158,11 @@ These are not CoopKeep gaps — they are **limits of the mod itself**, verified 
   cannot be refused from the outside.
 - **No ban, only kick.** The Steam identity is not written to the live protocol, so a
   persistent ban could only ever be name-based.
-- **No kill action.** The server refuses vanilla cheat commands
-  (`Cheat mode is disabled!`) and zeroing health has unverified consequences.
+- **The game's own console cheats stay off** on the server (`Cheat mode is disabled!`)
+  and no command enables them. Player cheat menus are available through the world
+  setting, and gold/health/age through the Players page.
+- **No mods on the server.** It only loads the official modules and Coop; clients must
+  turn other mods off (the Mods page helps).
 - **"Friends only" visibility** could not be verified on the dedicated server.
 - **Memory cannot be capped** — the server has no such setting.
 - Only **Steam** installations are detected (no Epic/GOG support).
@@ -170,9 +181,9 @@ changed. So the integration surface is not code:
 | Channel | Used for |
 |---|---|
 | Process lifecycle | Start, stop, crash detection (exit codes 0/2/3/4) |
-| stdin commands | `status` · `players` · `save` · `say` · `kick` · `stop` |
+| stdin commands | `status` · `players` · `save` · `say` · `kick` · `stop`, plus an allow-list of Coop console commands (`coop.debug.hero.*`, `coop.server.shutdown`) |
 | stdout `@DS@` events | Status phase, live player list (JSON) |
-| File system | `server-config.json`, `Game Saves\`, backups |
+| File system | `server-config.json`, `Game Saves\`, backups, and Coop's gameplay settings in `CoopData\mod-config.json` |
 
 The configuration file is edited **preserving its comments, key order and any keys we
 don't recognise**, so your settings survive mod updates.
@@ -182,7 +193,7 @@ don't recognise**, so your settings survive mod updates.
 ## Development
 
 ```bash
-dotnet test                                    # 178 tests
+dotnet test                                    # 213 tests
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # produces the single-file exe
 ```
@@ -192,7 +203,7 @@ powershell -File publish.ps1                   # produces the single-file exe
 | `src/CoopKeep.Core` | Process supervision, protocol, backups, installation discovery — **UI-independent** |
 | `src/CoopKeep.App` | Avalonia UI (English/Turkish, dark theme) |
 | `src/CoopKeep.Cli` | Command line tool |
-| `tests/CoopKeep.Core.Tests` | 178 tests |
+| `tests/CoopKeep.Core.Tests` | 213 tests |
 
 The single source of the version number is `Directory.Build.props`.
 

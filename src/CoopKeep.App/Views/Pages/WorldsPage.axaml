@@ -1,0 +1,176 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             xmlns:pages="using:CoopKeep.App.Views.Pages"
+             xmlns:saves="using:CoopKeep.Core.Saves"
+             x:Class="CoopKeep.App.Views.Pages.WorldsPage"
+             x:DataType="vm:MainViewModel">
+
+  <Grid ColumnDefinitions="300,*">
+
+    <!-- ============ SOL: DÜNYA LİSTESİ ============ -->
+    <Border Grid.Column="0" BorderBrush="{StaticResource BorderDim}" BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="20,28,16,20">
+            <StackPanel Classes="enter" Spacing="4" Margin="4,0,0,16">
+                <TextBlock Classes="eyebrow" Text="{Binding L[nav.worlds]}" />
+                <TextBlock Classes="h1" Text="{Binding L[worlds.title]}" />
+            </StackPanel>
+
+            <Panel Grid.Row="1">
+                <ListBox Classes="enter d1" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding SelectedCampaign}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="saves:SaveSet">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Width="34" Height="34" CornerRadius="9" Background="{StaticResource BgRaised}"
+                                        VerticalAlignment="Center">
+                                    <Path Data="{StaticResource IconGlobe}" Stroke="{StaticResource Accent}" StrokeThickness="1.6"
+                                          Width="16" Height="16" Stretch="Uniform" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Classes="dim" FontSize="11.5">
+                                            <Run Text="{Binding PlayerCount}" />
+                                            <Run Text="{Binding $parent[ListBox].((vm:MainViewModel)DataContext).L[col.players]}" />
+                                        </TextBlock>
+                                        <TextBlock Classes="dim" FontSize="11.5"
+                                                   Text="{Binding LastModifiedLocal, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <StackPanel VerticalAlignment="Center" Spacing="10" IsVisible="{Binding !HasCampaigns}" Margin="10">
+                    <Path Data="{StaticResource IconGlobe}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.4"
+                          Width="40" Height="40" Stretch="Uniform" />
+                    <TextBlock Classes="hint" TextAlignment="Center" Text="{Binding L[msg.noCampaigns]}" />
+                </StackPanel>
+            </Panel>
+
+            <Button Grid.Row="2" Classes="primary" Margin="0,14,0,0" Command="{Binding OpenWizardCommand}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Classes="icon" Data="{StaticResource IconPlus}" StrokeThickness="2.2" />
+                    <TextBlock Text="{Binding L[btn.newWorld]}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Border>
+
+    <!-- ============ SAĞ: SEÇİLİ DÜNYA ============ -->
+    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28,32,40" Spacing="18" MaxWidth="1000" IsVisible="{Binding SelectedCampaign, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+            <!-- Başlık + eylemler -->
+            <Grid Classes="enter" ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="display" Text="{Binding SelectedCampaign.Name, FallbackValue=''}" />
+                    <TextBlock Classes="dim" Text="{Binding WorldEditor.Summary}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Command="{Binding OpenSavesFolderCommand}" ToolTip.Tip="{Binding L[btn.openFolder]}">
+                        <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                    </Button>
+                    <Button Classes="primary" Command="{Binding StartCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Data="{StaticResource IconPlay}" Fill="{StaticResource OnAccent}" Width="12" Height="12" Stretch="Uniform" />
+                            <TextBlock Text="{Binding L[btn.startServer]}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Çalışırken ayar değişikliği uyarısı -->
+            <Border Classes="enter" Background="{StaticResource WarningSoft}" CornerRadius="10" Padding="14,10"
+                    IsVisible="{Binding IsRunning}">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource Warning}" StrokeThickness="1.8"
+                          Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Top" />
+                    <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="body" Text="{Binding L[worlds.runningHint]}" />
+                </Grid>
+            </Border>
+
+            <!-- Profil yok: eski dünya -->
+            <Border Classes="enter" Background="{StaticResource BgRaised}" CornerRadius="10" Padding="14,10"
+                    IsVisible="{Binding !WorldHasProfile}">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8"
+                          Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Top" />
+                    <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="hint" Text="{Binding L[worlds.noProfile]}" />
+                </Grid>
+            </Border>
+
+            <!-- Oyun ayarları -->
+            <Border Classes="card enter d1">
+                <pages:WorldSettingsPanel DataContext="{Binding WorldEditor}" PresetGroup="worldsPreset" />
+            </Border>
+
+            <!-- Kaydet çubuğu -->
+            <Border Classes="enter d2" Background="{StaticResource BgPanel}" CornerRadius="12" Padding="16,12"
+                    BorderBrush="{StaticResource AccentDim}" BorderThickness="1"
+                    IsVisible="{Binding WorldEditor.IsDirty}">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Classes="body" VerticalAlignment="Center" Text="{Binding L[worlds.unsaved]}" />
+                    <Button Grid.Column="1" Margin="0,0,8,0" Command="{Binding RevertWorldSettingsCommand}"
+                            Content="{Binding L[btn.revert]}" />
+                    <Button Grid.Column="2" Classes="primary" Command="{Binding SaveWorldSettingsCommand}"
+                            Content="{Binding L[btn.saveSettings]}" />
+                </Grid>
+            </Border>
+
+            <!-- Dosya işlemleri -->
+            <Border Classes="card enter d2">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="3">
+                        <TextBlock Classes="h2" Text="{Binding L[worlds.manage]}" />
+                        <TextBlock Classes="hint" Text="{Binding L[worlds.manage.desc]}" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+                        <TextBox Text="{Binding CampaignNameInput}" Watermark="{Binding L[worlds.newName]}" />
+                        <Button Grid.Column="2" Command="{Binding RenameCampaignCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Path Classes="icon" Data="{StaticResource IconEdit}" Width="14" />
+                                <TextBlock Text="{Binding L[btn.rename]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="4" Command="{Binding DuplicateCampaignCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Path Classes="icon" Data="{StaticResource IconCopy}" Width="14" />
+                                <TextBlock Text="{Binding L[btn.duplicate]}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Border Height="1" Background="{StaticResource BorderDim}" />
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !PendingDelete}">
+                        <TextBlock Classes="hint" VerticalAlignment="Center" Text="{Binding L[worlds.deleteHint]}" />
+                        <Button Grid.Column="1" Classes="danger" Command="{Binding RequestDeleteCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Path Classes="icon" Data="{StaticResource IconTrash}" Width="14" />
+                                <TextBlock Text="{Binding L[btn.delete]}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- İki adımlı silme -->
+                    <Border Classes="enter" IsVisible="{Binding PendingDelete}" Background="{StaticResource DangerSoft}"
+                            BorderBrush="{StaticResource Danger}" BorderThickness="1" CornerRadius="10" Padding="14">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <TextBlock Classes="body" Foreground="#F5C2C2" VerticalAlignment="Center"
+                                       Text="{Binding L[msg.deleteWarning]}" Margin="0,0,12,0" />
+                            <Button Grid.Column="1" Margin="0,0,8,0" Command="{Binding CancelDeleteCommand}"
+                                    Content="{Binding L[btn.cancel]}" />
+                            <Button Grid.Column="2" Classes="dangerSolid" Command="{Binding ConfirmDeleteCommand}"
+                                    Content="{Binding L[btn.confirmDelete]}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

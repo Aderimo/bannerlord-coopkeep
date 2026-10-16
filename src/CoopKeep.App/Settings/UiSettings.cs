@@ -36,6 +36,15 @@ public sealed class UiSettings
     /// <summary>Sunucu çökerse otomatik yeniden başlatılsın mı?</summary>
     public bool AutoRestart { get; set; } = true;
 
+    /// <summary>
+    /// Kullanıcının CoopKeep'te onayladığı sunucu EULA'sının parmak izi.
+    /// Sözleşme değişirse eşleşmez ve onay yeniden istenir.
+    /// </summary>
+    public string? AcceptedEulaFingerprint { get; set; }
+
+    /// <summary>Açılışta GitHub'da yeni sürüm var mı diye bakılsın mı?</summary>
+    public bool CheckUpdates { get; set; } = true;
+
     // ------------------------------------------------------------------
 
     private static string Directory => Path.Combine(

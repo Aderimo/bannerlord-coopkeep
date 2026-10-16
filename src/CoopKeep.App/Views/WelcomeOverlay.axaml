@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.WelcomeOverlay"
+             x:DataType="vm:MainViewModel">
+
+  <!-- İlk açılış turu: metin duvarı yerine üç kısa adım. -->
+  <Border Background="#D9090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderDim}"
+            BorderThickness="1" CornerRadius="16" Width="560" Padding="34,30"
+            VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 24 80 0 #99000000">
+      <StackPanel Spacing="22">
+
+        <!-- Büyük simge -->
+        <Border Width="64" Height="64" CornerRadius="18" Background="{StaticResource AccentSoft}"
+                BorderBrush="{StaticResource AccentDim}" BorderThickness="1" HorizontalAlignment="Left">
+            <Panel>
+                <Path Data="{StaticResource IconShield}" Stroke="{StaticResource Accent}" StrokeThickness="1.8"
+                      Width="30" Height="30" Stretch="Uniform" IsVisible="{Binding TutorialStep0}" />
+                <Path Data="{StaticResource IconPlay}" Fill="{StaticResource Accent}"
+                      Width="24" Height="24" Stretch="Uniform" IsVisible="{Binding TutorialStep1}" />
+                <Path Data="{StaticResource IconUsers}" Stroke="{StaticResource Accent}" StrokeThickness="1.8"
+                      Width="30" Height="30" Stretch="Uniform" IsVisible="{Binding TutorialStep2}" />
+            </Panel>
+        </Border>
+
+        <Panel MinHeight="150">
+            <StackPanel Classes="enter" Spacing="10" IsVisible="{Binding TutorialStep0}">
+                <TextBlock Classes="display" Text="{Binding L[tut.title]}" />
+                <TextBlock Classes="body" FontSize="14" LineHeight="22" Text="{Binding L[tut2.s1]}" />
+            </StackPanel>
+            <StackPanel Classes="enter" Spacing="10" IsVisible="{Binding TutorialStep1}">
+                <TextBlock Classes="display" Text="{Binding L[tut2.s2.title]}" />
+                <TextBlock Classes="body" FontSize="14" LineHeight="22" Text="{Binding L[tut2.s2]}" />
+            </StackPanel>
+            <StackPanel Classes="enter" Spacing="10" IsVisible="{Binding TutorialStep2}">
+                <TextBlock Classes="display" Text="{Binding L[tut2.s3.title]}" />
+                <TextBlock Classes="body" FontSize="14" LineHeight="22" Text="{Binding L[tut2.s3]}" />
+            </StackPanel>
+        </Panel>
+
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <!-- Adım noktaları -->
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Classes="dot" Classes.on="{Binding TutorialStep0}" />
+                <Border Classes="dot" Classes.on="{Binding TutorialStep1}" />
+                <Border Classes="dot" Classes.on="{Binding TutorialStep2}" />
+            </StackPanel>
+            <Button Grid.Column="1" Classes="ghost" HorizontalAlignment="Right" Margin="0,0,8,0"
+                    Command="{Binding CloseTutorialCommand}" Content="{Binding L[tut2.skip]}"
+                    Foreground="{StaticResource TextDim}" IsVisible="{Binding TutorialNotLast}" />
+            <Button Grid.Column="2" Classes="primary" Command="{Binding TutorialNextCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding L[btn.next]}" IsVisible="{Binding TutorialNotLast}" />
+                    <TextBlock Text="{Binding L[tut.close]}" IsVisible="{Binding TutorialIsLast}" />
+                    <Path Classes="icon" Data="{StaticResource IconArrowRight}" Width="14" />
+                </StackPanel>
+            </Button>
+        </Grid>
+      </StackPanel>
+    </Border>
+  </Border>
+
+  <UserControl.Styles>
+    <Style Selector="Border.dot">
+        <Setter Property="Width" Value="8" />
+        <Setter Property="Height" Value="8" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Background" Value="{StaticResource BorderDim}" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseOut" />
+                <BrushTransition Property="Background" Duration="0:0:0.25" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.dot.on">
+        <Setter Property="Width" Value="22" />
+        <Setter Property="Background" Value="{StaticResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

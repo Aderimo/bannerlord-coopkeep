@@ -1,0 +1,20 @@
+# Coop v0.1.6 (build 0.1.6+5f4d63cc) dedicated server, 2026-10-16.
+# Bu satırlar canlı sunucunun stdout'undan birebir kopyalandı.
+[DedicatedServer] > coop.debug.hero.set_gold_state main_hero 12345
+HERO_GOLD_SET hero=main_hero oldGold=7000 newGold=12345
+[DedicatedServer] > coop.debug.hero.set_gold "Pacarios" 2222
+Set gold to 2222 for 1 hero(es) named 'Pacarios'
+[DedicatedServer] > coop.debug.hero.set_gold NoSuchHero 10
+Unable to find hero with name: NoSuchHero
+[DedicatedServer] > coop.debug.hero.set_hitpoints main_hero 60
+Hero HitPoints changed to: 60
+[DedicatedServer] > coop.debug.hero.set_hitpoints NoSuchHero 50
+Unable to find hero with id: NoSuchHero
+[DedicatedServer] > coop.debug.hero.set_age main_hero 30
+Set age to 30 for 1 hero(es) matching 'main_hero'
+[DedicatedServer] > coop.debug.hero.add_power main_hero 50
+Hero power changed to: 50
+[DedicatedServer] > coop.debug.hero.SetGold
+[DedicatedServer] no game console command 'coop.debug.hero.SetGold'
+[DedicatedServer] > campaign.add_gold_to_hero 100
+Cheat mode is disabled!

@@ -1,0 +1,144 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.SettingsPage"
+             x:DataType="vm:MainViewModel">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="36,28,36,40" Spacing="18" MaxWidth="820">
+
+        <StackPanel Classes="enter" Spacing="4">
+            <TextBlock Classes="eyebrow" Text="{Binding L[nav.settings]}" />
+            <TextBlock Classes="display" Text="{Binding L[settings.title]}" />
+        </StackPanel>
+
+        <!-- Güncelleme -->
+        <Border Classes="card enter" Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}"
+                IsVisible="{Binding HasUpdate}">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="body" VerticalAlignment="Center" Text="{Binding UpdateText}" />
+                <Button Grid.Column="1" Classes="primary" Command="{Binding OpenReleasePageCommand}"
+                        Content="{Binding L[update.download]}" />
+            </Grid>
+        </Border>
+
+        <!-- ============ SUNUCU ============ -->
+        <Border Classes="card enter d1">
+            <StackPanel Spacing="16">
+                <StackPanel Spacing="3">
+                    <TextBlock Classes="h2" Text="{Binding L[settings.server]}" />
+                    <TextBlock Classes="hint" Text="{Binding L[msg.settingsNeedRestart]}" />
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.passwordHint]}" />
+                    </StackPanel>
+                    <TextBox Grid.Column="1" Width="240" Text="{Binding EditPassword}" PasswordChar="•"
+                             RevealPassword="{Binding !PrivacyMode}" IsEnabled="{Binding !IsRunning}"
+                             VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[msg.steamHint]}" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" IsEnabled="{Binding !IsRunning}"
+                                  VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[msg.autosaveHint]}" />
+                    </StackPanel>
+                    <TextBox Grid.Column="1" Width="90" Text="{Binding EditAutosave}" IsEnabled="{Binding !IsRunning}"
+                             VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[lbl.port]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.portHint]}" />
+                    </StackPanel>
+                    <TextBox Grid.Column="1" Width="90" Text="{Binding EditPort}" IsEnabled="{Binding !IsRunning}"
+                             VerticalAlignment="Center" />
+                </Grid>
+
+                <Button HorizontalAlignment="Right" Classes="primary" Command="{Binding ApplySettingsCommand}"
+                        Content="{Binding L[btn.saveSettings]}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ============ OTOMASYON ============ -->
+        <Border Classes="card enter d2">
+            <StackPanel Spacing="16">
+                <TextBlock Classes="h2" Text="{Binding L[settings.automation]}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[lbl.autoRestart]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.autoRestartHint]}" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoRestart}" VerticalAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[settings.restartCountdown]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.restartCountdownHint]}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding RestartWithCountdownCommand}"
+                            Content="{Binding L[btn.restartCountdown]}" />
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[settings.updates]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.updatesHint]}" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckUpdates}" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ KURULUM ============ -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="h2" Text="{Binding L[settings.install]}" />
+                <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto">
+                    <TextBlock Classes="dim" Text="Bannerlord" />
+                    <TextBlock Grid.Column="1" Classes="value" Text="{Binding GameVersion}" />
+                    <TextBlock Grid.Row="1" Classes="dim" Margin="0,6,0,0" Text="Coop" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Classes="value" Margin="0,6,0,0" Text="{Binding ModVersion}" />
+                    <TextBlock Grid.Row="2" Classes="dim" Margin="0,6,0,0" Text="CoopKeep" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Classes="value" Margin="0,6,0,0" Text="{Binding AppVersion}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ YARDIM ============ -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="14">
+                <TextBlock Classes="h2" Text="{Binding L[settings.help]}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding L[settings.report]}" FontWeight="SemiBold" FontSize="13.5" />
+                        <TextBlock Classes="hint" Text="{Binding L[settings.reportHint]}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding CreateBugReportCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Path Classes="icon" Data="{StaticResource IconBug}" Width="15" />
+                            <TextBlock Text="{Binding L[btn.createReport]}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <WrapPanel>
+                    <Button Margin="0,0,8,0" Command="{Binding ShowWelcomeCommand}" Content="{Binding L[btn.showWelcome]}" />
+                    <Button Margin="0,0,8,0" Command="{Binding OpenLogsFolderCommand}" Content="{Binding L[btn.openLogs]}" />
+                    <Button Command="{Binding OpenSavesFolderCommand}" Content="{Binding L[btn.openFolder]}" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

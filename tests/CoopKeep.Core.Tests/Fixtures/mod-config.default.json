@@ -1,0 +1,78 @@
+﻿{
+  "voice": {
+    "mapFullVolumeDistance": 5,
+    "mapMaximumDistance": 20,
+    "sceneFullVolumeDistance": 10,
+    "sceneMaximumDistance": 50
+  },
+  // Test fixture written for CoopKeep. Same shape and default values as the
+  // mod-config.default.json shipped with Coop v0.1.6 (nested sections, comments,
+  // trailing keys we don't manage), but none of its text.
+
+  // Difficulty levels: "VeryEasy" | "Easy" | "Realistic".
+  "difficulty": {
+    // Player damage.
+    "playerReceivedDamage": "VeryEasy",
+
+    // Troop damage.
+    "playerTroopsReceivedDamage": "VeryEasy",
+
+    // Enemy combat AI.
+    "combatAIDifficulty": "VeryEasy",
+
+    // Recruits from notables.
+    "recruitmentDifficulty": "VeryEasy",
+
+    // Party speed on the map.
+    "playerMapMovementSpeed": "VeryEasy",
+
+    // Stealth missions.
+    "stealthAndDisguiseDifficulty": "VeryEasy",
+
+    // Persuasion.
+    "persuasionSuccessChance": "VeryEasy",
+
+    // Clan member death in battle.
+    "clanMemberDeathChance": "VeryEasy",
+
+    // Hero death in battle.
+    "battleDeath": "VeryEasy",
+
+    // Aging, births and natural death.
+    "birthAndDeath": true,
+
+    // Perks for clan members.
+    "autoAllocateClanMemberPerks": false
+  },
+  "modOptions": {
+    "voiceEnabled": true,
+    // Troops on the field, 200-1000.
+    "battleSize": 1000,
+    "fastForwardEnabled": true,
+    "autoPauseEnabled": true,
+    "clientsCanUseCheats": false,
+    "goldFoodInfluenceChangeInSettlements": false,
+    // "Disabled" | "OneDayMax" | "Enabled"
+    "goldFoodInfluenceChangeInBattles": "Disabled",
+    "goldFoodInfluenceChangeForDisconnectedPlayers": false,
+    "blockAiWarDeclarationsOnOfflinePlayers": false,
+    "playerBattleAiJoinWindowHours": 6,
+    "speedLimitWhilePlayersInBattle": true,
+    "ensureUnaffiliatedWanderers": true,
+    "wandererLimit": 32,
+    "wandererLimitScalesWithPlayers": false,
+    "playerKingdomClanTierRequired": 4,
+    "coopClansEnabled": true,
+    "smithingStaminaRecoveryOutsideSettlements": true,
+    "smithingStaminaRecoveryMultiplier": 0.1,
+    "maximumLootersMultiplier": 1.0,
+    "looterPartySizeMultiplier": 1.0,
+    // "Vanilla" | "NeverExpire" | "AlwaysRetry"
+    "lordDefectionRetries": "Vanilla",
+    "enableHeroExecutions": false,
+    "enablePlayerClanMemberExecutions": false,
+    "enablePlayerExecutions": false,
+    "showPlayerNameplates": true,
+    "playerWoundedBattleEntry": true
+  }
+}
