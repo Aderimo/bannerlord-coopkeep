@@ -8,6 +8,65 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v0.3.0 — 2026-10-16
+
+Second round of user feedback. New server commands below were read from a running
+Coop v0.1.6 server before being used.
+
+*İkinci geri bildirim turu. Aşağıdaki yeni sunucu komutları kullanılmadan önce çalışan
+bir Coop v0.1.6 sunucusundan okundu.*
+
+### Added · Eklenenler
+
+- **Admin tools** on the Players page, for one player or all players: full health,
+  add/set gold, age, influence, renown, troops, troop XP, skill XP, attribute and
+  focus points, with an optional note in the audit log (e.g. making up for a cheater).
+  *Yönetici araçları: tek oyuncu ya da tüm oyuncular için can, altın, nüfuz, ün,
+  asker, deneyim, puan; denetim kaydına not.*
+- **Live map** of Calradia drawn from the game's own settlement data, with every
+  player's party position, activity (travelling, in a town, in battle, besieging),
+  morale and strength; click a player for details and quick actions.
+  *Canlı harita: oyuncuların konumu, ne yaptığı ve bilgileri.*
+- **Mods page:** search (matches move to the top), filter tabs, a community
+  compatibility list (`compat/mods.json`) and "works / broken" reports that open a
+  pre-filled GitHub issue. Mods that appeared in an error line in the last Coop session
+  are flagged.
+  *Modlar: arama, filtreler, topluluk listesi, GitHub üzerinden bildirim.*
+- **Console help:** recognised lines are summarised with an explanation; search and a
+  "problems only" filter.
+  *Konsol yardımı: tanıdık satırların açıklaması, arama, yalnızca sorunlar.*
+- **Backups:** all-worlds view; every backup shows its world, date, time, size and
+  reason (autosave, manual, shutdown, before restore).
+  *Yedekler: tüm dünyalar, dünya adı, tarih, saat, neden.*
+- **Server priority** setting and a **memory warning** threshold.
+  *Sunucu önceliği ve bellek uyarısı.*
+- More world settings: wanderers, smithing stamina, voice chat distances. The wizard's
+  server step now includes autosave interval and port.
+  *Daha fazla dünya ayarı; sihirbazda otomatik kayıt ve port.*
+
+### Changed · Değişenler
+
+- **Cheat protection:** the player-cheats setting is now presented as "Cheat
+  protection" and is on by default, so players can't cheat; the host uses the admin
+  tools instead.
+  *Hile koruması varsayılan olarak açık; hileler yalnızca yönetici araçlarında.*
+- **Bannerlord-style design:** warm leather/wood palette, gold frames, serif headings,
+  far less explanatory text (moved into tooltips).
+  *Bannerlord temalı tasarım, çok daha az yazı.*
+- Home page shows autosave interval, last save, last backup, connected players and a
+  single **Save and back up** button.
+  *Ana sayfa: otomatik kayıt, son kayıt/yedek, bağlı oyuncular, "Kaydet ve yedek al".*
+
+### Known limitations · Bilinen sınırlar
+
+- Coop's troop command adds a fixed group of recruits; the troop type and count can't
+  be chosen. "God mode" has no server-side command.
+  *Asker türü ve sayısı seçilemiyor; tanrı modunun sunucu komutu yok.*
+- Memory can't be reserved for the server in advance; Windows allocates it on demand.
+  *Sunucuya önceden bellek ayrılamıyor.*
+
+---
+
 ## v0.2.0 — 2026-10-16
 
 A redesign driven by user feedback: the app was hard to follow, worlds could not be

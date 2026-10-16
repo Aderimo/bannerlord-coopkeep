@@ -10,7 +10,7 @@ using CoopKeep.Core.Protocol;
 namespace CoopKeep.App.ViewModels;
 
 /// <summary>Uygulamanın sayfaları.</summary>
-public enum AppPage { Home, Worlds, Players, Backups, Mods, Settings, Console }
+public enum AppPage { Home, Worlds, Players, Map, Backups, Mods, Settings, Console }
 
 /// <summary>Ana sayfanın gösterdiği "sıradaki adım".</summary>
 public enum HomeState
@@ -69,6 +69,7 @@ public partial class MainViewModel
     public bool PageHome { get => CurrentPage == AppPage.Home; set { if (value) CurrentPage = AppPage.Home; } }
     public bool PageWorlds { get => CurrentPage == AppPage.Worlds; set { if (value) CurrentPage = AppPage.Worlds; } }
     public bool PagePlayers { get => CurrentPage == AppPage.Players; set { if (value) CurrentPage = AppPage.Players; } }
+    public bool PageMap { get => CurrentPage == AppPage.Map; set { if (value) CurrentPage = AppPage.Map; } }
     public bool PageBackups { get => CurrentPage == AppPage.Backups; set { if (value) CurrentPage = AppPage.Backups; } }
     public bool PageMods { get => CurrentPage == AppPage.Mods; set { if (value) CurrentPage = AppPage.Mods; } }
     public bool PageSettings { get => CurrentPage == AppPage.Settings; set { if (value) CurrentPage = AppPage.Settings; } }
@@ -79,12 +80,15 @@ public partial class MainViewModel
         OnPropertyChanged(nameof(PageHome));
         OnPropertyChanged(nameof(PageWorlds));
         OnPropertyChanged(nameof(PagePlayers));
+        OnPropertyChanged(nameof(PageMap));
         OnPropertyChanged(nameof(PageBackups));
         OnPropertyChanged(nameof(PageMods));
         OnPropertyChanged(nameof(PageSettings));
         OnPropertyChanged(nameof(PageConsole));
 
         if (value == AppPage.Mods) CheckModules();
+        if (value == AppPage.Players && IsServing) _ = RefreshHeroesAsync();
+        OnMapPageChanged(value == AppPage.Map);
     }
 
     [RelayCommand]
@@ -143,6 +147,32 @@ public partial class MainViewModel
     /// Kenar çubuğundaki dünya adı: çalışırken sunucunun açtığı, değilken açılacak olan.
     /// </summary>
     public string SidebarWorldName => IsRunning ? ActiveSaveName : SelectedCampaign?.Name ?? "—";
+
+    /// <summary>Sunucunun en son kaydettiği an (bu oturumda).</summary>
+    [ObservableProperty] private DateTime? _lastSaveAt;
+
+    /// <summary>En son alınan yedeğin zamanı.</summary>
+    [ObservableProperty] private DateTime? _lastBackupAt;
+
+    public string LastSaveText => LastSaveAt is { } t ? t.ToString("HH:mm") : "—";
+
+    public string LastBackupText => (LastBackupAt ?? Backups.FirstOrDefault()?.CreatedLocal) is { } t
+        ? (t.Date == DateTime.Today ? t.ToString("HH:mm") : t.ToString("dd.MM HH:mm"))
+        : "—";
+
+    partial void OnLastSaveAtChanged(DateTime? value) => OnPropertyChanged(nameof(LastSaveText));
+    partial void OnLastBackupAtChanged(DateTime? value) => OnPropertyChanged(nameof(LastBackupText));
+
+    /// <summary>"Kaydet ve yedek al": dünyayı kaydeder; kayıt bitince otomatik yedek alınır.</summary>
+    [RelayCommand(CanExecute = nameof(CanCommand))]
+    private async Task SaveAndBackupAsync()
+    {
+        await SendAsync(Core.Server.ServerCommand.Save());
+        ShowToast(L[AutoBackup ? "msg.saveAndBackup" : "msg.saveRequested"], ToastKind.Info);
+    }
+
+    [RelayCommand]
+    private void OpenSteamFriends() => OpenPath("steam://open/friends");
 
     /// <summary>Steam adı henüz bilinmiyorken gösterilen metin: Steam kapalıysa bunu söyler.</summary>
     public string HostNamePlaceholder => L[!EditSteam ? "invite.steamOff" : IsServing ? "invite.steamWaiting" : "msg.hostNameUnknown"];

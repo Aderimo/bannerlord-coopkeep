@@ -12,7 +12,6 @@
     <Border Grid.Column="0" BorderBrush="{StaticResource BorderDim}" BorderThickness="0,0,1,0">
         <Grid RowDefinitions="Auto,*,Auto" Margin="20,28,16,20">
             <StackPanel Classes="enter" Spacing="4" Margin="4,0,0,16">
-                <TextBlock Classes="eyebrow" Text="{Binding L[nav.worlds]}" />
                 <TextBlock Classes="h1" Text="{Binding L[worlds.title]}" />
             </StackPanel>
 

@@ -52,6 +52,7 @@ public sealed partial class Loc : INotifyPropertyChanged
         (IsTurkish ? Turkish : English).TryGetValue(key, out var value) ? value
         : (IsTurkish ? TurkishV2 : EnglishV2).TryGetValue(key, out var v2) ? v2
         : (IsTurkish ? TurkishUi : EnglishUi).TryGetValue(key, out var ui) ? ui
+        : (IsTurkish ? TurkishV3 : EnglishV3).TryGetValue(key, out var v3) ? v3
         : key;
 
     private static string DetectSystemLanguage() =>

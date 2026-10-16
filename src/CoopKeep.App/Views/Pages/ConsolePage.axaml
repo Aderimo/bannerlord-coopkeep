@@ -4,18 +4,50 @@
              x:Class="CoopKeep.App.Views.Pages.ConsolePage"
              x:DataType="vm:MainViewModel">
 
-  <Grid RowDefinitions="Auto,*" Margin="36,28,36,28">
-    <Grid Classes="enter" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
-        <StackPanel Spacing="4">
-            <TextBlock Classes="eyebrow" Text="{Binding L[nav.console]}" />
-            <TextBlock Classes="display" Text="{Binding L[sec.console]}" />
-            <TextBlock Classes="dim" FontSize="13.5" Text="{Binding L[console.sub]}" TextWrapping="Wrap" />
-        </StackPanel>
-        <Button Grid.Column="1" VerticalAlignment="Bottom" Command="{Binding OpenLogsFolderCommand}"
-                Content="{Binding L[btn.openLogs]}" />
+  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="32,28,32,24">
+    <Grid Classes="enter" ColumnDefinitions="*,Auto">
+        <TextBlock Classes="display" Text="{Binding L[nav.console]}" ToolTip.Tip="{Binding L[console.sub]}" />
+        <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding OpenLogsFolderCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+                <Path Classes="icon" Data="{StaticResource IconFolder}" Width="14" />
+                <TextBlock Text="{Binding L[btn.openLogs]}" />
+            </StackPanel>
+        </Button>
     </Grid>
 
-    <Border Grid.Row="1" Classes="enter d1" Background="{StaticResource ConsoleBg}" CornerRadius="12"
+    <!-- Bu oturumda görülen tanıdık satırlar -->
+    <Border Grid.Row="1" Classes="card enter d1" Margin="0,14,0,0" Padding="14,10" IsVisible="{Binding HasSeenLogLines}">
+        <StackPanel Spacing="6">
+            <TextBlock Classes="h2" FontSize="14" Text="{Binding L[console.known]}" />
+            <ItemsControl ItemsSource="{Binding SeenLogLines}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SeenLogLine">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,3">
+                            <Panel Width="16" VerticalAlignment="Top" Margin="0,2,8,0">
+                                <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" IsVisible="{Binding IsError}" />
+                                <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" IsVisible="{Binding IsWarning}" />
+                                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" IsVisible="{Binding IsHarmless}" />
+                            </Panel>
+                            <TextBlock Grid.Column="1" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,10,0" Text="{Binding Title}" />
+                            <TextBlock Grid.Column="2" Classes="hint" Text="{Binding Explanation}" />
+                            <TextBlock Grid.Column="3" Classes="dim" FontSize="11" Margin="10,0,0,0"><Run Text="×" /><Run Text="{Binding Count}" /></TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+
+    <!-- Arama ve süzgeç -->
+    <Grid Grid.Row="2" Classes="enter d1" ColumnDefinitions="300,*,Auto" Margin="0,14,0,10">
+        <TextBox Text="{Binding ConsoleSearch}" Watermark="{Binding L[console.search]}" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Classes="dim" Text="{Binding L[console.problemsOnly]}" VerticalAlignment="Center" />
+            <ToggleSwitch IsChecked="{Binding ConsoleProblemsOnly}" />
+        </StackPanel>
+    </Grid>
+
+    <Border Grid.Row="3" Classes="enter d2" Background="{StaticResource ConsoleBg}" CornerRadius="4"
             BorderBrush="{StaticResource BorderDim}" BorderThickness="1" Padding="14" ClipToBounds="True">
         <Panel>
             <!--
@@ -24,17 +56,17 @@
             -->
             <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Console}">
+                <ItemsControl ItemsSource="{Binding ConsoleView}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <TextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas, monospace"
-                                       FontSize="11.5" Foreground="#A9B4C4" TextWrapping="NoWrap" />
+                            <SelectableTextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas, monospace"
+                                                 FontSize="11.5" Foreground="#BFB39A" TextWrapping="NoWrap" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
 
-            <Border IsVisible="{Binding PrivacyMode}" Background="#B00C0D10" CornerRadius="8">
+            <Border IsVisible="{Binding PrivacyMode}" Background="#B00E0B08" CornerRadius="4">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
                     <Path Data="{StaticResource IconEye}" Stroke="{StaticResource TextDim}" StrokeThickness="1.5"
                           Width="32" Height="32" Stretch="Uniform" />

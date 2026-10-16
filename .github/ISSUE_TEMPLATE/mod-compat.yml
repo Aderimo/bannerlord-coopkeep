@@ -1,0 +1,45 @@
+name: Mod compatibility · Mod uyumluluğu
+description: Tell us whether a mod works with Bannerlord Coop · Bir modun Coop ile çalışıp çalışmadığını bildir
+title: "[Mod] "
+labels: ["mod-compat"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        CoopKeep fills most of this in for you. Please only report what you actually tested.
+        *CoopKeep bu formun çoğunu senin için doldurur. Lütfen yalnızca gerçekten denediğini bildir.*
+  - type: input
+    id: mod_id
+    attributes:
+      label: Mod id · Mod kimliği
+      description: As shown on CoopKeep's Mods page · CoopKeep'in Modlar sayfasındaki gibi
+    validations:
+      required: true
+  - type: input
+    id: mod_version
+    attributes:
+      label: Mod version · Mod sürümü
+  - type: input
+    id: status
+    attributes:
+      label: Result · Sonuç
+      description: "works / broken / client-only"
+    validations:
+      required: true
+  - type: input
+    id: coop_version
+    attributes:
+      label: Coop version · Coop sürümü
+    validations:
+      required: true
+  - type: input
+    id: game_version
+    attributes:
+      label: Bannerlord version · Bannerlord sürümü
+  - type: textarea
+    id: details
+    attributes:
+      label: What happened? · Ne oldu?
+      description: |
+        Error message, when it happened (joining, battle, siege…), whether it was enabled on the host, the clients or both.
+        Hata mesajı, ne zaman oldu (katılırken, savaşta, kuşatmada…), host'ta mı oyuncularda mı açıktı.

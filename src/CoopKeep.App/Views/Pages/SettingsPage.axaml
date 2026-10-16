@@ -8,7 +8,6 @@
     <StackPanel Margin="36,28,36,40" Spacing="18" MaxWidth="820">
 
         <StackPanel Classes="enter" Spacing="4">
-            <TextBlock Classes="eyebrow" Text="{Binding L[nav.settings]}" />
             <TextBlock Classes="display" Text="{Binding L[settings.title]}" />
         </StackPanel>
 
@@ -31,38 +30,26 @@
                 </StackPanel>
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.passwordHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.passwordHint]}"><TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <TextBox Grid.Column="1" Width="240" Text="{Binding EditPassword}" PasswordChar="•"
                              RevealPassword="{Binding !PrivacyMode}" IsEnabled="{Binding !IsRunning}"
                              VerticalAlignment="Center" />
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[msg.steamHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.steamHint]}"><TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" IsEnabled="{Binding !IsRunning}"
                                   VerticalAlignment="Center" />
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[msg.autosaveHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.autosaveHint]}"><TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <TextBox Grid.Column="1" Width="90" Text="{Binding EditAutosave}" IsEnabled="{Binding !IsRunning}"
                              VerticalAlignment="Center" />
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[lbl.port]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.portHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.portHint]}"><TextBlock Text="{Binding L[lbl.port]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <TextBox Grid.Column="1" Width="90" Text="{Binding EditPort}" IsEnabled="{Binding !IsRunning}"
                              VerticalAlignment="Center" />
                 </Grid>
@@ -77,25 +64,31 @@
             <StackPanel Spacing="16">
                 <TextBlock Classes="h2" Text="{Binding L[settings.automation]}" />
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[lbl.autoRestart]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.autoRestartHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.autoRestartHint]}"><TextBlock Text="{Binding L[lbl.autoRestart]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoRestart}" VerticalAlignment="Center" />
                 </Grid>
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[settings.restartCountdown]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.restartCountdownHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.restartCountdownHint]}"><TextBlock Text="{Binding L[settings.restartCountdown]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding RestartWithCountdownCommand}"
                             Content="{Binding L[btn.restartCountdown]}" />
                 </Grid>
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[settings.updates]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.updatesHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.priorityHint]}"><TextBlock Text="{Binding L[settings.priority]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding HighPriority}" VerticalAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.memoryHint]}"><TextBlock Text="{Binding L[settings.memory]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <ComboBox Grid.Column="1" Width="110" VerticalAlignment="Center" ItemsSource="{Binding MemoryWarningOptions}"
+                              SelectedItem="{Binding MemoryWarningGb}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="x:Int32">
+                                <TextBlock Text="{Binding Converter={x:Static vm:Formatters.GigabyteOption}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.updatesHint]}"><TextBlock Text="{Binding L[settings.updates]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckUpdates}" VerticalAlignment="Center" />
                 </Grid>
             </StackPanel>
@@ -121,10 +114,7 @@
             <StackPanel Spacing="14">
                 <TextBlock Classes="h2" Text="{Binding L[settings.help]}" />
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Text="{Binding L[settings.report]}" FontWeight="SemiBold" FontSize="13.5" />
-                        <TextBlock Classes="hint" Text="{Binding L[settings.reportHint]}" />
-                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.reportHint]}"><TextBlock Text="{Binding L[settings.report]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding CreateBugReportCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <Path Classes="icon" Data="{StaticResource IconBug}" Width="15" />

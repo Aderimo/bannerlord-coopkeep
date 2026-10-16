@@ -36,6 +36,17 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
 {
     private readonly string _root = NormalizeDirectory(serverRootDirectory);
 
+    /// <summary>
+    /// Sunucu süreçlerine uygulanacak öncelik; <see langword="null"/> ise dokunulmaz.
+    /// </summary>
+    /// <remarks>
+    /// Sunucu belleğini sınırlamanın ya da önceden "vermenin" bir yolu yok; Windows bellek
+    /// ihtiyaç duyuldukça verir. Takılmayı azaltmak için elimizdeki gerçek araç işlemci
+    /// önceliği. Asıl motor başlatıcının <b>çocuk süreci</b> olduğu ve öncelik çocuğa
+    /// geçmediği için her ölçümde ağacın tamamına uygulanıyor.
+    /// </remarks>
+    public ProcessPriorityClass? DesiredPriority { get; set; }
+
     private TimeSpan _previousCpuTime;
     private DateTimeOffset _previousSampleAt;
     private bool _hasPreviousSample;
@@ -53,6 +64,9 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
             try
             {
                 if (!BelongsToServer(process, rootProcessId)) continue;
+
+                if (DesiredPriority is { } priority && process.PriorityClass != priority)
+                    process.PriorityClass = priority;
 
                 memory += process.WorkingSet64;
                 cpuTime += process.TotalProcessorTime;

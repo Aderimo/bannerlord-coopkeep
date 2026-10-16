@@ -39,14 +39,14 @@ public partial class MainWindow : Window
         if (_vm is not null)
         {
             _vm.PropertyChanged -= OnViewModelPropertyChanged;
-            _vm.Console.CollectionChanged -= OnConsoleChanged;
+            _vm.ConsoleView.CollectionChanged -= OnConsoleChanged;
         }
 
         _vm = vm;
         if (vm is null) return;
 
         vm.PropertyChanged += OnViewModelPropertyChanged;
-        vm.Console.CollectionChanged += OnConsoleChanged;
+        vm.ConsoleView.CollectionChanged += OnConsoleChanged;
         ShowPage(vm.CurrentPage);
     }
 
@@ -65,6 +65,7 @@ public partial class MainWindow : Window
             {
                 AppPage.Worlds => new WorldsPage(),
                 AppPage.Players => new PlayersPage(),
+                AppPage.Map => new MapPage(),
                 AppPage.Backups => new BackupsPage(),
                 AppPage.Mods => new ModsPage(),
                 AppPage.Settings => new SettingsPage(),

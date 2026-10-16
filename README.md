@@ -4,7 +4,7 @@
 
 **Bannerlord Coop server manager**
 
-[![Version](https://img.shields.io/badge/version-v0.2.0-C9A227)](../../releases)
+[![Version](https://img.shields.io/badge/version-v0.3.0-C9A227)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#install)
 
@@ -193,7 +193,7 @@ don't recognise**, so your settings survive mod updates.
 ## Development
 
 ```bash
-dotnet test                                    # 213 tests
+dotnet test                                    # 229 tests
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # produces the single-file exe
 ```
@@ -203,7 +203,7 @@ powershell -File publish.ps1                   # produces the single-file exe
 | `src/CoopKeep.Core` | Process supervision, protocol, backups, installation discovery — **UI-independent** |
 | `src/CoopKeep.App` | Avalonia UI (English/Turkish, dark theme) |
 | `src/CoopKeep.Cli` | Command line tool |
-| `tests/CoopKeep.Core.Tests` | 213 tests |
+| `tests/CoopKeep.Core.Tests` | 229 tests |
 
 The single source of the version number is `Directory.Build.props`.
 

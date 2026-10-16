@@ -74,6 +74,7 @@ public static class ModSettingsCatalog
 {
     public const string DifficultySection = "difficulty";
     public const string OptionsSection = "modOptions";
+    public const string VoiceSection = "voice";
 
     public static readonly IReadOnlyList<string> Levels = ["VeryEasy", "Easy", "Realistic"];
 
@@ -105,6 +106,10 @@ public static class ModSettingsCatalog
         new(OptionsSection, "maximumLootersMultiplier", ModSettingKind.Number, ModSettingGroup.World, 1.0, 0.1, 5),
         new(OptionsSection, "looterPartySizeMultiplier", ModSettingKind.Number, ModSettingGroup.World, 1.0, 0.1, 5),
         new(OptionsSection, "wandererLimit", ModSettingKind.Int, ModSettingGroup.World, 32, 0, 200),
+        new(OptionsSection, "ensureUnaffiliatedWanderers", ModSettingKind.Bool, ModSettingGroup.World, true),
+        new(OptionsSection, "wandererLimitScalesWithPlayers", ModSettingKind.Bool, ModSettingGroup.World, false),
+        new(OptionsSection, "smithingStaminaRecoveryOutsideSettlements", ModSettingKind.Bool, ModSettingGroup.World, true),
+        new(OptionsSection, "smithingStaminaRecoveryMultiplier", ModSettingKind.Number, ModSettingGroup.World, 0.1, 0.1, 5),
         new(OptionsSection, "playerKingdomClanTierRequired", ModSettingKind.Int, ModSettingGroup.World, 4, 0, 6),
         new(OptionsSection, "blockAiWarDeclarationsOnOfflinePlayers", ModSettingKind.Bool, ModSettingGroup.World, false),
         new(OptionsSection, "playerBattleAiJoinWindowHours", ModSettingKind.Int, ModSettingGroup.World, 6, 0, 48),
@@ -115,6 +120,8 @@ public static class ModSettingsCatalog
         new(OptionsSection, "speedLimitWhilePlayersInBattle", ModSettingKind.Bool, ModSettingGroup.Multiplayer, true),
         new(OptionsSection, "playerWoundedBattleEntry", ModSettingKind.Bool, ModSettingGroup.Multiplayer, true),
         new(OptionsSection, "voiceEnabled", ModSettingKind.Bool, ModSettingGroup.Multiplayer, true),
+        new(VoiceSection, "mapMaximumDistance", ModSettingKind.Int, ModSettingGroup.Multiplayer, 20, 5, 100),
+        new(VoiceSection, "sceneMaximumDistance", ModSettingKind.Int, ModSettingGroup.Multiplayer, 50, 10, 200),
         new(OptionsSection, "showPlayerNameplates", ModSettingKind.Bool, ModSettingGroup.Multiplayer, true),
         new(OptionsSection, "coopClansEnabled", ModSettingKind.Bool, ModSettingGroup.Multiplayer, true),
         new(OptionsSection, "goldFoodInfluenceChangeForDisconnectedPlayers", ModSettingKind.Bool, ModSettingGroup.Multiplayer, false),

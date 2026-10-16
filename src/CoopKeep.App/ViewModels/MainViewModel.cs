@@ -55,6 +55,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         PrivacyMode = _ui.PrivacyMode;
         AutoBackup = _ui.AutoBackup;
         AutoRestart = _ui.AutoRestart;
+        HighPriority = _ui.HighPriority;
+        MemoryWarningGb = _ui.MemoryWarningGb;
         CheckUpdates = _ui.CheckUpdates;
 
         _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -75,6 +77,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         CheckForForeignServer();
 
         if (CheckUpdates) _ = CheckForUpdateAsync();
+        _ = LoadCommunityAsync();
     }
 
     /// <summary>
@@ -306,10 +309,18 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             return;
         }
 
+        // Kapalıyken Normal'e döndürülür; açıkken "normalin üstü" (Yüksek değil: oyunun ve sistemin önüne geçmesin).
+        _resources.DesiredPriority = HighPriority
+            ? System.Diagnostics.ProcessPriorityClass.AboveNormal
+            : System.Diagnostics.ProcessPriorityClass.Normal;
         var sample = _resources.Sample(_supervisor.ProcessId);
 
         CpuText = sample.ProcessCount == 0 ? "-" : $"{sample.CpuPercent:0}%";
         RamText = sample.ProcessCount == 0 ? "-" : $"{sample.MemoryGigabytes:0.0} GB";
+
+        MemoryWarning = MemoryWarningGb > 0 && sample.MemoryGigabytes > MemoryWarningGb
+            ? string.Format(L["msg.memoryHigh"], sample.MemoryGigabytes.ToString("0.0"), MemoryWarningGb)
+            : "";
     }
 
     public string Uptime
@@ -416,6 +427,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         if (_coop is null) return;
 
         Console.Clear();
+        ClearConsoleSummary();
         _supervisor.Start(new ServerLaunchOptions
         {
             ExecutablePath = _coop.DedicatedServerExe,
@@ -728,7 +740,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         try
         {
-            _backups.Create(SelectedCampaign.Name);
+            _backups.Create(SelectedCampaign.Name, BackupReason.Manual);
+            LastBackupAt = DateTime.Now;
             ShowToast(L["msg.backupTaken"]);
             ReloadBackups();
         }
@@ -774,17 +787,31 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     private bool CanRestore() =>
         _backups is not null && SelectedBackup is not null && !IsRunning && !IsBusy;
 
+    /// <summary>Yedekler sayfası tüm dünyaların yedeklerini mi gösteriyor?</summary>
+    [ObservableProperty] private bool _backupsShowAll;
+
+    public bool BackupsShowSelected { get => !BackupsShowAll; set => BackupsShowAll = !value; }
+
+    partial void OnBackupsShowAllChanged(bool value)
+    {
+        OnPropertyChanged(nameof(BackupsShowSelected));
+        ReloadBackups();
+    }
+
     private void ReloadBackups()
     {
         Backups.Clear();
 
-        if (_backups is not null && SelectedCampaign is not null)
+        if (_backups is not null)
         {
-            foreach (var b in _backups.List(SelectedCampaign.Name))
-                Backups.Add(b);
+            var list = BackupsShowAll ? _backups.ListAll()
+                : SelectedCampaign is not null ? _backups.List(SelectedCampaign.Name)
+                : [];
+            foreach (var b in list) Backups.Add(b);
         }
 
         OnPropertyChanged(nameof(HasBackups));
+        OnPropertyChanged(nameof(LastBackupText));
         SelectedBackup = Backups.FirstOrDefault();
     }
 
@@ -800,13 +827,21 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// </remarks>
     private void TryAutoBackup(string line)
     {
-        if (!AutoBackup) return;
         if (!line.Contains("world saved to", StringComparison.Ordinal)) return;
+        LastSaveAt = DateTime.Now;
+
+        if (!AutoBackup) return;
         if (_backups is null || ActiveSaveName is not { Length: > 0 } name) return;
+
+        // Kaynak satırlar: "autosave: …", "operator save: …", "shutdown save: …"
+        var reason = line.Contains("autosave", StringComparison.Ordinal) ? BackupReason.Autosave
+            : line.Contains("shutdown", StringComparison.Ordinal) ? BackupReason.Shutdown
+            : BackupReason.Manual;
 
         try
         {
-            _backups.Create(name);
+            _backups.Create(name, reason);
+            LastBackupAt = DateTime.Now;
 
             if (SelectedCampaign?.Name == name) ReloadBackups();
         }
@@ -1059,6 +1094,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         Console.Add(line);
         while (Console.Count > MaxConsoleLines) Console.RemoveAt(0);
+        OnConsoleLineAdded(line);
     }
 
     /// <summary>Çöküş sonrası politikayı uygular: gerekiyorsa bekleyip yeniden başlatır.</summary>
@@ -1298,6 +1334,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
         SaveNowCommand.NotifyCanExecuteChanged();
+        SaveAndBackupCommand.NotifyCanExecuteChanged();
         AnnounceCommand.NotifyCanExecuteChanged();
         KickCommand.NotifyCanExecuteChanged();
         RestartWithCountdownCommand.NotifyCanExecuteChanged();

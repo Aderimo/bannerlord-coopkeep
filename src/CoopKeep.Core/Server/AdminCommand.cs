@@ -47,6 +47,14 @@ public static class AdminCommand
         "coop.debug.hero.set_hitpoints",
         "coop.debug.hero.set_age",
         "coop.debug.hero.info",
+        "coop.debug.clan.give_influence",
+        "coop.debug.clan.add_renown",
+        "coop.debug.hero_developer.add_skill_xp",
+        "coop.debug.hero_developer.add_attribute_points",
+        "coop.debug.hero_developer.add_focus_points",
+        "coop.debug.mobile_party.add_troops",
+        "coop.debug.mobile_party.add_troop_xp",
+        "coop.debug.mobileparty.info",
         "coop.debug.players.list",
         "coop.debug.campaign_options.list",
         "coop.debug.mod_config.list",
@@ -88,6 +96,74 @@ public static class AdminCommand
 
     /// <summary>Tek bir kahramanın ayrıntılarını sorgular (ad, altın, can, yaş).</summary>
     public static string HeroInfo(string heroId) => $"coop.debug.hero.info {RequireId(heroId)}";
+
+    public const int MaxInfluence = 10_000;
+    public const int MaxRenown = 10_000;
+    public const int MaxSkillXp = 100_000;
+    public const int MaxPoints = 20;
+    public const int MaxTroopXp = 1_000_000;
+
+    /// <summary>Oyunun yetenek kimlikleri (<c>add_skill_xp</c> için).</summary>
+    public static readonly IReadOnlyList<string> Skills =
+    [
+        "OneHanded", "TwoHanded", "Polearm", "Bow", "Crossbow", "Throwing",
+        "Riding", "Athletics", "Crafting", "Scouting", "Tactics", "Roguery",
+        "Charm", "Leadership", "Trade", "Steward", "Medicine", "Engineering",
+    ];
+
+    /// <summary>Klana nüfuz ekler. Usage: <c>coop.debug.clan.give_influence &lt;clan_id&gt; &lt;amount&gt;</c></summary>
+    public static string GiveInfluence(string clanId, int amount) =>
+        $"coop.debug.clan.give_influence {RequireId(clanId)} {Math.Clamp(amount, 1, MaxInfluence).ToString(CultureInfo.InvariantCulture)}";
+
+    /// <summary>Klana ün ekler. Usage: <c>coop.debug.clan.add_renown &lt;clan_id&gt; &lt;renown&gt;</c></summary>
+    public static string AddRenown(string clanId, int amount) =>
+        $"coop.debug.clan.add_renown {RequireId(clanId)} {Math.Clamp(amount, 1, MaxRenown).ToString(CultureInfo.InvariantCulture)}";
+
+    /// <summary>Yetenek deneyimi. Usage: <c>add_skill_xp &lt;hero_name_or_id&gt; &lt;skill_name&gt; &lt;xp_amount&gt;</c></summary>
+    public static string AddSkillXp(string heroId, string skill, int xp)
+    {
+        if (!Skills.Contains(skill))
+            throw new ArgumentException($"Bilinmeyen yetenek: '{skill}'", nameof(skill));
+
+        return $"coop.debug.hero_developer.add_skill_xp {RequireId(heroId)} {skill} {Math.Clamp(xp, 1, MaxSkillXp).ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    public static string AddAttributePoints(string heroId, int points) =>
+        $"coop.debug.hero_developer.add_attribute_points {RequireId(heroId)} {Math.Clamp(points, 1, MaxPoints).ToString(CultureInfo.InvariantCulture)}";
+
+    public static string AddFocusPoints(string heroId, int points) =>
+        $"coop.debug.hero_developer.add_focus_points {RequireId(heroId)} {Math.Clamp(points, 1, MaxPoints).ToString(CultureInfo.InvariantCulture)}";
+
+    /// <summary>
+    /// Kahramanın partisine Coop'un sabit asker grubunu ekler.
+    /// </summary>
+    /// <remarks>
+    /// Usage: <c>coop.debug.mobile_party.add_troops &lt;hero_name&gt;</c>. Tür ve sayı seçilemiyor:
+    /// komut Coop'un hata ayıklama aracı ve sabit bir acemi grubu ekliyor. Partisi olmayan
+    /// kahramanda <c>No hero named "…" with a party found.</c> döner. İsim aldığı için
+    /// boşluklu adlar tırnakla gönderilir.
+    /// </remarks>
+    public static string AddTroops(string heroName) =>
+        $"coop.debug.mobile_party.add_troops {QuoteName(heroName)}";
+
+    /// <summary>Partideki askerlere deneyim (terfi için). Usage: <c>add_troop_xp &lt;hero_name&gt; &lt;xp_amount&gt;</c></summary>
+    public static string AddTroopXp(string heroName, int xp) =>
+        $"coop.debug.mobile_party.add_troop_xp {QuoteName(heroName)} {Math.Clamp(xp, 1, MaxTroopXp).ToString(CultureInfo.InvariantCulture)}";
+
+    /// <summary>Partinin konumu, hedefi, morali. Usage: <c>coop.debug.mobileparty.info &lt;partyStringId&gt;</c></summary>
+    public static string PartyInfo(string partyId) => $"coop.debug.mobileparty.info {RequireId(partyId)}";
+
+    /// <summary>İsim alan komutlar için: boşluk varsa çift tırnak; tırnak karakterine izin yok.</summary>
+    private static string QuoteName(string? name)
+    {
+        var clean = ServerCommand.SanitizeArgument(name, 64);
+        if (clean.Length == 0)
+            throw new ArgumentException("Kahraman adı boş olamaz.", nameof(name));
+        if (clean.Contains('"'))
+            throw new ArgumentException($"Geçersiz kahraman adı: '{clean}'", nameof(name));
+
+        return clean.Contains(' ') ? "\"" + clean + "\"" : clean;
+    }
 
     /// <summary>Bağlı oyuncuların kahraman eşlemesini sorgular.</summary>
     public static string PlayersList() => "coop.debug.players.list";

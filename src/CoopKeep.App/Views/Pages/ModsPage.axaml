@@ -4,63 +4,119 @@
              x:Class="CoopKeep.App.Views.Pages.ModsPage"
              x:DataType="vm:MainViewModel">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="36,28,36,40" Spacing="18" MaxWidth="1000">
+  <UserControl.Styles>
+    <!-- Filtre sekmesi -->
+    <Style Selector="RadioButton.tab">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="bg" Background="Transparent" BorderBrush="{StaticResource BorderDim}" BorderThickness="1"
+                        CornerRadius="4" Padding="12,6" Cursor="Hand">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.15" />
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" FontSize="12.5"
+                                      Foreground="{StaticResource TextDim}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.tab:pointerover /template/ Border#bg">
+        <Setter Property="BorderBrush" Value="#6A5535" />
+    </Style>
+    <Style Selector="RadioButton.tab:checked /template/ Border#bg">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="RadioButton.tab:checked /template/ ContentPresenter#cp">
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+  </UserControl.Styles>
 
-        <StackPanel Classes="enter" Spacing="4">
-            <TextBlock Classes="eyebrow" Text="{Binding L[nav.mods]}" />
-            <TextBlock Classes="display" Text="{Binding L[mods.title]}" />
-            <TextBlock Classes="dim" FontSize="13.5" Text="{Binding L[mods.sub]}" TextWrapping="Wrap" />
-        </StackPanel>
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="32,28,32,40" Spacing="14" MaxWidth="1080">
+
+        <TextBlock Classes="display enter" Text="{Binding L[nav.mods]}" />
 
         <!-- Özet -->
-        <Border Classes="card enter d1" BorderBrush="{Binding ModsCardBorder}">
+        <Border Classes="card enter d1" BorderBrush="{Binding ModsCardBorder}" Padding="18,14">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Border Width="42" Height="42" CornerRadius="21" Background="{Binding ModsIconBackground}">
+                <Border Width="38" Height="38" CornerRadius="19" Background="{Binding ModsIconBackground}">
                     <Panel>
                         <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2"
-                              Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding !ModuleProblem}" />
+                              Width="16" Height="16" Stretch="Uniform" IsVisible="{Binding !ModuleProblem}" />
                         <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.9"
-                              Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding ModuleProblem}" />
+                              Width="16" Height="16" Stretch="Uniform" IsVisible="{Binding ModuleProblem}" />
                     </Panel>
                 </Border>
-                <StackPanel Grid.Column="1" Margin="14,0" Spacing="3" VerticalAlignment="Center">
-                    <TextBlock Classes="h2" Text="{Binding ModsHeadline}" />
-                    <TextBlock Classes="hint" Text="{Binding ModuleNotice}" />
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Classes="h2" Text="{Binding ModsHeadline}" ToolTip.Tip="{Binding L[mods.why.body]}" />
+                    <TextBlock Classes="dim" FontSize="12" Text="{Binding CommunityStatusText}" />
                 </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
-                    <Button Classes="primary" Command="{Binding ApplyCoopProfileCommand}" HorizontalAlignment="Stretch" IsVisible="{Binding HasModuleProblems}"
-                            HorizontalContentAlignment="Center" Content="{Binding L[mods.applyProfile]}" />
-                    <Button Command="{Binding RestoreModProfileCommand}" HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" Content="{Binding L[mods.restoreProfile]}"
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Command="{Binding RestoreModProfileCommand}" Content="{Binding L[mods.restoreProfile]}"
                             IsVisible="{Binding HasProfileBackup}" />
+                    <Button Classes="primary" Command="{Binding ApplyCoopProfileCommand}" Content="{Binding L[mods.applyProfile]}"
+                            IsVisible="{Binding HasModuleProblems}" ToolTip.Tip="{Binding L[mods.profileHint]}" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <TextBlock Classes="hint enter d1" Text="{Binding L[mods.profileHint]}" />
+        <!-- Arama ve filtreler -->
+        <Grid Classes="enter d1" ColumnDefinitions="260,12,*">
+            <TextBox Text="{Binding ModSearch}" Watermark="{Binding L[mods.search]}" />
+            <WrapPanel Grid.Column="2" VerticalAlignment="Center">
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterAll}" Margin="0,0,6,6"
+                             Content="{Binding L[mods.f.all]}" />
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCompatible}" Margin="0,0,6,6">
+                    <TextBlock><Run Text="{Binding L[mods.f.ok]}" /><Run Text=" " /><Run Text="{Binding CompatibleCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                </RadioButton>
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterNotOnServer}" Margin="0,0,6,6">
+                    <TextBlock><Run Text="{Binding L[mods.f.notOnServer]}" /><Run Text=" " /><Run Text="{Binding NotOnServerCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                </RadioButton>
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterBlocked}" Margin="0,0,6,6">
+                    <TextBlock><Run Text="{Binding L[mods.f.blocked]}" /><Run Text=" " /><Run Text="{Binding BlockedCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                </RadioButton>
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCommunityWorks}" Margin="0,0,6,6"
+                             Content="{Binding L[mods.f.works]}" />
+                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCommunityBroken}" Margin="0,0,6,6"
+                             Content="{Binding L[mods.f.broken]}" />
+            </WrapPanel>
+        </Grid>
 
         <!-- Liste -->
-        <Border Classes="card enter d2" Padding="8,8">
+        <Border Classes="card enter d2" Padding="6">
             <StackPanel>
-                <Grid ColumnDefinitions="*,140,200" Margin="12,6,12,10">
-                    <TextBlock Classes="eyebrow" Text="{Binding L[mods.col.module]}" />
-                    <TextBlock Grid.Column="1" Classes="eyebrow" Text="{Binding L[mods.col.version]}" />
-                    <TextBlock Grid.Column="2" Classes="eyebrow" Text="{Binding L[mods.col.status]}" />
+                <Grid ColumnDefinitions="*,120,150,150,96" Margin="14,6,14,8">
+                    <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.module]}" />
+                    <TextBlock Grid.Column="1" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.version]}" />
+                    <TextBlock Grid.Column="2" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.status]}" />
+                    <TextBlock Grid.Column="3" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.community]}" />
                 </Grid>
                 <ItemsControl ItemsSource="{Binding Modules}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ModuleRow">
-                            <Border Padding="12,9" CornerRadius="8" Opacity="{Binding RowOpacity}">
-                                <Grid ColumnDefinitions="Auto,*,140,200">
-                                    <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center"
-                                            Background="{StaticResource Success}" IsVisible="{Binding IsSelected}" />
-                                    <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center"
-                                            BorderBrush="{StaticResource TextFaint}" BorderThickness="1.2"
-                                            IsVisible="{Binding !IsSelected}" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Id}" FontSize="13" VerticalAlignment="Center" />
+                            <Border Padding="14,7" CornerRadius="4" Opacity="{Binding RowOpacity}">
+                                <Border.Transitions>
+                                    <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2" /></Transitions>
+                                </Border.Transitions>
+                                <Grid ColumnDefinitions="Auto,*,120,150,150,96">
+                                    <Panel Width="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource Success}" IsVisible="{Binding IsSelected}" />
+                                        <Border Width="8" Height="8" CornerRadius="4" BorderBrush="{StaticResource TextFaint}" BorderThickness="1.2" IsVisible="{Binding !IsSelected}" />
+                                    </Panel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Id}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                        <Border Classes="badge" Background="{StaticResource DangerSoft}" Padding="6,1" IsVisible="{Binding HadLocalError}"
+                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.localErrorTip]}">
+                                            <TextBlock FontSize="10.5" Foreground="{StaticResource Danger}"
+                                                       Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.localError]}" />
+                                        </Border>
+                                    </StackPanel>
                                     <TextBlock Grid.Column="2" Classes="dim" Text="{Binding Version}" VerticalAlignment="Center" />
-                                    <Panel Grid.Column="3" HorizontalAlignment="Left">
+                                    <Panel Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border Classes="badge" Background="{StaticResource SuccessSoft}" IsVisible="{Binding IsOk}">
                                             <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding StatusText}" />
                                         </Border>
@@ -71,20 +127,28 @@
                                             <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding StatusText}" />
                                         </Border>
                                     </Panel>
+                                    <Panel Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding CommunityNote}">
+                                        <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding CommunityText}" IsVisible="{Binding CommunityWorks}" />
+                                        <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding CommunityText}" IsVisible="{Binding CommunityBroken}" />
+                                    </Panel>
+                                    <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" IsVisible="{Binding CanReport}">
+                                        <Button Padding="7,4" ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.reportWorks]}"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ReportModWorksCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2" Width="11" Height="11" Stretch="Uniform" />
+                                        </Button>
+                                        <Button Padding="7,4" ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.reportBroken]}"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ReportModBrokenCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2" Width="10" Height="10" Stretch="Uniform" />
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Classes="hint" Margin="12" Text="{Binding L[msg.modulesUnknown]}" IsVisible="{Binding !HasModules}" />
-            </StackPanel>
-        </Border>
-
-        <!-- Açıklama -->
-        <Border Classes="card enter d3">
-            <StackPanel Spacing="10">
-                <TextBlock Classes="h2" Text="{Binding L[mods.why]}" />
-                <TextBlock Classes="hint" Text="{Binding L[mods.why.body]}" />
+                <TextBlock Classes="hint" Margin="14" Text="{Binding L[msg.modulesUnknown]}" IsVisible="{Binding !HasModules}" />
             </StackPanel>
         </Border>
     </StackPanel>

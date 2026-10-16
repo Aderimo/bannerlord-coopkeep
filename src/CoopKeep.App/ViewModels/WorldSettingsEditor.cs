@@ -83,6 +83,7 @@ public partial class WorldSettingsEditor : ObservableObject
 
         if (d.Kind == ModSettingKind.Level && !_suppressPreset) RefreshPreset();
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(SummaryParts));
         Changed?.Invoke();
     }
 
@@ -130,10 +131,14 @@ public partial class WorldSettingsEditor : ObservableObject
         OnPropertyChanged(nameof(PresetCustom));
         OnPropertyChanged(nameof(PresetText));
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(SummaryParts));
     }
 
     /// <summary>Kısa özet: "Normal · 1000 asker · hileler kapalı".</summary>
     public string PresetText => L["preset." + (Preset ?? "Custom")];
+
+    /// <summary>Ana sayfadaki rozetler için özet parçaları.</summary>
+    public System.Collections.Generic.IReadOnlyList<string> SummaryParts => Summary.Split("  ·  ");
 
     public string Summary
     {
@@ -142,7 +147,7 @@ public partial class WorldSettingsEditor : ObservableObject
             var parts = new List<string> { PresetText };
             parts.Add(string.Format(L["sum.battleSize"], _values["modOptions.battleSize"]));
             parts.Add(L[(string)_values["difficulty.battleDeath"] == "Realistic" ? "sum.deathOn" : "sum.deathOff"]);
-            if ((bool)_values["modOptions.clientsCanUseCheats"]) parts.Add(L["sum.cheatsOn"]);
+            parts.Add(L[(bool)_values["modOptions.clientsCanUseCheats"] ? "sum.cheatsOn" : "sum.cheatLock"]);
             return string.Join("  ·  ", parts);
         }
     }
@@ -153,6 +158,7 @@ public partial class WorldSettingsEditor : ObservableObject
         foreach (var item in Items) item.RefreshTexts();
         OnPropertyChanged(nameof(PresetText));
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(SummaryParts));
     }
 }
 
@@ -188,10 +194,16 @@ public partial class WorldSettingItem : ObservableObject
     /// <summary>Seviye ve seçim ayarları için düğmeler.</summary>
     public ObservableCollection<SettingOption> Options { get; } = [];
 
+    /// <summary>
+    /// Arayüzde tersine gösterilen ayar. <c>clientsCanUseCheats</c> "Hile koruması" olarak
+    /// sunuluyor: koruma açık = oyuncular hile kullanamaz (dosyada <c>false</c>).
+    /// </summary>
+    public bool IsInverted => Definition.Key == "clientsCanUseCheats";
+
     public bool BoolValue
     {
-        get => _owner.Get(Definition.Id) is true;
-        set { _owner.Set(Definition.Id, value); OnPropertyChanged(); }
+        get => (_owner.Get(Definition.Id) is true) != IsInverted;
+        set { _owner.Set(Definition.Id, value != IsInverted); OnPropertyChanged(); }
     }
 
     public string? ChoiceValue => _owner.Get(Definition.Id) as string;

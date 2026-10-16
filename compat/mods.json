@@ -1,0 +1,13 @@
+{
+  // CoopKeep community mod compatibility list.
+  // CoopKeep downloads this file and shows a badge next to each mod on the Mods page.
+  //
+  // status: "Works" | "Broken" | "ClientOnly"
+  // Entries are added by the maintainer after reviewing a "Mod compatibility" issue.
+  // Only add what someone actually tested; say which Coop version it was tested with.
+  "mods": [
+    { "id": "NavalDLC", "status": "Broken", "coop": "v0.1.6", "note": "War Sails: refused by Coop (Server Instructions.md)." },
+    { "id": "BirthAndDeath", "status": "Broken", "coop": "v0.1.6", "note": "Birth and Aging Options: refused by Coop (Server Instructions.md)." },
+    { "id": "FastMode", "status": "Broken", "coop": "v0.1.6", "note": "Fast Mode: refused by Coop (Server Instructions.md)." }
+  ]
+}

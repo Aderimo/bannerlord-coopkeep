@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -22,6 +23,33 @@ public partial class MainViewModel
     private const string ReleasesPage = "https://github.com/Aderimo/bannerlord-coopkeep/releases/latest";
 
     [ObservableProperty] private bool _checkUpdates = true;
+
+    /// <summary>Sunucu süreçlerine "normalin üstü" öncelik.</summary>
+    [ObservableProperty] private bool _highPriority;
+
+    /// <summary>Bellek uyarı sınırı (GB). 0 = kapalı.</summary>
+    [ObservableProperty] private int _memoryWarningGb = 3;
+
+    /// <summary>Sunucu belleği sınırı aştıysa uyarı metni; yoksa boş.</summary>
+    [ObservableProperty] private string _memoryWarning = "";
+
+    public bool HasMemoryWarning => MemoryWarning.Length > 0;
+
+    public IReadOnlyList<int> MemoryWarningOptions { get; } = [0, 2, 3, 4, 6, 8];
+
+    partial void OnMemoryWarningChanged(string value) => OnPropertyChanged(nameof(HasMemoryWarning));
+
+    partial void OnHighPriorityChanged(bool value)
+    {
+        _ui.HighPriority = value;
+        _ui.Save();
+    }
+
+    partial void OnMemoryWarningGbChanged(int value)
+    {
+        _ui.MemoryWarningGb = value;
+        _ui.Save();
+    }
 
     /// <summary>Yeni sürüm varsa onun etiketi (örn. <c>v0.2.1</c>); yoksa boş.</summary>
     [ObservableProperty] private string _updateVersion = "";

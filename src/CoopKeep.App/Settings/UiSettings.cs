@@ -42,6 +42,12 @@ public sealed class UiSettings
     /// </summary>
     public string? AcceptedEulaFingerprint { get; set; }
 
+    /// <summary>Sunucu süreçleri "normalin üstü" öncelikle çalışsın mı?</summary>
+    public bool HighPriority { get; set; }
+
+    /// <summary>Sunucu bu kadar GB'ı aşınca ana sayfada uyarı gösterilir. 0 = kapalı.</summary>
+    public int MemoryWarningGb { get; set; } = 3;
+
     /// <summary>Açılışta GitHub'da yeni sürüm var mı diye bakılsın mı?</summary>
     public bool CheckUpdates { get; set; } = true;
 

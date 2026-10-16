@@ -16,6 +16,14 @@ public static class Formatters
             _ => bytes + " B",
         });
 
+    /// <summary>Bellek uyarısı seçeneği: 0 → "Kapalı", 3 → "3 GB".</summary>
+    public static readonly IValueConverter GigabyteOption = new FuncValueConverter<int, string>(
+        gb => gb == 0 ? CoopKeep.App.Localization.Loc.Current["val.off"] : gb + " GB");
+
+    /// <summary>Yedeğin neden alındığı, yerelleştirilmiş.</summary>
+    public static readonly IValueConverter BackupReasonText = new FuncValueConverter<CoopKeep.Core.Saves.BackupReason, string>(
+        reason => CoopKeep.App.Localization.Loc.Current["backup.reason." + reason]);
+
     /// <summary>Sihirbaz adım çubuğu: geçerli adım parametreye ulaştıysa dolu (1), değilse boş (0).</summary>
     public static readonly IValueConverter StepFill = new StepFillConverter();
 

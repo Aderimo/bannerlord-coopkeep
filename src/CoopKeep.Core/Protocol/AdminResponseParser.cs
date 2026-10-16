@@ -4,7 +4,14 @@ using System.Text.RegularExpressions;
 namespace CoopKeep.Core.Protocol;
 
 /// <summary><c>coop.debug.hero.info</c> çıktısından okunan kahraman bilgisi.</summary>
-public sealed record HeroInfo(string? Name, int? Gold, int? Health, int? Age);
+public sealed record HeroInfo(string? Name, int? Gold, int? Health, int? Age)
+{
+    /// <summary>Kahramanın partisinin kimliği (<c>_partyBelongedTo</c>); partisi yoksa null.</summary>
+    public string? PartyId { get; init; }
+
+    /// <summary>Klan adı (<c>_clan = (1207959553) Therycos</c> → <c>Therycos</c>).</summary>
+    public string? ClanName { get; init; }
+}
 
 /// <summary>Bir yönetici komutunun sonucu.</summary>
 public enum AdminOutcome
@@ -23,6 +30,15 @@ public enum AdminOutcome
 
     /// <summary>Sunucu tanıdığımız bir yanıt vermedi.</summary>
     NoResponse,
+
+    /// <summary>
+    /// Komut kabul edildi, hata yok; ama başarı mesajının biçimi henüz doğrulanmadı.
+    /// Arayüz "yapıldı" değil "gönderildi" der.
+    /// </summary>
+    Sent,
+
+    /// <summary>Komut parametreleri reddedildi (<c>Usage:</c> yanıtı).</summary>
+    InvalidArguments,
 }
 
 /// <summary>
@@ -44,7 +60,7 @@ public static partial class AdminResponseParser
     [GeneratedRegex(@"^Set age to (?<age>\d+) for (?<count>\d+) hero")]
     private static partial Regex AgeSet();
 
-    [GeneratedRegex(@"^Unable to find hero with (id|name): ")]
+    [GeneratedRegex(@"^(Unable to find hero with (id|name): |No hero named .* found|ID: '.*' not found|.* not found\.?$)")]
     private static partial Regex NotFound();
 
     /// <summary>Bu satır, gönderilen komutun yanıtının sonu mu?</summary>
@@ -66,15 +82,24 @@ public static partial class AdminResponseParser
         foreach (var raw in lines)
         {
             var line = raw.Trim();
+            if (IsUnknownCommand(line)) return AdminOutcome.UnknownCommand;
+
+            // Diğer günlük satırları ("[Coop] …", "[DedicatedServer] …") komutun yanıtı değil.
+            if (line.StartsWith('[')) continue;
+
             if (GoldSet().IsMatch(line) || HitPointsChanged().IsMatch(line)) return AdminOutcome.Success;
             if (AgeSet().Match(line) is { Success: true } age)
                 return age.Groups["count"].Value == "0" ? AdminOutcome.NotFound : AdminOutcome.Success;
             if (NotFound().IsMatch(line)) return AdminOutcome.NotFound;
             if (IsUnknownCommand(line)) return AdminOutcome.UnknownCommand;
             if (IsCheatsDisabled(line)) return AdminOutcome.CheatsDisabled;
+            if (line.StartsWith("Usage:", StringComparison.Ordinal)) return AdminOutcome.InvalidArguments;
         }
 
-        return AdminOutcome.NoResponse;
+        // Hata satırı yok ama sunucu bir şey yazdı: komut çalıştı, biçimini bilmiyoruz.
+        return lines.Any(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith('[') && !l.StartsWith("@DS@", StringComparison.Ordinal))
+            ? AdminOutcome.Sent
+            : AdminOutcome.NoResponse;
     }
 
     /// <summary><c>HERO_GOLD_SET</c> satırından eski ve yeni altını okur.</summary>
@@ -100,7 +125,7 @@ public static partial class AdminResponseParser
     /// </remarks>
     public static HeroInfo? ParseHeroInfo(IEnumerable<string> lines)
     {
-        string? name = null;
+        string? name = null, party = null, clan = null;
         int? gold = null, health = null, age = null;
         var any = false;
 
@@ -119,10 +144,18 @@ public static partial class AdminResponseParser
                 case "_gold": gold = ParseInt(value); any = true; break;
                 case "_health": health = ParseInt(value); any = true; break;
                 case "_defaultAge": age = ParseInt(value); any = true; break;
+                case "_partyBelongedTo": party = value.Split(':', 2)[0].Trim(); break;
+                case "_clan": clan = Regex.Replace(value, @"^\(\d+\)\s*", ""); break;
             }
         }
 
-        return any ? new HeroInfo(name, gold, health, age) : null;
+        return any
+            ? new HeroInfo(name, gold, health, age)
+            {
+                PartyId = string.IsNullOrWhiteSpace(party) ? null : party,
+                ClanName = string.IsNullOrWhiteSpace(clan) ? null : clan,
+            }
+            : null;
 
         static int? ParseInt(string s) =>
             double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? (int)d : null;

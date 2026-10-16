@@ -18,3 +18,7 @@ Hero power changed to: 50
 [DedicatedServer] no game console command 'coop.debug.hero.SetGold'
 [DedicatedServer] > campaign.add_gold_to_hero 100
 Cheat mode is disabled!
+[DedicatedServer] > coop.debug.mobile_party.add_troops Pacarios
+No hero named "Pacarios" with a party found.
+[DedicatedServer] > coop.debug.mobileparty.info MainParty
+ID: 'MainParty' not found

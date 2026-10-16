@@ -1,0 +1,138 @@
+﻿# Coop v0.1.6 sunucusundan birebir: coop.debug.mobileparty.info lord_1_1_party_1 (2026-10-16)
+MobileParty info for: lord_1_1_party_1:549 Name: Lucon's Party
+StringID: lord_1_1_party_1
+Name: Lucon's Party
+Morale: 76.72015
+RecentEventsMorale: 0
+HasUnpaidWages: 0
+
+Fields:
+_currentSettlement (TaleWorlds.CampaignSystem.Settlements.Settlement): <null>
+<LastVisitedSettlement>k__BackingField backing for property 'LastVisitedSettlement' (TaleWorlds.CampaignSystem.Settlements.Settlement): <null>
+<Bearing>k__BackingField backing for property 'Bearing' (TaleWorlds.Library.Vec2): (Vec2) X: 0.99972135 Y: 0.02360673
+_attachedParties (TaleWorlds.Library.MBList<TaleWorlds.CampaignSystem.Party.MobileParty>): TaleWorlds.Library.MBList`1[TaleWorlds.CampaignSystem.Party.MobileParty]
+_attachedTo (TaleWorlds.CampaignSystem.Party.MobileParty): <null>
+<HasLandNavigationCapability>k__BackingField backing for property 'HasLandNavigationCapability' (System.Boolean): True
+<Aggressiveness>k__BackingField backing for property 'Aggressiveness' (System.Single): 0.9
+HasUnpaidWages (System.Single): 0
+<ArmyPositionAdder>k__BackingField backing for property 'ArmyPositionAdder' (TaleWorlds.Library.Vec2): (Vec2) X: 0 Y: 0
+_eventPositionAdder (TaleWorlds.Library.Vec2): (Vec2) X: 0 Y: 0
+<Objective>k__BackingField backing for property 'Objective' (TaleWorlds.CampaignSystem.Party.MobileParty+PartyObjective): Neutral
+<TaleWorlds.CampaignSystem.Map.ILocatable<TaleWorlds.CampaignSystem.Party.MobileParty>.NextLocatable>k__BackingField backing for property 'TaleWorlds.CampaignSystem.Map.ILocatable<TaleWorlds.CampaignSystem.Party.MobileParty>.NextLocatable' (TaleWorlds.CampaignSystem.Party.MobileParty): <null>
+<Ai>k__BackingField backing for property 'Ai' (TaleWorlds.CampaignSystem.Party.MobilePartyAi): TaleWorlds.CampaignSystem.Party.MobilePartyAi
+<Party>k__BackingField backing for property 'Party' (TaleWorlds.CampaignSystem.Party.PartyBase): Lucon's Party
+<IsActive>k__BackingField backing for property 'IsActive' (System.Boolean): True
+_isInRaftState (System.Boolean): False
+IsInfoHidden (System.Boolean): False
+_isVisible (System.Boolean): True
+_lastCalculatedSpeed (System.Single): 0
+NextLongTermPathPoint (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 463.2814 Y: 471.1416 IsOnLand: True
+_isInspected (System.Boolean): True
+_disorganizedUntilTime (TaleWorlds.CampaignSystem.CampaignTime): Spring 1, 0
+_partyPureSpeedLastCheckVersion (System.Int32): -1
+_partyLastCheckIsPrisoner (System.Boolean): False
+_lastCalculatedBaseSpeedExplained (TaleWorlds.CampaignSystem.ExplainedNumber): TaleWorlds.CampaignSystem.ExplainedNumber
+<ThinkParamsCache>k__BackingField backing for property 'ThinkParamsCache' (TaleWorlds.CampaignSystem.PartyThinkParams): TaleWorlds.CampaignSystem.PartyThinkParams
+_partyLastCheckAtNight (System.Boolean): False
+_itemRosterVersionNo (System.Int32): -1
+_partySizeRatioLastCheckVersion (System.Int32): -1
+_partyWeightLastCheckVersionNo (System.Int32): 0
+_cachedPartySizeRatio (System.Single): 1
+_besiegerCamp (TaleWorlds.CampaignSystem.Siege.BesiegerCamp): <null>
+_targetParty (TaleWorlds.CampaignSystem.Party.MobileParty): <null>
+_targetSettlement (TaleWorlds.CampaignSystem.Settlements.Settlement): Diathma
+_targetPosition (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 463.2814 Y: 471.1416 IsOnLand: True
+_doNotAttackMainParty (System.Int32): 0
+_customHomeSettlement (TaleWorlds.CampaignSystem.Settlements.Settlement): <null>
+_army (TaleWorlds.CampaignSystem.Army): <null>
+_isDisorganized (System.Boolean): False
+_isCurrentlyUsedByAQuest (System.Boolean): False
+<ShortTermBehavior>k__BackingField backing for property 'ShortTermBehavior' (TaleWorlds.CampaignSystem.Party.AiBehavior): GoToSettlement
+<IsPartyTradeActive>k__BackingField backing for property 'IsPartyTradeActive' (System.Boolean): False
+_partyTradeGold (System.Int32): 0
+<PartyTradeTaxGold>k__BackingField backing for property 'PartyTradeTaxGold' (System.Int32): 0
+_ignoredUntilTime (TaleWorlds.CampaignSystem.CampaignTime): Spring 1, 0
+<StationaryStartTime>k__BackingField backing for property 'StationaryStartTime' (TaleWorlds.CampaignSystem.CampaignTime): Winter 2, 127085703
+AverageFleeTargetDirection (TaleWorlds.Library.Vec2): (Vec2) X: 0 Y: 0
+<VersionNo>k__BackingField backing for property 'VersionNo' (System.Int32): 0
+_besiegerCampResetStarted (System.Boolean): False
+<ShouldJoinPlayerBattles>k__BackingField backing for property 'ShouldJoinPlayerBattles' (System.Boolean): False
+<IsDisbanding>k__BackingField backing for property 'IsDisbanding' (System.Boolean): False
+_pathMode (System.Boolean): True
+_pathLastPosition (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 463.2814 Y: 471.1416 IsOnLand: True
+NextTargetPosition (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 463.2814 Y: 471.1416 IsOnLand: True
+MoveTargetPoint (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 463.2814 Y: 471.1416 IsOnLand: True
+PartyMoveMode (TaleWorlds.CampaignSystem.Party.MoveModeType): Point
+_formationPosition (TaleWorlds.Library.Vec2): (Vec2) X: -0.5945423 Y: -0.038759947
+MoveTargetParty (TaleWorlds.CampaignSystem.Party.MobileParty): <null>
+_defaultBehavior (TaleWorlds.CampaignSystem.Party.AiBehavior): GoToSettlement
+_isCurrentlyAtSea (System.Boolean): False
+_isTargetingPort (System.Boolean): False
+<IsNavalVisualDirty>k__BackingField backing for property 'IsNavalVisualDirty' (System.Boolean): False
+<Anchor>k__BackingField backing for property 'Anchor' (TaleWorlds.CampaignSystem.Naval.AnchorPoint): TaleWorlds.CampaignSystem.Naval.AnchorPoint
+StartTransitionNextFrameToExitFromPort (System.Boolean): False
+<EndPositionForNavigationTransition>k__BackingField backing for property 'EndPositionForNavigationTransition' (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 0 Y: 0 IsOnLand: False
+_navigationTransitionStartTime (TaleWorlds.CampaignSystem.CampaignTime): Spring 1, 0
+<NavigationTransitionDuration>k__BackingField backing for property 'NavigationTransitionDuration' (TaleWorlds.CampaignSystem.CampaignTime): Spring 1, 0
+_desiredAiNavigationType (TaleWorlds.CampaignSystem.Party.MobileParty+NavigationType): Default
+_locatorNodeIndex (System.Int32): 956
+<Scout>k__BackingField backing for property 'Scout' (TaleWorlds.CampaignSystem.Hero): <null>
+<Engineer>k__BackingField backing for property 'Engineer' (TaleWorlds.CampaignSystem.Hero): <null>
+<Quartermaster>k__BackingField backing for property 'Quartermaster' (TaleWorlds.CampaignSystem.Hero): <null>
+<Surgeon>k__BackingField backing for property 'Surgeon' (TaleWorlds.CampaignSystem.Hero): <null>
+<FirstMate>k__BackingField backing for property 'FirstMate' (TaleWorlds.CampaignSystem.Hero): <null>
+<Navigator>k__BackingField backing for property 'Navigator' (TaleWorlds.CampaignSystem.Hero): <null>
+_actualClan (TaleWorlds.CampaignSystem.Clan): (1207959559) Osticos
+_moraleDueToEvents (System.Single): 0
+_totalWeightCarriedCache (System.Single): 0
+_lastNavigationFace (TaleWorlds.Library.PathFaceRecord): TaleWorlds.Library.PathFaceRecord
+_lastWeatherTerrainEffect (TaleWorlds.CampaignSystem.ComponentInterfaces.MapWeatherModel+WeatherEventEffectOnTerrain): Default
+_aiPathNotFound (System.Boolean): False
+<PathBegin>k__BackingField backing for property 'PathBegin' (System.Int32): 0
+Path (TaleWorlds.Library.NavigationPath): TaleWorlds.Library.NavigationPath
+PathLastFace (TaleWorlds.Library.PathFaceRecord): TaleWorlds.Library.PathFaceRecord
+<ForceAiNoPathMode>k__BackingField backing for property 'ForceAiNoPathMode' (System.Boolean): False
+_lastComputedPathNavigationType (TaleWorlds.CampaignSystem.Party.MobileParty+NavigationType): Default
+_position (TaleWorlds.CampaignSystem.CampaignVec2): (CampaignVec2) X: 464.26944 Y: 469.2502 IsOnLand: True
+_lastWind (TaleWorlds.Library.Vec2): (Vec2) X: 0 Y: 0
+_partyComponent (TaleWorlds.CampaignSystem.Party.PartyComponents.PartyComponent): TaleWorlds.CampaignSystem.Party.PartyComponents.LordPartyComponent
+<IsMilitia>k__BackingField backing for property 'IsMilitia' (System.Boolean): False
+<IsLordParty>k__BackingField backing for property 'IsLordParty' (System.Boolean): True
+<IsVillager>k__BackingField backing for property 'IsVillager' (System.Boolean): False
+<IsCaravan>k__BackingField backing for property 'IsCaravan' (System.Boolean): False
+<IsPatrolParty>k__BackingField backing for property 'IsPatrolParty' (System.Boolean): False
+<IsGarrison>k__BackingField backing for property 'IsGarrison' (System.Boolean): False
+<IsCustomParty>k__BackingField backing for property 'IsCustomParty' (System.Boolean): False
+<IsBandit>k__BackingField backing for property 'IsBandit' (System.Boolean): False
+<StringId>k__BackingField backing for property 'StringId' (System.String): lord_1_1_party_1
+<Id>k__BackingField backing for property 'Id' (TaleWorlds.ObjectSystem.MBGUID): 939524153
+<IsInitialized>k__BackingField backing for property 'IsInitialized' (System.Boolean): False
+<IsReady>k__BackingField backing for property 'IsReady' (System.Boolean): True
+<IsRegistered>k__BackingField backing for property 'IsRegistered' (System.Boolean): False
+
+<Settlement>k__BackingField backing for property 'Settlement' (TaleWorlds.CampaignSystem.Settlements.Settlement): <null>
+<MobileParty>k__BackingField backing for property 'MobileParty' (TaleWorlds.CampaignSystem.Party.MobileParty): lord_1_1_party_1:549 Name: Lucon's Party
+<MemberRoster>k__BackingField backing for property 'MemberRoster' (TaleWorlds.CampaignSystem.Roster.TroopRoster): TaleWorlds.CampaignSystem.Roster.TroopRoster
+<PrisonRoster>k__BackingField backing for property 'PrisonRoster' (TaleWorlds.CampaignSystem.Roster.TroopRoster): TaleWorlds.CampaignSystem.Roster.TroopRoster
+<ItemRoster>k__BackingField backing for property 'ItemRoster' (TaleWorlds.CampaignSystem.Roster.ItemRoster): TaleWorlds.CampaignSystem.Roster.ItemRoster
+_remainingFoodPercentage (System.Int32): 0
+_lastEatingTime (TaleWorlds.CampaignSystem.CampaignTime): Summer 1, 1084
+_customOwner (TaleWorlds.CampaignSystem.Hero): <null>
+<LevelMaskIsDirty>k__BackingField backing for property 'LevelMaskIsDirty' (System.Boolean): False
+_index (System.Int32): 549
+<RandomValue>k__BackingField backing for property 'RandomValue' (System.Int32): 80051390
+<CustomName>k__BackingField backing for property 'CustomName' (TaleWorlds.Localization.TextObject): <null>
+<CustomBanner>k__BackingField backing for property 'CustomBanner' (TaleWorlds.Core.Banner): <null>
+_mapEventSide (TaleWorlds.CampaignSystem.MapEvents.MapEventSide): <null>
+_partyMemberSizeLastCheckVersion (System.Int32): 0
+_cachedPartyMemberSizeLimit (System.Int32): 246
+_prisonerSizeLastCheckVersion (System.Int32): -1
+_cachedPrisonerSizeLimit (System.Int32): 0
+_lastNumberOfMenWithHorseVersionNo (System.Int32): -1
+_lastNumberOfMenPerTierVersionNo (System.Int32): -1
+_numberOfMenWithHorse (System.Int32): 31
+_numberOfHealthyMenPerTier (System.Int32[]): <null>
+_lastEstimatedStrengthVersionNo (System.Int32): 0
+_cachedEstimatedStrength (System.Single): 237.87848
+_ships (TaleWorlds.Library.MBList<TaleWorlds.CampaignSystem.Naval.Ship>): TaleWorlds.Library.MBList`1[TaleWorlds.CampaignSystem.Naval.Ship]
+<IsVisualDirty>k__BackingField backing for property 'IsVisualDirty' (System.Boolean): True

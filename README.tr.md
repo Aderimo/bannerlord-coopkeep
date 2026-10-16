@@ -4,7 +4,7 @@
 
 **Bannerlord Coop sunucu yöneticisi**
 
-[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.2.0-C9A227)](../../releases)
+[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.3.0-C9A227)](../../releases)
 [![Lisans](https://img.shields.io/badge/lisans-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#kurulum)
 
@@ -195,7 +195,7 @@ düzenlenir; mod güncellendiğinde ayarların kaybolmaz.
 ## Geliştirme
 
 ```bash
-dotnet test                                    # 213 test
+dotnet test                                    # 229 test
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # tek dosyalık exe üretir
 ```
@@ -205,7 +205,7 @@ powershell -File publish.ps1                   # tek dosyalık exe üretir
 | `src/CoopKeep.Core` | Süreç yönetimi, protokol, yedekleme, kurulum tespiti — **UI'dan bağımsız** |
 | `src/CoopKeep.App` | Avalonia arayüzü (Türkçe/İngilizce, koyu tema) |
 | `src/CoopKeep.Cli` | Komut satırı aracı |
-| `tests/CoopKeep.Core.Tests` | 213 test |
+| `tests/CoopKeep.Core.Tests` | 229 test |
 
 Sürüm numarasının tek kaynağı `Directory.Build.props`.
 

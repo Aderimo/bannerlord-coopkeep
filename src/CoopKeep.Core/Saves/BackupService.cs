@@ -15,10 +15,31 @@ public sealed record BackupPolicy(int MaxCount = 10, int MaxAgeDays = 30)
     public static BackupPolicy Default { get; } = new();
 }
 
+/// <summary>Yedeğin neden alındığı. Dosya adının sonuna yazılır (<c>_auto</c>, <c>_manual</c>…).</summary>
+public enum BackupReason { Unknown, Manual, Autosave, Shutdown, BeforeRestore }
+
 /// <summary>Diskteki tek bir yedek.</summary>
 public sealed record BackupEntry(string FilePath, string SaveName, DateTime CreatedUtc, long SizeBytes)
 {
     public DateTime CreatedLocal => CreatedUtc.ToLocalTime();
+
+    public BackupReason Reason { get; init; }
+
+    internal static readonly (BackupReason Reason, string Suffix)[] Suffixes =
+    [
+        (BackupReason.Manual, "_manual"),
+        (BackupReason.Autosave, "_auto"),
+        (BackupReason.Shutdown, "_shutdown"),
+        (BackupReason.BeforeRestore, "_prerestore"),
+    ];
+
+    internal static BackupReason ReasonFromFileName(string path)
+    {
+        var stem = Path.GetFileNameWithoutExtension(path);
+        foreach (var (reason, suffix) in Suffixes)
+            if (stem.EndsWith(suffix, StringComparison.Ordinal)) return reason;
+        return BackupReason.Unknown;
+    }
 }
 
 /// <summary>
@@ -72,7 +93,7 @@ public sealed class BackupService
     /// Çağıran, bunu <b>doğrulanmış bir kayıt olayından sonra</b> tetiklemeli — yazma
     /// sırasında alınan bir yedek yarım dosya içerebilir.
     /// </remarks>
-    public BackupEntry Create(string saveName)
+    public BackupEntry Create(string saveName, BackupReason reason = BackupReason.Unknown)
     {
         var save = _saves.Find(saveName)
                    ?? throw new FileNotFoundException($"'{saveName}' adlı sunucu bulunamadı.");
@@ -85,12 +106,13 @@ public sealed class BackupService
         Directory.CreateDirectory(folder);
 
         var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
-        var target = Path.Combine(folder, $"{saveName}_{stamp}.zip");
+        var suffix = BackupEntry.Suffixes.FirstOrDefault(s => s.Reason == reason).Suffix ?? "";
+        var target = Path.Combine(folder, $"{saveName}_{stamp}{suffix}.zip");
 
         // Aynı saniyede ikinci yedek istenirse üzerine yazma.
         var n = 1;
         while (File.Exists(target))
-            target = Path.Combine(folder, $"{saveName}_{stamp}-{n++}.zip");
+            target = Path.Combine(folder, $"{saveName}_{stamp}-{n++}{suffix}.zip");
 
         // Önce geçici dosyaya yaz: yazma yarıda kesilirse bozuk bir zip
         // yedek listesine girmesin.
@@ -114,7 +136,20 @@ public sealed class BackupService
         Prune(saveName);
 
         var info = new FileInfo(target);
-        return new BackupEntry(target, saveName, info.CreationTimeUtc, info.Length);
+        return new BackupEntry(target, saveName, info.CreationTimeUtc, info.Length) { Reason = reason };
+    }
+
+    /// <summary>Tüm dünyaların yedekleri, yeniden eskiye.</summary>
+    public IReadOnlyList<BackupEntry> ListAll()
+    {
+        if (!Directory.Exists(BackupRoot)) return Array.Empty<BackupEntry>();
+
+        return Directory.EnumerateDirectories(BackupRoot)
+            .Select(Path.GetFileName)
+            .Where(name => SaveSet.IsValidSaveName(name))
+            .SelectMany(name => List(name!))
+            .OrderByDescending(b => b.CreatedUtc)
+            .ToList();
     }
 
     /// <summary>Bir dünyanın yedeklerini yeniden eskiye doğru listeler.</summary>
@@ -125,7 +160,10 @@ public sealed class BackupService
 
         return Directory.EnumerateFiles(folder, "*.zip")
             .Select(p => new FileInfo(p))
-            .Select(f => new BackupEntry(f.FullName, saveName, f.LastWriteTimeUtc, f.Length))
+            .Select(f => new BackupEntry(f.FullName, saveName, f.LastWriteTimeUtc, f.Length)
+            {
+                Reason = BackupEntry.ReasonFromFileName(f.Name),
+            })
             .OrderByDescending(b => b.CreatedUtc)
             .ToList();
     }
@@ -164,7 +202,7 @@ public sealed class BackupService
         // 2) Mevcut hâlin güvenlik yedeği
         if (_saves.Exists(entry.SaveName))
         {
-            try { Create(entry.SaveName); }
+            try { Create(entry.SaveName, BackupReason.BeforeRestore); }
             catch (InvalidOperationException) { /* mevcut hâl zaten eksikse devam et */ }
         }
 

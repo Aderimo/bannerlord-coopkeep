@@ -93,6 +93,12 @@
                             <TextBlock Text="{Binding L[nav.players]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMap}">
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconMap}" />
+                            <TextBlock Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
                     <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageBackups}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconArchive}" />

@@ -145,19 +145,21 @@
                     <StackPanel Spacing="14">
                         <TextBlock Classes="h2" Text="{Binding L[wiz.server]}" />
                         <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Spacing="3" Margin="0,0,20,0">
-                                <TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" />
-                                <TextBlock Classes="hint" Text="{Binding L[settings.passwordHint]}" />
-                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.passwordHint]}"><TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                             <TextBox Grid.Column="1" Width="220" Text="{Binding EditPassword}" PasswordChar="•"
                                      RevealPassword="{Binding !PrivacyMode}" VerticalAlignment="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Spacing="3" Margin="0,0,20,0">
-                                <TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" />
-                                <TextBlock Classes="hint" Text="{Binding L[msg.steamHint]}" />
-                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.steamHint]}"><TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" VerticalAlignment="Center" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.autosaveHint]}"><TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                            <TextBox Grid.Column="1" Width="90" Text="{Binding EditAutosave}" VerticalAlignment="Center" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.portHint]}"><TextBlock Text="{Binding L[lbl.port]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                            <TextBox Grid.Column="1" Width="90" Text="{Binding EditPort}" VerticalAlignment="Center" />
                         </Grid>
                     </StackPanel>
                 </Border>

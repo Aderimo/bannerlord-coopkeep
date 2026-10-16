@@ -30,14 +30,14 @@ public sealed partial class Loc
         ["sum.battleSize"] = "{0} asker",
         ["sum.deathOn"] = "savaşta ölüm açık",
         ["sum.deathOff"] = "savaşta ölüm kapalı",
-        ["sum.cheatsOn"] = "hileler açık",
+        ["sum.cheatsOn"] = "oyuncu hileleri açık",
 
         ["grp.difficulty"] = "Zorluk",
         ["grp.difficulty.desc"] = "Oyunda yeni kampanya açarken gördüğün ayarlar. Her oturumda yeniden uygulanır; sonradan değiştirebilirsin.",
         ["grp.life"] = "Yaşam ve ölüm",
         ["grp.world"] = "Dünya",
         ["grp.multiplayer"] = "Birlikte oynama",
-        ["grp.cheats"] = "Hileler",
+        ["grp.cheats"] = "Hile koruması",
 
         // ---- zorluk ----
         ["set.playerReceivedDamage"] = "Oyuncunun aldığı hasar",
@@ -159,8 +159,8 @@ public sealed partial class Loc
         ["opt.AlwaysRetry"] = "Hemen",
 
         // ---- hileler ----
-        ["set.clientsCanUseCheats"] = "Oyuncular hile kullanabilsin",
-        ["set.clientsCanUseCheats.desc"] = "Açıkken her oyuncu kendi oyununda hile menülerini kullanabilir: asker, eşya, ışınlanma vb. Oyunun kendi konsol hileleri Coop'ta her zaman kapalıdır.",
+        ["set.clientsCanUseCheats"] = "Hile koruması",
+        ["set.clientsCanUseCheats.desc"] = "Açıkken oyuncular kendi oyunlarında asker, eşya, ışınlanma gibi hileleri kullanamaz. Sunucu sahibi Oyuncular sayfasından yine altın, asker vb. verebilir.",
     };
 
     private static readonly Dictionary<string, string> EnglishV2 = new(StringComparer.Ordinal)
@@ -180,14 +180,14 @@ public sealed partial class Loc
         ["sum.battleSize"] = "{0} troops",
         ["sum.deathOn"] = "battle death on",
         ["sum.deathOff"] = "battle death off",
-        ["sum.cheatsOn"] = "cheats on",
+        ["sum.cheatsOn"] = "player cheats on",
 
         ["grp.difficulty"] = "Difficulty",
         ["grp.difficulty.desc"] = "The settings you see when starting a new campaign in the game. Re-applied every session; you can change them later.",
         ["grp.life"] = "Life and death",
         ["grp.world"] = "World",
         ["grp.multiplayer"] = "Playing together",
-        ["grp.cheats"] = "Cheats",
+        ["grp.cheats"] = "Cheat protection",
 
         ["set.playerReceivedDamage"] = "Damage to player",
         ["set.playerReceivedDamage.desc"] = "Damage your character takes in battle.",
@@ -304,7 +304,7 @@ public sealed partial class Loc
         ["opt.NeverExpire"] = "Never",
         ["opt.AlwaysRetry"] = "Instantly",
 
-        ["set.clientsCanUseCheats"] = "Players can use cheats",
-        ["set.clientsCanUseCheats.desc"] = "When on, every player can use cheat menus in their own game: troops, equipment, teleport and more. The game's own console cheats are always off in co-op.",
+        ["set.clientsCanUseCheats"] = "Cheat protection",
+        ["set.clientsCanUseCheats.desc"] = "When on, players can't use cheats like troops, equipment or teleport in their own game. The host can still give gold, troops and more from the Players page.",
     };
 }
