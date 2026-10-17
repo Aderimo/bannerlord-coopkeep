@@ -292,4 +292,30 @@ public sealed class SaveRepositoryTests : IDisposable
         var depo = new SaveRepository(Path.Combine(_dizin, "hic-olmayan"));
         Assert.Empty(depo.Discover());
     }
+
+    [Fact]
+    public void yeni_dunya_sablondan_sunucu_acilmadan_kurulur()
+    {
+        CiftYaz("default_new_game", sav: "bos dunya");
+
+        var dunya = _depo.CreateFromTemplate("yeni");
+
+        Assert.NotNull(dunya);
+        Assert.Equal("bos dunya", File.ReadAllText(dunya.SavePath));
+        Assert.False(dunya.IsComplete);  // eş JSON'u sunucu ilk açılışta yazar
+        Assert.Throws<InvalidOperationException>(() => _depo.CreateFromTemplate("yeni"));
+    }
+
+    [Fact]
+    public void sablon_dizinde_yoksa_sunucu_kurulumundaki_kullanilir()
+    {
+        var disari = Path.Combine(_dizin, "kurulum");
+        Directory.CreateDirectory(disari);
+        var sablon = Path.Combine(disari, "default_new_game.sav");
+        File.WriteAllText(sablon, "kurulumdaki");
+        var depo = new SaveRepository(Path.Combine(_dizin, "veri"));
+
+        Assert.Null(depo.CreateFromTemplate("a", [Path.Combine(disari, "yok.sav")]));
+        Assert.Equal("kurulumdaki", File.ReadAllText(depo.CreateFromTemplate("a", [sablon])!.SavePath));
+    }
 }

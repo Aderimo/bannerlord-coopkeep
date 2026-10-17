@@ -29,6 +29,31 @@ public sealed record ModCompatEntry
     [JsonPropertyName("coop")] public string? CoopVersion { get; init; }
 
     [JsonPropertyName("note")] public string? Note { get; init; }
+
+    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("workshop")] public string? Workshop { get; init; }
+    [JsonPropertyName("nexus")] public JsonElement? Nexus { get; init; }
+    [JsonPropertyName("category")] public string? Category { get; init; }
+    [JsonPropertyName("works")] public int Works { get; init; }
+    [JsonPropertyName("broken")] public int Broken { get; init; }
+
+    /// <summary>Gerçek Module Id bilinmiyor; <see cref="Id"/> görünen ad.</summary>
+    [JsonPropertyName("idGuess")] public bool IdGuess { get; init; }
+
+    public string DisplayName => string.IsNullOrWhiteSpace(Name) ? Id : Name!;
+
+    /// <summary>Steam Workshop kimliği (yalnız rakamlar), yoksa <see langword="null"/>.</summary>
+    public string? WorkshopId => WorkshopDetails.IsValidId(Workshop?.Trim()) ? Workshop!.Trim() : null;
+
+    public string? WorkshopUrl => WorkshopId is { } id ? "https://steamcommunity.com/sharedfiles/filedetails/?id=" + id : null;
+
+    public string? NexusUrl =>
+        Nexus is { } n && n.ValueKind is JsonValueKind.Number or JsonValueKind.String && n.ToString() is { Length: > 0 } id
+            ? "https://www.nexusmods.com/mountandblade2bannerlord/mods/" + id
+            : null;
+
+    /// <summary>Modun sayfası: Steam Workshop, yoksa Nexus.</summary>
+    public string? Url => WorkshopUrl ?? NexusUrl;
 }
 
 /// <summary>
@@ -54,18 +79,33 @@ public sealed class ModCompatDatabase
 
     private readonly Dictionary<string, ModCompatEntry> _byId;
 
-    private ModCompatDatabase(IEnumerable<ModCompatEntry> entries) =>
+    /// <summary>Gerçek kimliği bilinmeyen (<see cref="ModCompatEntry.IdGuess"/>) modlar için ada göre eşleşme.</summary>
+    private readonly Dictionary<string, ModCompatEntry> _byName;
+
+    private ModCompatDatabase(IEnumerable<ModCompatEntry> entries)
+    {
         _byId = entries
             .Where(e => !string.IsNullOrWhiteSpace(e.Id))
             .GroupBy(e => Normalize(e.Id))
             .ToDictionary(g => g.Key, g => g.Last());
 
+        _byName = _byId.Values
+            .GroupBy(e => Normalize(e.DisplayName))
+            .Where(g => g.Key.Length > 0)
+            .ToDictionary(g => g.Key, g => g.Last());
+    }
+
     public static ModCompatDatabase Empty { get; } = new([]);
 
     public int Count => _byId.Count;
 
+    /// <summary>Listedeki bütün modlar (yüklü olmayanlar dahil).</summary>
+    public IEnumerable<ModCompatEntry> All => _byId.Values;
+
     public ModCompatEntry? Find(string moduleId) =>
-        _byId.TryGetValue(Normalize(moduleId), out var e) ? e : null;
+        _byId.TryGetValue(Normalize(moduleId), out var e) ? e
+        : _byName.TryGetValue(Normalize(moduleId), out var n) && n.IdGuess ? n
+        : null;
 
     /// <summary>Liste metnini okur; bozuksa <see langword="null"/>.</summary>
     public static ModCompatDatabase? Parse(string json)

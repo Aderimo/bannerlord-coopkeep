@@ -4,7 +4,7 @@
 
 **Bannerlord Coop sunucu yöneticisi**
 
-[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.3.0-C9A227)](../../releases)
+[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-v0.5.0-C9A227)](../../releases)
 [![Lisans](https://img.shields.io/badge/lisans-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#kurulum)
 
@@ -24,7 +24,8 @@ tamamen elle: DLL'leri unblock etmek, önce oyunda tek oyunculu bir save yaratma
 `server-config.json`'ı Notepad'le düzenlemek, `.exe`'yi çift tıklayıp konsol
 penceresini açık tutmak, save bozulursa dosyaları elle kopyalamak.
 
-CoopKeep bu yükü tamamen üstlenir ve **mod dosyalarına hiç dokunmaz.**
+CoopKeep bu yükü tamamen üstlenir. Mod dosyalarına dokunmaz; yalnızca isteğe bağlı
+sunucu eklentisini açarsan (aşağıda) dokunur.
 
 ---
 
@@ -48,6 +49,7 @@ CoopKeep bu yükü tamamen üstlenir ve **mod dosyalarına hiç dokunmaz.**
 
 > **Kurulum gerektirmez.** Oyun klasörüne hiçbir şey kopyalanmaz, hiçbir dosya
 > değiştirilmez. İstediğin klasörde durabilir; silmek istersen exe'yi silmen yeterli.
+> (Tek istisna isteğe bağlı sunucu eklentisi; kapatınca geri kaldırılır.)
 
 **Arkadaşlarının CoopKeep'e ihtiyacı yok.** Onlar sadece aynı Coop moduna abone
 olup oyundan bağlanır.
@@ -105,14 +107,34 @@ Steam üzerinden gelenler için gerekmez.
 
 ### Oyuncular
 - Canlı liste, arama, atma, duyuru
-- **Karakterler:** ad, altın, can ve yaş sunucudan okunur; tam can, altın ekle/ayarla,
-  yaşı ayarla. Kaç oyuncu olursa olsun çalışır; sonuç sunucudan doğrulanır ve her
-  işlem kalıcı denetim kaydına yazılır
-- **Engel listesi:** listedeki adlar bağlanınca otomatik atılır
-- **Hileler:** dünya ayarından oyuncuların hile menüleri açılır
+- Coop sunucusunun kendi ban listesiyle **Steam banı**; yeniden başlatmak gerekmez.
+  Steam kimliği henüz bilinmeyen oyuncu adıyla banlanır
+- **Oyuncu profili:** seviye, altın, can, yaş, nüfuz, ün, oyundaki gibi beceri ekranı,
+  savaş ve şehir kuşanımı (gerçek eşya görselleriyle), envanter ve ordu
+
+### Hileler
+Hile yapan birinin verdiği zararı telafi etmek için. Bir, birkaç ya da bütün oyuncular:
+- Altın, can, klan nüfuzu ve ünü, yaş
+- Gerçek portreleriyle **tür ve sayı seçerek asker** ver; ordudan asker al; yaralıları iyileştir
+- **Eşyalar:** oyundaki bütün eşyalar, gruplu ve aranabilir, kasaba fiyatlarıyla
+- Beceri ekranında **beceri, odak ve özellik puanları**
+- Son işlemler geri alınabilir; her işlem doğrulanır ve denetim kaydına yazılır
+
+### Harita
+- Kasabalar, kaleler, köyler, krallıklar ve el değiştirme uyarılarıyla gerçek Calradia haritası
+- Oyuncular ve **bütün lordlar** canlı hareket eder; tıklayınca bilgi kartı açılır
+- **Haritadan ışınlama:** oyuncuyu seç, sonra bir yerleşime tıkla ya da ara
+- **İzleyici modu:** arkadaşların haritanı kendi CoopKeep'lerinden izleyebilir
+
+### Ansiklopedi
+- Krallıklar, klanlar, lordlar, yerleşimler, askerler (terfi ağaçları) ve eşyalar;
+  metinler oyunun kendi ansiklopedisinden, oyunun kendi Türkçe çevirisiyle
+- Oyun verilerinden hesaplanan **rehberler:** en güçlü askerler, en zengin kasabalar,
+  en güçlü klanlar, en iyi kale konumları, en iyi silah, zırh ve atlar
 
 ### Modlar
 - Oyun başlatıcındaki her modun durumu (uyumlu / sunucuda yok / Coop reddediyor)
+- Topluluk sonuçlarıyla **bütün modlar listesi**; moda tıklayınca açıklaması açılır
 - **Coop için düzenle:** sorunlu modları tek tıkla kapat, sonra geri aç
 
 ### Yedekler
@@ -158,11 +180,12 @@ Bunlar CoopKeep'in eksiği değil, **modun kendi sınırları** — araştırmay
 
 - **Oyuncu limiti yok.** Bannerlord Coop bir slot sınırı uygulamıyor; dışarıdan
   bağlantı reddedilemiyor.
-- **Ban yok, yalnızca kick var.** Steam kimliği canlı protokole yazılmıyor, bu
-  yüzden kalıcı ban ancak isim bazlı olabilirdi.
-- **Oyunun kendi konsol hileleri sunucuda kapalı** (`Cheat mode is disabled!`) ve
-  açacak bir komut yok. Oyuncuların hile menüleri dünya ayarından, altın/can/yaş ise
-  Oyuncular sayfasından.
+- **Oyunun kendi konsol hileleri sunucuda kapalı** (`Cheat mode is disabled!`).
+  CoopKeep'in Hileler sekmesi Coop'un kendi komutlarıyla ve isteğe bağlı **CoopKeep
+  sunucu eklentisiyle** (eşyalar, beceriler, profil, hızlı harita) çalışır. Eklenti sen
+  açmadıkça kapalıdır; açınca Coop modunun klasörüne alt modül olarak eklenir (asıl
+  dosyanın yedeği alınır), kapatınca kaldırılır. Yalnızca sunucu konsolu kullanabilir.
+- **Ün azaltılamıyor**, tanrı modu yok.
 - **Sunucuya mod eklenemiyor.** Yalnızca resmî modülleri ve Coop'u yüklüyor;
   oyuncuların diğer modları kapatması gerekir (Modlar sayfası yardım eder).
 - **"Sadece arkadaşlar" görünürlüğü** dedicated server'da doğrulanamadı.

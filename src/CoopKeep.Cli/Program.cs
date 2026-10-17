@@ -38,6 +38,7 @@ try
         "use" => UseSave(dataDir, rest),
         "new" => await NewWorldAsync(dataDir, rest, acceptEula),
         "run" => await RunAsync(dataDir, acceptEula),
+        "images" => await FetchImagesAsync(rest),
         _ => Help(),
     };
 }
@@ -61,12 +62,61 @@ static int Help()
           coopkeep use <ad>        aktif kampanyayı değiştir
           coopkeep new <ad>        yeni sandbox dünyası yarat (oyuna girmeden)
           coopkeep run             server'ı başlat ve konsolu sür
+          coopkeep images <klasör> görselli paket için wiki görsellerini indir
 
         Seçenekler:
           --data-dir <yol>         server veri dizinini geçersiz kıl
           --accept-eula            sunucunun lisans sözleşmesini kabul et
                                    (Coop modundaki DedicatedServer\EULA.md)
         """);
+    return 0;
+}
+
+/// <summary>
+/// Görselli indirme paketi: asker portreleri, klan sancakları, lord portreleri, yerleşim
+/// görüntüleri ve harita wiki'lerden indirilir (<c>&lt;klasör&gt;\&lt;tür&gt;\&lt;ad&gt;.png</c>).
+/// Oyundan çıkarılan görseller (CoopKeep.ImageExporter) aynı klasöre eklenir.
+/// </summary>
+static async Task<int> FetchImagesAsync(string[] rest)
+{
+    var outDir = Path.GetFullPath(rest.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? "image-pack");
+    var game = GameLocator.FindBannerlord() ?? throw new InvalidOperationException("Bannerlord bulunamadı.");
+    using var images = new CoopKeep.Core.Images.GameImageService(outDir);
+
+    var jobs = new List<(CoopKeep.Core.Images.GameImageKind Kind, string Name)>();
+    jobs.AddRange(GameCatalogs.ReadTroops(GameCatalogs.TroopsPath(game)).Select(t => (CoopKeep.Core.Images.GameImageKind.Troop, t.Name)));
+    jobs.AddRange(GameCatalogs.ReadClans(GameCatalogs.ClansPath(game)).Select(c => (CoopKeep.Core.Images.GameImageKind.ClanBanner, c.Name)));
+    jobs.AddRange(GameCatalogs.ReadSettlements(GameCatalogs.SettlementsPath(game))
+        .Where(s => s.Kind is SettlementKind.Town or SettlementKind.Castle or SettlementKind.Village)
+        .Select(s => (CoopKeep.Core.Images.GameImageKind.Settlement, s.Name)));
+
+    var lords = Path.Combine(game.ModulesDirectory, "SandBox", "ModuleData", "lords.xml");
+    if (File.Exists(lords))
+        jobs.AddRange(System.Xml.Linq.XDocument.Load(lords).Descendants("NPCCharacter")
+            .Select(e => GameCatalogs.CleanName((string?)e.Attribute("name")))
+            .Where(n => n.Length > 0)
+            .Select(n => (CoopKeep.Core.Images.GameImageKind.Lord, n)));
+
+    jobs.AddRange(GameCatalogs.ReadItems(game.ModulesDirectory).Select(i => (CoopKeep.Core.Images.GameImageKind.Item, i.Name)));
+    jobs = jobs.Distinct().ToList();
+
+    Head($"{jobs.Count} görsel aranıyor → {outDir}");
+    Console.WriteLine(await images.GetMapAsync() is null ? "  harita: yok" : "  harita: tamam");
+
+    var found = new Dictionary<CoopKeep.Core.Images.GameImageKind, int>();
+    var done = 0;
+    await Parallel.ForEachAsync(jobs, new ParallelOptions { MaxDegreeOfParallelism = 4 }, async (job, ct) =>
+    {
+        var path = await images.GetAsync(job.Kind, job.Name, ct);
+        lock (found)
+        {
+            if (path is not null) found[job.Kind] = found.GetValueOrDefault(job.Kind) + 1;
+            if (++done % 100 == 0) Console.WriteLine($"  {done}/{jobs.Count}");
+        }
+    });
+
+    foreach (var kind in jobs.Select(j => j.Kind).Distinct())
+        Field(kind.ToString(), $"{found.GetValueOrDefault(kind)} / {jobs.Count(j => j.Kind == kind)}");
     return 0;
 }
 

@@ -1,0 +1,145 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.ModInfoOverlay"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Mod bilgi penceresi: topluluk durumu, yerel durum, Workshop açıklaması ve kapak görseli.
+      Zemine tıklamak da kapatır.
+  -->
+  <Border Name="Backdrop" Background="#E6090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource FrameBrush}"
+            BorderThickness="1" CornerRadius="16" Width="720" MaxHeight="700" Margin="24"
+            VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 24 80 0 #99000000">
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Başlık -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="30,24,22,14">
+            <Border Width="96" Height="96" CornerRadius="8" ClipToBounds="True" Background="{StaticResource BgRaised}"
+                    BorderBrush="{StaticResource BorderDim}" BorderThickness="1" Margin="0,0,18,0" VerticalAlignment="Top">
+                <Panel>
+                    <Path Data="{StaticResource IconPuzzle}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6"
+                          Width="30" Height="30" Stretch="Uniform" IsVisible="{Binding !ModInfoHasImage}" />
+                    <Image Source="{Binding ModInfoImage}" Stretch="UniformToFill" IsVisible="{Binding ModInfoHasImage}" />
+                </Panel>
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Classes="eyebrow" Text="{Binding L[modinfo.eyebrow]}" />
+                <TextBlock Classes="h1" Text="{Binding ModInfo.Title}" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="6" ToolTip.Tip="{Binding L[modinfo.idTip]}">
+                    <TextBlock Classes="dim" FontSize="12" Text="{Binding L[modinfo.id]}" />
+                    <SelectableTextBlock FontSize="12" Foreground="{StaticResource TextDim}" Text="{Binding ModInfo.Id}" />
+                </StackPanel>
+            </StackPanel>
+            <Button Grid.Column="2" Classes="ghost" Padding="8" VerticalAlignment="Top"
+                    Command="{Binding CloseModInfoCommand}" ToolTip.Tip="{Binding L[modinfo.close]}">
+                <Path Classes="icon" Data="{StaticResource IconClose}" Width="14" />
+            </Button>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="30,0,30,4" Spacing="12">
+
+                <!-- Durum rozetleri -->
+                <WrapPanel>
+                    <Border Classes="badge" Background="{StaticResource BgRaised}" Margin="0,0,6,6"
+                            IsVisible="{Binding ModInfo.Category, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}" Text="{Binding ModInfo.Category}" />
+                    </Border>
+
+                    <Border Classes="badge" Background="{StaticResource BgRaised}" Margin="0,0,6,6" ToolTip.Tip="{Binding L[modinfo.communityTip]}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource TextFaint}" Text="{Binding L[modinfo.community]}" />
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding ModInfo.CommunityText}" IsVisible="{Binding ModInfo.CommunityWorks}" />
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding ModInfo.CommunityText}" IsVisible="{Binding ModInfo.CommunityBroken}" />
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}" Text="{Binding L[mod.community.unknown]}"
+                                       IsVisible="{Binding ModInfo.Community, Converter={x:Static vm:ModConverters.IsUnknown}}" />
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}" Text="{Binding ModInfo.VotesText}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="badge" Background="{StaticResource BgRaised}" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource TextFaint}" Text="{Binding L[modinfo.server]}" />
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}" Text="{Binding ModInfoInstallText}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Panel Margin="0,0,6,6" IsVisible="{Binding ModInfo.IsInstalled}">
+                        <Border Classes="badge" Background="{StaticResource SuccessSoft}" IsVisible="{Binding ModInfo.IsOk}">
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding ModInfo.StatusText}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource DangerSoft}" IsVisible="{Binding ModInfo.IsBlocked}">
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding ModInfo.StatusText}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource WarningSoft}" IsVisible="{Binding ModInfo.IsRisky}">
+                            <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding ModInfo.StatusText}" />
+                        </Border>
+                    </Panel>
+                </WrapPanel>
+
+                <!-- Topluluk notu -->
+                <Border Classes="card" Padding="14,10" IsVisible="{Binding ModInfo.HasCommunityNote}">
+                    <StackPanel Spacing="3">
+                        <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[modinfo.note]}" />
+                        <SelectableTextBlock Text="{Binding ModInfo.CommunityNote}" TextWrapping="Wrap" FontSize="13" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Workshop açıklaması -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <StackPanel Spacing="2">
+                        <TextBlock Classes="h2" Text="{Binding L[modinfo.description]}" />
+                        <TextBlock Classes="dim" FontSize="12" Text="{Binding ModInfoStatsText}" IsVisible="{Binding ModInfoHasDescription}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Classes="badge" Background="{StaticResource WarningSoft}" VerticalAlignment="Top"
+                            IsVisible="{Binding ModInfoStale}" ToolTip.Tip="{Binding L[modinfo.staleTip]}">
+                        <TextBlock FontSize="11" Foreground="{StaticResource Warning}" Text="{Binding L[modinfo.stale]}" />
+                    </Border>
+                </Grid>
+
+                <TextBlock Classes="hint" Text="{Binding L[modinfo.loading]}" IsVisible="{Binding ModInfoLoading}" />
+                <TextBlock Classes="hint" Text="{Binding ModInfoNoDescriptionText}" IsVisible="{Binding ModInfoNoDescription}" />
+
+                <Border Background="{StaticResource ConsoleBg}" CornerRadius="10" BorderBrush="{StaticResource BorderDim}" BorderThickness="1"
+                        IsVisible="{Binding ModInfoHasDescription}">
+                    <SelectableTextBlock Margin="16,14" Text="{Binding ModInfoWorkshop.Description}" TextWrapping="Wrap" FontSize="12.5"
+                                         Foreground="{StaticResource TextDim}" LineHeight="19" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Eylemler -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="30,16,30,22">
+            <Button Margin="0,0,8,0" Command="{Binding OpenModWorkshopCommand}" IsVisible="{Binding ModInfo.HasWorkshop}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding L[modinfo.workshop]}" />
+                    <Path Classes="icon" Data="{StaticResource IconArrowRight}" Width="11" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="1" Command="{Binding OpenModNexusCommand}" IsVisible="{Binding ModInfo.HasNexus}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding L[modinfo.nexus]}" />
+                    <Path Classes="icon" Data="{StaticResource IconArrowRight}" Width="11" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Margin="0,0,8,0" IsVisible="{Binding ModInfo.CanReport}" ToolTip.Tip="{Binding L[modinfo.reportTip]}"
+                    Command="{Binding ReportModWorksCommand}" CommandParameter="{Binding ModInfo}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2" Width="11" Height="11" Stretch="Uniform" />
+                    <TextBlock Text="{Binding L[modinfo.reportWorks]}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="4" IsVisible="{Binding ModInfo.CanReport}" ToolTip.Tip="{Binding L[modinfo.reportTip]}"
+                    Command="{Binding ReportModBrokenCommand}" CommandParameter="{Binding ModInfo}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2" Width="10" Height="10" Stretch="Uniform" />
+                    <TextBlock Text="{Binding L[modinfo.reportBroken]}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+      </Grid>
+    </Border>
+  </Border>
+</UserControl>

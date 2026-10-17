@@ -52,6 +52,26 @@ public sealed class ServerLaunchOptions
     /// </remarks>
     public bool AcceptEula { get; init; }
 
+    /// <summary>
+    /// Coop'un ban listesinin yolu (<c>COOP_STEAM_BAN_FILE</c>). Boşsa sunucu kendi
+    /// varsayılanını kullanır.
+    /// </summary>
+    /// <remarks>
+    /// <c>COOP_DATA_DIR</c> yerine bu değişken kullanılıyor: o değişken
+    /// <c>mod-config.json</c>'ın yerini de değiştirirdi. Yol mutlak olmalı ve tırnak
+    /// içermemeli (Coop belgesi).
+    /// </remarks>
+    public string? SteamBanFile { get; init; }
+
+    /// <summary>Sunucu sürecine verilecek ortam değişkenleri.</summary>
+    public IReadOnlyDictionary<string, string> BuildEnvironment()
+    {
+        var env = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!string.IsNullOrWhiteSpace(SteamBanFile))
+            env["COOP_STEAM_BAN_FILE"] = Path.GetFullPath(SteamBanFile);
+        return env;
+    }
+
     public IReadOnlyList<string> BuildArguments()
     {
         var args = new List<string>();

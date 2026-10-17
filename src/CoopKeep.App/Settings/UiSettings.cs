@@ -45,11 +45,28 @@ public sealed class UiSettings
     /// <summary>Sunucu süreçleri "normalin üstü" öncelikle çalışsın mı?</summary>
     public bool HighPriority { get; set; }
 
+    /// <summary>CoopKeep sunucu eklentisi (eşya ver/al) kurulsun mu? Varsayılan kapalı.</summary>
+    public bool ServerTools { get; set; }
+
     /// <summary>Sunucu bu kadar GB'ı aşınca ana sayfada uyarı gösterilir. 0 = kapalı.</summary>
     public int MemoryWarningGb { get; set; } = 3;
 
     /// <summary>Açılışta GitHub'da yeni sürüm var mı diye bakılsın mı?</summary>
     public bool CheckUpdates { get; set; } = true;
+
+    /// <summary>Harita izleyicilerle paylaşılıyor mu?</summary>
+    public bool ShareMap { get; set; }
+
+    /// <summary>İzleyici portu; 0 ise oyun portu + 1.</summary>
+    public int SharePort { get; set; }
+
+    /// <summary>İzleyici paylaşım kodu.</summary>
+    public string? ShareCode { get; set; }
+
+    /// <summary>İzleyici olarak son bağlanılan ev sahibi (adres, port, kod).</summary>
+    public string? ViewerHost { get; set; }
+    public int ViewerPort { get; set; }
+    public string? ViewerCode { get; set; }
 
     // ------------------------------------------------------------------
 

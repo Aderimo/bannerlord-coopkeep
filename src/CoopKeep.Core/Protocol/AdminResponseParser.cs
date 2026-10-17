@@ -39,6 +39,9 @@ public enum AdminOutcome
 
     /// <summary>Komut parametreleri reddedildi (<c>Usage:</c> yanıtı).</summary>
     InvalidArguments,
+
+    /// <summary>Sunucu işlemi reddetti (örn. lord partisini ışınlamak).</summary>
+    Rejected,
 }
 
 /// <summary>
@@ -60,12 +63,23 @@ public static partial class AdminResponseParser
     [GeneratedRegex(@"^Set age to (?<age>\d+) for (?<count>\d+) hero")]
     private static partial Regex AgeSet();
 
-    [GeneratedRegex(@"^(Unable to find hero with (id|name): |No hero named .* found|ID: '.*' not found|.* not found\.?$)")]
+    [GeneratedRegex(@"^(Unable to find hero with (id|name): |No hero named .* found|ID: '.*' not found|.* not found\.?$|Unable to find |COOPKEEP_ERROR .* not found)")]
     private static partial Regex NotFound();
+
+    /// <summary>
+    /// v0.4'te doğrulanan başarı satırları (bkz. fikstür <c>troops-clans.txt</c>).
+    /// </summary>
+    [GeneratedRegex(@"^(TROOP_STATE_SET |Set \S+ oldWounded=\d+ newWounded=\d+|Applied -?\d+ influence to |Gave -?\d+ influence to |.+ given renown$|\S+ was given -?\d+ (attribute|focus) points|\S+ was given -?\d+ xp for |Gave xp to the troops of |Ordered |.+ is already in |COOPKEEP_ITEM |COOPKEEP_DEV )")]
+    private static partial Regex Confirmed();
+
+    /// <summary>İşlemin yapılamadığını söyleyen, "bulunamadı" dışındaki satırlar.</summary>
+    [GeneratedRegex(@"^(COOPKEEP_ERROR .*(no party|count must|xp must|kind must|no campaign)|Party \S+ is not a player party\.|Settlement with id .* is not active\.|Hero roster elements are not supported|Please enter an integer|Wounded count must be between)")]
+    private static partial Regex Rejected();
 
     /// <summary>Bu satır, gönderilen komutun yanıtının sonu mu?</summary>
     public static bool IsTerminal(string line) =>
         GoldSet().IsMatch(line) || HitPointsChanged().IsMatch(line) || AgeSet().IsMatch(line) ||
+        Confirmed().IsMatch(line) || Rejected().IsMatch(line) ||
         NotFound().IsMatch(line) || IsUnknownCommand(line) || IsCheatsDisabled(line) ||
         // hero.info dökümünün son alanı.
         line.StartsWith("_heroDeveloper = ", StringComparison.Ordinal);
@@ -87,7 +101,8 @@ public static partial class AdminResponseParser
             // Diğer günlük satırları ("[Coop] …", "[DedicatedServer] …") komutun yanıtı değil.
             if (line.StartsWith('[')) continue;
 
-            if (GoldSet().IsMatch(line) || HitPointsChanged().IsMatch(line)) return AdminOutcome.Success;
+            if (GoldSet().IsMatch(line) || HitPointsChanged().IsMatch(line) || Confirmed().IsMatch(line)) return AdminOutcome.Success;
+            if (Rejected().IsMatch(line)) return AdminOutcome.Rejected;
             if (AgeSet().Match(line) is { Success: true } age)
                 return age.Groups["count"].Value == "0" ? AdminOutcome.NotFound : AdminOutcome.Success;
             if (NotFound().IsMatch(line)) return AdminOutcome.NotFound;

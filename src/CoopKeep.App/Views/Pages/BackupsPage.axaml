@@ -25,13 +25,13 @@
 
         <!-- Kapsam: seçili dünya / tüm dünyalar -->
         <UniformGrid Classes="enter d1" Columns="2" HorizontalAlignment="Left" Width="420">
-            <RadioButton Classes="choice" GroupName="backupScope" IsChecked="{Binding BackupsShowSelected}" Margin="0,0,4,0">
+            <RadioButton Classes="choice scope" GroupName="backupScope" IsChecked="{Binding BackupsShowSelected}" Margin="0,0,4,0">
                 <StackPanel Spacing="1">
                     <TextBlock Text="{Binding L[backups.thisWorld]}" FontWeight="SemiBold" />
                     <TextBlock Classes="dim" FontSize="11.5" Text="{Binding SelectedCampaign.Name, FallbackValue='—'}" />
                 </StackPanel>
             </RadioButton>
-            <RadioButton Classes="choice" GroupName="backupScope" IsChecked="{Binding BackupsShowAll}" Margin="4,0,0,0">
+            <RadioButton Classes="choice scope" GroupName="backupScope" IsChecked="{Binding BackupsShowAll}" Margin="4,0,0,0">
                 <TextBlock Text="{Binding L[backups.allWorlds]}" FontWeight="SemiBold" VerticalAlignment="Center" />
             </RadioButton>
         </UniformGrid>

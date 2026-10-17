@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+      Sunucuya eklenen küçük alt modül: Coop'ta olmayan "eşya ver/al" komutlarını ekler.
+      TaleWorlds kütüphaneleri kullanıcının kurulu sunucusundan referans alınır ve
+      çıktıya KOPYALANMAZ (Private=false): CoopKeep oyun ya da Coop dosyası dağıtmaz.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CoopKeep.ServerTools</AssemblyName>
+    <RootNamespace>CoopKeep.ServerTools</RootNamespace>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CoopServerBin Condition="'$(CoopServerBin)' == ''">C:\Program Files (x86)\Steam\steamapps\workshop\content\261550\3770450698\DedicatedServer\engine\bin\Win64_Shipping_Server</CoopServerBin>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="TaleWorlds.Library"><HintPath>$(CoopServerBin)\TaleWorlds.Library.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TaleWorlds.Core"><HintPath>$(CoopServerBin)\TaleWorlds.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TaleWorlds.ObjectSystem"><HintPath>$(CoopServerBin)\TaleWorlds.ObjectSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TaleWorlds.CampaignSystem"><HintPath>$(CoopServerBin)\TaleWorlds.CampaignSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TaleWorlds.MountAndBlade"><HintPath>$(CoopServerBin)\TaleWorlds.MountAndBlade.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TaleWorlds.Localization"><HintPath>$(CoopServerBin)\TaleWorlds.Localization.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

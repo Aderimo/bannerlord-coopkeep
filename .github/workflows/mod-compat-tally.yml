@@ -1,0 +1,58 @@
+# "mod-compat" etiketli issue'lar (CoopKeep'teki "çalışıyor / çalışmıyor"
+# düğmelerinin açtığı form) her değiştiğinde compat/mods.json'u yeniden sayar.
+#
+# Betik tüm açık+kapalı bildirimleri baştan sayar; "invalid" veya "spam"
+# etiketi eklenen bildirim bir sonraki çalışmada sayımdan düşer. Aynı kişinin
+# aynı mod için birden çok bildiriminden yalnızca en sonuncusu sayılır.
+# works - broken >= 3 olursa durum "Works", tersi "Broken" olur; "coop" alanı
+# olan elle girilmiş kayıtların durumu hiç değişmez.
+#
+# Not: issue olayları yalnızca varsayılan daldaki (main) iş akışını çalıştırır.
+
+name: Mod compatibility tally
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+# Aynı anda iki sayım main'e yazmaya çalışmasın.
+concurrency:
+  group: mod-compat-tally
+  cancel-in-progress: false
+
+jobs:
+  tally:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'mod-compat') ||
+      github.event.label.name == 'mod-compat'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bildirimleri say
+        id: tally
+        run: node .github/scripts/tally-mod-compat.mjs --file compat/mods.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Değişikliği main'e gönder
+        if: steps.tally.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add compat/mods.json
+          git commit -m "compat: mod uyumluluk sayımını güncelle"
+          git pull --rebase origin main
+          git push origin HEAD:main

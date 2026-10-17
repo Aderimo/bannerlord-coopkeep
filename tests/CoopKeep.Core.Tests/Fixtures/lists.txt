@@ -1,0 +1,42 @@
+# Coop v0.1.6, 2026-10-16: coop.debug.hero.list / clan.list / kingdom.list (kısaltılmış)
+[DedicatedServer] > coop.debug.hero.list
+ID: 'Hero_dead_lord_2_1', Name: 'Olek the Old', Game ID: 2147483650, Game StringId dead_lord_2_1
+ID: 'Hero_dead_lord_2_2', Name: 'Varra', Game ID: 2147483651, Game StringId dead_lord_2_2
+ID: 'Hero_dead_lord_3_1', Name: 'Nimr', Game ID: 2147483652, Game StringId dead_lord_3_1
+ID: 'Hero_dead_lord_6_1', Name: 'Urkhun', Game ID: 2147483653, Game StringId dead_lord_6_1
+ID: 'Hero_dead_lord_6_2', Name: 'Solun', Game ID: 2147483654, Game StringId dead_lord_6_2
+ID: 'Hero_dead_lord_6_3', Name: 'Kuyug', Game ID: 2147483655, Game StringId dead_lord_6_3
+ID: 'Hero_dead_lord_6_4', Name: 'Undul', Game ID: 2147483656, Game StringId dead_lord_6_4
+ID: 'Hero_main_hero', Name: 'Pacarios', Game ID: 2147483649, Game StringId main_hero
+ID: 'Hero_lord_1_1', Name: 'Lucon', Game ID: 2147483657, Game StringId lord_1_1
+ID: 'Hero_lord_1_2', Name: 'Zerosica', Game ID: 2147483658, Game StringId lord_1_2
+ID: 'Hero_lord_1_41', Name: 'Arcor', Game ID: 2147483659, Game StringId lord_1_41
+ID: 'Hero_lord_1_1_1', Name: 'Susada', Game ID: 2147483660, Game StringId lord_1_1_1
+[DedicatedServer] > coop.debug.clan.list
+ID: 'player_faction' Name: 'Therycos'
+ID: 'clan_sturgia_2' Name: 'Kuloving'
+ID: 'clan_aserai_2' Name: 'Banu Sarran'
+ID: 'clan_khuzait_1' Name: 'Urkhunait'
+ID: 'clan_khuzait_2' Name: 'Khergit'
+ID: 'clan_khuzait_3' Name: 'Arkit'
+ID: 'clan_empire_north_1' Name: 'Osticos'
+ID: 'clan_empire_north_2' Name: 'Argoros'
+ID: 'looters' Name: 'Looters'
+ID: 'deserters' Name: 'Deserters'
+[DedicatedServer] > coop.debug.kingdom.list
+Name: 'Northern Empire'
+ Id : 'empire'
+Name: 'Khuzait'
+ Id : 'khuzait'
+Name: 'Western Empire'
+ Id : 'empire_w'
+Name: 'Battania'
+ Id : 'battania'
+Name: 'Southern Empire'
+ Id : 'empire_s'
+Name: 'Aserai'
+ Id : 'aserai'
+Name: 'Sturgia'
+ Id : 'sturgia'
+Name: 'Vlandia'
+ Id : 'vlandia'

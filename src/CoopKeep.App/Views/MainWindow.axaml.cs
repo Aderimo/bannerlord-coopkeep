@@ -65,7 +65,9 @@ public partial class MainWindow : Window
             {
                 AppPage.Worlds => new WorldsPage(),
                 AppPage.Players => new PlayersPage(),
+                AppPage.Cheats => new CheatsPage(),
                 AppPage.Map => new MapPage(),
+                AppPage.Encyclopedia => new EncyclopediaPage(),
                 AppPage.Backups => new BackupsPage(),
                 AppPage.Mods => new ModsPage(),
                 AppPage.Settings => new SettingsPage(),

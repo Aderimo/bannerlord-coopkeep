@@ -1,209 +1,589 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CoopKeep.App.ViewModels"
+             xmlns:proto="using:CoopKeep.Core.Protocol"
              x:Class="CoopKeep.App.Views.Pages.MapPage"
              x:DataType="vm:MainViewModel">
 
+  <!--
+      Canlı harita. Zemin, oyunun gerçek Calradia haritası (wiki'den indirilip önbelleğe
+      alınır, 1920×1272). Her şey bu görüntünün piksellerinde konumlanır (MapProjection).
+  -->
   <UserControl.Styles>
-    <Style Selector="ItemsControl.mapLayer > ContentPresenter" x:DataType="vm:MapSettlement">
+    <Style Selector="ItemsControl.layer > ContentPresenter" x:DataType="vm:MapSettlement">
         <Setter Property="Canvas.Left" Value="{Binding Left}" />
         <Setter Property="Canvas.Top" Value="{Binding Top}" />
     </Style>
-    <Style Selector="ItemsControl.pinLayer > ContentPresenter" x:DataType="vm:MapPlayer">
+    <Style Selector="ItemsControl.labels > ContentPresenter" x:DataType="vm:KingdomLabel">
         <Setter Property="Canvas.Left" Value="{Binding Left}" />
         <Setter Property="Canvas.Top" Value="{Binding Top}" />
-        <Setter Property="ZIndex" Value="10" />
+    </Style>
+    <Style Selector="ItemsControl.lords > ContentPresenter" x:DataType="vm:MapLord">
+        <Setter Property="Canvas.Left" Value="{Binding Left}" />
+        <Setter Property="Canvas.Top" Value="{Binding Top}" />
+        <Setter Property="ZIndex" Value="8" />
         <Setter Property="Transitions">
             <Transitions>
-                <DoubleTransition Property="Canvas.Left" Duration="0:0:1.2" Easing="SineEaseInOut" />
-                <DoubleTransition Property="Canvas.Top" Duration="0:0:1.2" Easing="SineEaseInOut" />
+                <DoubleTransition Property="Canvas.Left" Duration="0:0:2" Easing="LinearEasing" />
+                <DoubleTransition Property="Canvas.Top" Duration="0:0:2" Easing="LinearEasing" />
             </Transitions>
         </Setter>
     </Style>
-    <Style Selector="Border.pin">
-        <Setter Property="RenderTransform" Value="scale(1)" />
+    <Style Selector="ItemsControl.pins > ContentPresenter" x:DataType="vm:MapPlayer">
+        <Setter Property="Canvas.Left" Value="{Binding Left}" />
+        <Setter Property="Canvas.Top" Value="{Binding Top}" />
+        <Setter Property="ZIndex" Value="{Binding IsPriority, Converter={x:Static vm:MapConverters.PriorityZ}}" />
         <Setter Property="Transitions">
             <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+                <DoubleTransition Property="Canvas.Left" Duration="0:0:2" Easing="LinearEasing" />
+                <DoubleTransition Property="Canvas.Top" Duration="0:0:2" Easing="LinearEasing" />
             </Transitions>
         </Setter>
     </Style>
-    <Style Selector="Border.pin:pointerover">
-        <Setter Property="RenderTransform" Value="scale(1.15)" />
+
+    <!-- Katman düğmeleri -->
+    <Style Selector="ToggleButton.chip">
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+        <Setter Property="BorderThickness" Value="1" />
     </Style>
-    <Style Selector="Border.pin.selected">
-        <Setter Property="BorderBrush" Value="#FFFFFF" />
+    <Style Selector="ToggleButton.chip:checked /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+
+    <Style Selector="Border.plate">
+        <Setter Property="Background" Value="#CC1B1710" />
+        <Setter Property="BorderBrush" Value="#55C9A55A" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style Selector="TextBlock.plate">
+        <Setter Property="FontFamily" Value="{StaticResource HeadingFont}" />
+        <Setter Property="Foreground" Value="#F2E6C2" />
+    </Style>
+
+    <Style Selector="Button.pinBtn">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.pinBtn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <!-- Haritaya basılı sancakların üstündeki görünmez tıklama alanı -->
+    <Style Selector="Button.hotspot">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="#01000000" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.hotspot:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#22F2E6C2" />
+        <Setter Property="CornerRadius" Value="6" />
     </Style>
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="*,300" Margin="28,24,28,24">
+  <Grid ColumnDefinitions="*,310" Margin="24,20,24,20">
 
     <!-- ============ HARİTA ============ -->
-    <Border Grid.Column="0" Classes="card" Padding="0" ClipToBounds="True" Background="#14130F">
+    <Border Grid.Column="0" Classes="card" Padding="0" ClipToBounds="True" Background="#0F1A22">
       <Grid RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="16,12">
-            <TextBlock Classes="h2" Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Classes="dim" Margin="14,0" VerticalAlignment="Center" Text="{Binding MapStatus}" />
-            <CheckBox Grid.Column="2" IsChecked="{Binding ShowVillages}" Content="{Binding L[map.villages]}"
-                      Foreground="{StaticResource TextDim}" Margin="0,0,14,0" />
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
-                <TextBlock Classes="dim" Text="−" VerticalAlignment="Center" />
-                <Slider Name="Zoom" Width="110" Minimum="1" Maximum="4" Value="1" SmallChange="0.25" />
-                <TextBlock Classes="dim" Text="+" VerticalAlignment="Center" />
-                <Button Command="{Binding RefreshMapCommand}" Padding="8,6" ToolTip.Tip="{Binding L[btn.refresh]}">
-                    <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="14" />
+        <Grid ColumnDefinitions="Auto,*,Auto" Margin="14,10">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Classes="h2" Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
+                <TextBlock Classes="dim" FontSize="12" VerticalAlignment="Center" Text="{Binding MapStatus}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <Button Command="{Binding ZoomOutCommand}" Padding="9,4" Content="−" />
+                <Button Command="{Binding ZoomInCommand}" Padding="9,4" Content="+" />
+                <Button Command="{Binding RefreshMapCommand}" Padding="8,5" ToolTip.Tip="{Binding L[btn.refresh]}">
+                    <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="13" />
                 </Button>
             </StackPanel>
+            <WrapPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0">
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowKingdoms}" Content="{Binding L[map.layer.kingdoms]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowTowns}" Content="{Binding L[map.layer.towns]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowCastles}" Content="{Binding L[map.layer.castles]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowVillages}" Content="{Binding L[map.layer.villages]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowLords}" Content="{Binding L[map.layer.lords]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowMapPlayers}" Content="{Binding L[map.layer.players]}" />
+                <ToggleButton Classes="chip" IsChecked="{Binding ShowTrails}" Content="{Binding L[map.layer.trails]}" />
+            </WrapPanel>
         </Grid>
 
-        <ScrollViewer Name="MapScroll" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-          <LayoutTransformControl>
+        <ScrollViewer Name="MapScroll" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      Cursor="SizeAll">
+          <!-- Ortalanır: uzaklaştırınca harita sol üste kaymaz -->
+          <LayoutTransformControl HorizontalAlignment="Center" VerticalAlignment="Center">
             <LayoutTransformControl.LayoutTransform>
-                <ScaleTransform ScaleX="{Binding #Zoom.Value}" ScaleY="{Binding #Zoom.Value}" />
+                <ScaleTransform ScaleX="{Binding MapZoom}" ScaleY="{Binding MapZoom}" />
             </LayoutTransformControl.LayoutTransform>
-            <Viewbox Stretch="Uniform" Width="{Binding #MapScroll.Bounds.Width}" Height="{Binding #MapScroll.Bounds.Height}">
-              <Panel Width="760" Height="600">
-                <!-- Deniz/kıyı hissi veren hafif zemin -->
-                <Border CornerRadius="40" Margin="10">
-                    <Border.Background>
-                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="65%" RadiusY="65%">
-                            <GradientStop Color="#2A2519" Offset="0" />
-                            <GradientStop Color="#1C1A14" Offset="0.7" />
-                            <GradientStop Color="#14130F" Offset="1" />
-                        </RadialGradientBrush>
-                    </Border.Background>
-                </Border>
+            <Panel Width="1920" Height="1272" Background="#13212B">
 
-                <!-- Köyler -->
-                <ItemsControl Classes="mapLayer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowVillages}">
-                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MapSettlement">
-                            <Ellipse Width="3" Height="3" Margin="-1.5,-1.5,0,0" Fill="{Binding Color}" Opacity="0.45"
-                                     IsVisible="{Binding IsVillage}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+              <!-- Oyunun gerçek haritası -->
+              <Image Source="{Binding MapImage}" Stretch="Fill" />
+              <TextBlock Classes="dim" Text="{Binding L[map.noImage]}" FontSize="20" IsVisible="{Binding !HasMapImage}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-                <!-- Kasaba ve kaleler -->
-                <ItemsControl Classes="mapLayer" ItemsSource="{Binding MapSettlements}">
-                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MapSettlement">
-                            <Canvas ToolTip.Tip="{Binding Name}" Background="Transparent">
-                                <Rectangle Canvas.Left="-3.5" Canvas.Top="-3.5" Width="7" Height="7" Fill="{Binding Color}"
-                                           IsVisible="{Binding IsCastle}" Opacity="0.85" />
-                                <Ellipse Canvas.Left="-5" Canvas.Top="-5" Width="10" Height="10" Fill="{Binding Color}"
-                                         Stroke="#E8D9A8" StrokeThickness="1.2" IsVisible="{Binding IsTown}" />
-                                <TextBlock Canvas.Left="7" Canvas.Top="-7" IsVisible="{Binding IsTown}" Text="{Binding Name}" FontSize="9"
-                                           Foreground="#C9BC92" FontFamily="Palatino Linotype, Georgia, serif" />
-                            </Canvas>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+              <!-- Tıklama alanları: her kasaba ve kale, katmanlardan bağımsız -->
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapSettlement">
+                    <Panel IsVisible="{Binding IsFortified}">
+                      <Button Classes="hotspot" Width="56" Height="72" Margin="-28,-36,0,0" IsVisible="{Binding IsTown}"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectSettlementCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}" />
+                      <Button Classes="hotspot" Width="36" Height="44" Margin="-18,-24,0,0" IsVisible="{Binding IsCastle}"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectSettlementCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}" />
+                    </Panel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
 
-                <!-- Oyuncular -->
-                <ItemsControl Classes="pinLayer" ItemsSource="{Binding MapPlayers}">
-                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MapPlayer">
-                            <Button Classes="ghost" Padding="0" Margin="-13,-30,0,0"
-                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectMapPlayerCommand}"
-                                    CommandParameter="{Binding}">
-                                <StackPanel Spacing="1">
-                                    <Border Classes="pin" Classes.selected="{Binding IsSelected}" Width="26" Height="26" CornerRadius="13"
-                                            Background="{StaticResource Accent}" BorderBrush="#3A2E12" BorderThickness="2"
-                                            BoxShadow="0 2 8 0 #AA000000" RenderTransformOrigin="50%,100%">
-                                        <TextBlock Text="{Binding Hero.Initial}" FontWeight="Bold" FontSize="12" Foreground="#1A1608"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <Path Data="M0,0 L6,0 L3,5 Z" Fill="{StaticResource Accent}" HorizontalAlignment="Center" />
-                                    <Border Background="#CC14130F" CornerRadius="4" Padding="5,1" HorizontalAlignment="Center">
-                                        <TextBlock Text="{Binding Hero.Name}" FontSize="9.5" FontWeight="SemiBold" Foreground="#F2E6C2" />
-                                    </Border>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </Panel>
-            </Viewbox>
+              <!-- Köyler: nokta; ad yalnızca yakında -->
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowVillages}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapSettlement">
+                    <Canvas Width="0" Height="0" IsVisible="{Binding IsVillage}">
+                      <Canvas.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}"
+                                        ScaleY="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}" />
+                      </Canvas.RenderTransform>
+                      <Button Classes="pinBtn" Canvas.Left="-5" Canvas.Top="-5"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectSettlementCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <Ellipse Width="9" Height="9" Fill="{Binding Color}" Stroke="#F2E6C2" StrokeThickness="1.2" />
+                          <TextBlock Text="{Binding Name}" FontSize="11" Classes="plate"
+                                     IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=VillageNames}">
+                            <TextBlock.Effect><DropShadowEffect BlurRadius="3" OffsetX="0" OffsetY="0" Color="Black" Opacity="1" /></TextBlock.Effect>
+                          </TextBlock>
+                        </StackPanel>
+                      </Button>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Kaleler: küçük sancak; ad orta yakınlıkta -->
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowCastles}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapSettlement">
+                    <Canvas Width="0" Height="0" IsVisible="{Binding IsCastle}">
+                      <Canvas.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}"
+                                        ScaleY="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}" />
+                      </Canvas.RenderTransform>
+                      <Button Classes="pinBtn" Canvas.Left="-11" Canvas.Top="-14"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectSettlementCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                          <Panel Width="22" Height="28">
+                            <Path Data="M2,2 H20 V17 L11,26 L2,17 Z" Fill="{Binding Color}" Stroke="#E8D9A8" StrokeThickness="1.3"
+                                  IsVisible="{Binding !HasBannerImage}" />
+                            <Image Source="{Binding Banner.Bitmap}" Stretch="Uniform" />
+                          </Panel>
+                          <Border Classes="plate" VerticalAlignment="Center" Padding="5,0"
+                                  IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=CastleNames}">
+                            <TextBlock Classes="plate" Text="{Binding Name}" FontSize="11.5" />
+                          </Border>
+                        </StackPanel>
+                      </Button>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Kasabalar: yalnızca el değiştirince basılı sancağın üstüne yeni sancak (ad yazılmaz; ad haritada basılı) -->
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowTowns}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapSettlement">
+                    <Button Classes="pinBtn" IsVisible="{Binding DrawTownOverlay}" Margin="-28,-36,0,0"
+                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectSettlementCommand}"
+                            CommandParameter="{Binding}" ToolTip.Tip="{Binding OwnerName}">
+                      <Panel Width="56" Height="72">
+                        <Path Data="M3,3 H53 V50 L28,69 L3,50 Z" Fill="{Binding Color}" Stroke="#C9A55A" StrokeThickness="2"
+                              IsVisible="{Binding !HasBannerImage}" />
+                        <Image Source="{Binding Banner.Bitmap}" Stretch="Uniform" />
+                      </Panel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Oyuncu rotaları -->
+              <ItemsControl ItemsSource="{Binding MapPlayers}" IsVisible="{Binding ShowTrails}" IsHitTestVisible="False">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapPlayer">
+                    <Polyline Points="{Binding Trail}" Stroke="#E8C66B" StrokeThickness="3" StrokeDashArray="2,2" Opacity="0.7"
+                              StrokeLineCap="Round" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Lordlar: uzakta krallık renginde nokta, yakında portre; hükümdarlar hep portreyle -->
+              <ItemsControl Classes="lords" ItemsSource="{Binding MapLords}" IsVisible="{Binding ShowLords}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapLord">
+                    <Canvas Width="0" Height="0" IsVisible="{Binding Located}">
+                      <Canvas.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}"
+                                        ScaleY="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}" />
+                      </Canvas.RenderTransform>
+
+                      <!-- Sıradan lord -->
+                      <Panel IsVisible="{Binding !IsRuler}">
+                        <Button Classes="pinBtn" Margin="-6,-6,0,0"
+                                IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=LordDots}"
+                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectLordCommand}"
+                                CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                          <Ellipse Width="12" Height="12" Fill="{Binding Color}" Stroke="#1B1710" StrokeThickness="1.5" />
+                        </Button>
+                        <Button Classes="pinBtn" Margin="-16,-16,0,0"
+                                IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=LordPortraits}"
+                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectLordCommand}"
+                                CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                          <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" BorderBrush="{Binding Color}" BorderThickness="2"
+                                    Background="#2A2116" BoxShadow="0 2 6 0 #AA000000">
+                              <Image Source="{Binding Portrait.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                            </Border>
+                            <Border Classes="plate" VerticalAlignment="Center"
+                                    IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=LordNames}">
+                              <TextBlock Classes="plate" Text="{Binding Name}" FontSize="12" />
+                            </Border>
+                          </StackPanel>
+                        </Button>
+                      </Panel>
+
+                      <!-- Hükümdar -->
+                      <Button Classes="pinBtn" Margin="-21,-21,0,0" IsVisible="{Binding IsRuler}"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectLordCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <Border Width="42" Height="42" CornerRadius="21" ClipToBounds="True" BorderBrush="#E8C66B" BorderThickness="2.5"
+                                  Background="#2A2116" BoxShadow="0 2 8 0 #AA000000">
+                            <Image Source="{Binding Portrait.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                          </Border>
+                          <Border Classes="plate" VerticalAlignment="Center"
+                                  IsVisible="{Binding Source={x:Static vm:MapView.Current}, Path=LordPortraits}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                              <TextBlock Text="♛" Foreground="#E8C66B" FontSize="13" VerticalAlignment="Center" />
+                              <TextBlock Classes="plate" Text="{Binding Name}" FontSize="13" />
+                            </StackPanel>
+                          </Border>
+                        </StackPanel>
+                      </Button>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Oyuncular -->
+              <ItemsControl Classes="pins" ItemsSource="{Binding MapPlayers}" IsVisible="{Binding ShowMapPlayers}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapPlayer">
+                    <Canvas Width="0" Height="0">
+                      <Canvas.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}"
+                                        ScaleY="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}" />
+                      </Canvas.RenderTransform>
+                      <Button Classes="pinBtn" Margin="-30,-80,0,0"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectMapPlayerCommand}"
+                              CommandParameter="{Binding}">
+                        <LayoutTransformControl>
+                          <LayoutTransformControl.LayoutTransform>
+                            <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
+                          </LayoutTransformControl.LayoutTransform>
+                          <StackPanel Spacing="2" Width="60" Opacity="{Binding Online, Converter={x:Static vm:MapConverters.OnlineOpacity}}">
+                            <Panel Width="60" Height="60">
+                              <!-- Öncelikli oyuncu: sarı çember -->
+                              <Ellipse Width="60" Height="60" Stroke="#FFD54A" StrokeThickness="4" IsVisible="{Binding IsPriority}">
+                                <Ellipse.Effect><DropShadowEffect BlurRadius="12" OffsetX="0" OffsetY="0" Color="#FFD54A" Opacity="0.9" /></Ellipse.Effect>
+                              </Ellipse>
+                              <!-- Seçili oyuncu: beyaz çember -->
+                              <Ellipse Width="56" Height="56" Stroke="#F2E6C2" StrokeThickness="2" StrokeDashArray="3,2" IsVisible="{Binding IsSelected}" />
+                              <Border Width="48" Height="48" CornerRadius="24" Background="#2A2116" BorderBrush="#E8D9A8"
+                                      BorderThickness="2" ClipToBounds="True" BoxShadow="0 3 10 0 #CC000000">
+                                <Panel>
+                                  <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="20" Foreground="#E8C66B"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasBanner}" />
+                                  <Image Source="{Binding Banner.Bitmap}" Stretch="UniformToFill" />
+                                </Panel>
+                              </Border>
+                            </Panel>
+                            <Border Classes="plate" HorizontalAlignment="Center" Padding="7,2">
+                              <StackPanel>
+                                <TextBlock Classes="plate" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding ClanLine}" FontSize="10.5" Foreground="#C9BC92" HorizontalAlignment="Center" />
+                              </StackPanel>
+                            </Border>
+                          </StackPanel>
+                        </LayoutTransformControl>
+                      </Button>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Krallık adları: en üstte, okunaklı çerçeveyle, ekranda sabit boyda -->
+              <ItemsControl Classes="labels" ItemsSource="{Binding KingdomLabels}" IsVisible="{Binding ShowKingdoms}" IsHitTestVisible="False"
+                            Opacity="{Binding Source={x:Static vm:MapView.Current}, Path=KingdomOpacity}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:KingdomLabel">
+                    <Canvas Width="0" Height="0">
+                      <Canvas.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}"
+                                        ScaleY="{Binding Source={x:Static vm:MapView.Current}, Path=MarkerScale}" />
+                      </Canvas.RenderTransform>
+                      <Border Canvas.Left="-130" Canvas.Top="-16" Width="260" Height="32">
+                        <Border HorizontalAlignment="Center" VerticalAlignment="Center" Background="#D91B1710" BorderBrush="{Binding Color}"
+                                BorderThickness="1.5" CornerRadius="4" Padding="12,3" BoxShadow="0 2 10 0 #CC000000">
+                          <TextBlock Text="{Binding Name}" FontFamily="{StaticResource HeadingFont}" FontSize="15" FontWeight="Bold"
+                                     Foreground="{Binding Color}" LetterSpacing="3" />
+                        </Border>
+                      </Border>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Panel>
           </LayoutTransformControl>
         </ScrollViewer>
+
+        <!-- Haritadan ışınlama -->
+        <Border Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0" Padding="14,10" CornerRadius="8"
+                Background="#F21B1710" BorderBrush="{StaticResource Accent}" BorderThickness="1" BoxShadow="0 6 24 0 #CC000000"
+                MinWidth="420" MaxWidth="560" IsVisible="{Binding IsMapTeleporting}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{Binding MapTeleportText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <StackPanel Spacing="4" IsVisible="{Binding !HasMapTeleportTarget}">
+              <TextBox Text="{Binding MapTeleportSearch}" Watermark="{Binding L[map.tp.search]}" />
+              <ItemsControl ItemsSource="{Binding MapTeleportResults}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapSettlement">
+                    <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"
+                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).PickMapTeleportTargetCommand}"
+                            CommandParameter="{Binding}">
+                      <TextBlock><Run Text="{Binding Name}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{Binding OwnerName}" Foreground="{StaticResource TextFaint}" FontSize="11" /></TextBlock>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+              <Button Command="{Binding CancelMapTeleportCommand}" Content="{Binding L[btn.cancel]}" />
+              <Button Classes="primary" Command="{Binding ConfirmMapTeleportCommand}" IsVisible="{Binding HasMapTeleportTarget}"
+                      Content="{Binding L[map.tp.go]}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
       </Grid>
     </Border>
 
-    <!-- ============ OYUNCU KARTI ============ -->
-    <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+    <!-- ============ SAĞ PANEL ============ -->
+    <ScrollViewer Grid.Column="1" Margin="14,0,0,0" VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="12">
-        <TextBlock Classes="h2" Text="{Binding L[map.players]}" />
 
-        <ItemsControl ItemsSource="{Binding MapPlayers}">
+        <!-- İzleyici modu -->
+        <Border Classes="card" Padding="12,10" IsVisible="{Binding IsViewerMode}" Background="{StaticResource AccentSoft}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding L[viewer.mode]}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
+            <Button Grid.Column="1" Command="{Binding LeaveViewerCommand}" Content="{Binding L[viewer.leave]}" />
+          </Grid>
+        </Border>
+
+        <!-- Kim nerede? -->
+        <StackPanel Spacing="6">
+          <TextBox Text="{Binding LordSearch}" Watermark="{Binding L[map.whereIs]}" />
+          <ItemsControl ItemsSource="{Binding LordResults}" IsVisible="{Binding HasLordResults}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:MapPlayer">
-                    <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="10,8"
-                            Margin="0,0,0,4"
-                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectMapPlayerCommand}"
-                            CommandParameter="{Binding}">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource AccentSoft}">
-                                <TextBlock Text="{Binding Hero.Initial}" FontWeight="Bold" Foreground="{StaticResource Accent}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="1">
-                                <TextBlock Text="{Binding Hero.Name}" FontWeight="SemiBold" />
-                                <TextBlock Classes="dim" FontSize="11.5" Text="{Binding Activity}" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </Grid>
-                    </Button>
-                </DataTemplate>
+              <DataTemplate x:DataType="proto:HeroListEntry">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,5"
+                        Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).TrackLordCommand}"
+                        CommandParameter="{Binding}" Content="{Binding Name}" />
+              </DataTemplate>
             </ItemsControl.ItemTemplate>
-        </ItemsControl>
+          </ItemsControl>
+        </StackPanel>
 
-        <TextBlock Classes="hint" Text="{Binding L[map.noPlayers]}" IsVisible="{Binding !HasMapPlayers}" />
+        <!-- El değiştirmeler -->
+        <Border Classes="card" Padding="12,10" IsVisible="{Binding HasMapEvents}">
+          <StackPanel Spacing="4">
+            <TextBlock FontWeight="SemiBold" Foreground="{StaticResource Warning}" Text="{Binding L[map.events]}" />
+            <ItemsControl ItemsSource="{Binding MapEvents}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String"><TextBlock FontSize="11.5" Text="{Binding}" TextWrapping="Wrap" Margin="0,1" /></DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
 
-        <!-- Seçili oyuncunun ayrıntıları -->
-        <Border Classes="card enter" Padding="16" IsVisible="{Binding HasSelectedMapPlayer}">
-            <StackPanel Spacing="10">
-                <StackPanel Spacing="2">
-                    <TextBlock Classes="h2" Text="{Binding SelectedMapPlayer.Hero.Name, FallbackValue=''}" />
-                    <TextBlock Classes="dim" Text="{Binding SelectedMapPlayer.Hero.ClanName, FallbackValue=''}" />
-                    <TextBlock FontSize="12.5" Foreground="{StaticResource Accent}"
-                               Text="{Binding SelectedMapPlayer.Activity, FallbackValue=''}" TextWrapping="Wrap" />
-                </StackPanel>
-                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" >
-                    <StackPanel Spacing="1" Margin="0,0,0,8">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.gold]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.GoldText, FallbackValue='—'}" />
+        <TextBlock Classes="h2" Text="{Binding L[map.players]}" />
+        <TextBlock Classes="hint" Text="{Binding L[map.priorityHint]}" TextWrapping="Wrap" />
+        <ItemsControl ItemsSource="{Binding MapPlayers}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:MapPlayer">
+              <Border Padding="8,6" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,5">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <ToggleButton Classes="ghost" Padding="4" IsChecked="{Binding IsPriority, Mode=OneWay}"
+                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).TogglePriorityCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[map.priority]}">
+                    <Panel>
+                      <TextBlock Text="☆" FontSize="18" Foreground="{StaticResource TextFaint}" IsVisible="{Binding !IsPriority}" />
+                      <TextBlock Text="★" FontSize="18" Foreground="#FFD54A" IsVisible="{Binding IsPriority}" />
+                    </Panel>
+                  </ToggleButton>
+                  <Button Grid.Column="1" Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="6,2"
+                          Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectMapPlayerCommand}"
+                          CommandParameter="{Binding}">
+                    <StackPanel Spacing="1">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <TextBlock Classes="dim" FontSize="11.5" Text="{Binding Activity}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Spacing="1" Margin="0,0,0,8">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.health]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.HealthText, FallbackValue='—'}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Spacing="1" Margin="0,0,0,8">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.strength]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.Party.Strength, FallbackValue='—', StringFormat='{}{0:0}'}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="1" Margin="0,0,0,8">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.morale]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.Party.Morale, FallbackValue='—', StringFormat='{}{0:0}'}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Spacing="1">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.mounted]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.Party.MountedMen, FallbackValue='—'}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Grid.Column="1" Spacing="1">
-                        <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.limit]}" />
-                        <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.Party.PartySizeLimit, FallbackValue='—'}" />
-                    </StackPanel>
+                  </Button>
+                  <TextBlock Grid.Column="2" Classes="dim" FontSize="11.5" VerticalAlignment="Center">
+                    <Run Text="⚔ " /><Run Text="{Binding Troops}" />
+                  </TextBlock>
                 </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="hint" Text="{Binding L[map.noPlayers]}" IsVisible="{Binding !HasMapPlayers}" TextWrapping="Wrap" />
 
-                <WrapPanel>
-                    <Button Margin="0,0,6,6" Command="{Binding HealHeroCommand}" Content="{Binding L[btn.heal]}" />
-                    <Button Margin="0,0,6,6" Command="{Binding AddGoldCommand}" CommandParameter="10000" Content="+10.000" />
-                    <Button Margin="0,0,6,6" Command="{Binding AddTroopsCommand}" Content="{Binding L[btn.addTroops]}" />
-                </WrapPanel>
+        <!-- Seçili oyuncu -->
+        <Border Classes="card enter" Padding="14" IsVisible="{Binding HasSelectedMapPlayer}">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="Auto,*">
+              <Border Width="44" Height="44" CornerRadius="22" ClipToBounds="True" Background="#2A2116" BorderBrush="#E8D9A8" BorderThickness="1.5">
+                <Panel>
+                  <TextBlock Text="{Binding SelectedMapPlayer.Initial, FallbackValue=''}" FontWeight="Bold" FontSize="18" Foreground="#E8C66B"
+                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Image Source="{Binding SelectedMapPlayer.Banner.Bitmap, FallbackValue={x:Null}}" Stretch="UniformToFill" />
+                </Panel>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="1" VerticalAlignment="Center">
+                <TextBlock Classes="h2" Text="{Binding SelectedMapPlayer.Name, FallbackValue=''}" />
+                <TextBlock Classes="dim" FontSize="12" Text="{Binding SelectedMapPlayer.ClanLine, FallbackValue=''}" />
+              </StackPanel>
+            </Grid>
+            <TextBlock FontSize="12.5" Foreground="{StaticResource Accent}" Text="{Binding SelectedMapPlayer.Activity, FallbackValue=''}" TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,6,Auto" IsVisible="{Binding !IsViewerMode}">
+              <StackPanel Spacing="1">
+                <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.gold]}" />
+                <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.GoldText, FallbackValue='—'}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="1">
+                <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.health]}" />
+                <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.HealthText, FallbackValue='—'}" />
+              </StackPanel>
+              <StackPanel Grid.Row="2" Spacing="1">
+                <TextBlock Classes="dim" FontSize="11" Text="{Binding L[cheat.troops]}" />
+                <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.TroopsText, FallbackValue='—'}" />
+              </StackPanel>
+              <StackPanel Grid.Row="2" Grid.Column="1" Spacing="1">
+                <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.morale]}" />
+                <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding SelectedMapPlayer.Hero.Party.Morale, FallbackValue='—', StringFormat='{}{0:0}'}" />
+              </StackPanel>
+            </Grid>
+
+            <!-- Kadro (gerçek asker portreleriyle) -->
+            <ItemsControl ItemsSource="{Binding SelectedMapPlayer.Hero.RosterLines, FallbackValue={x:Null}}" IsVisible="{Binding !IsViewerMode}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RosterLine">
+                  <Border Width="40" Margin="0,0,4,4" ToolTip.Tip="{Binding Name}">
+                    <StackPanel>
+                      <Border Height="46" CornerRadius="3" ClipToBounds="True" Background="#0E0C08">
+                        <Image Source="{Binding Image.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                      </Border>
+                      <TextBlock Text="{Binding Entry.Number}" FontSize="10.5" HorizontalAlignment="Center" Classes="dim" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <WrapPanel IsVisible="{Binding !IsViewerMode}">
+              <Button Margin="0,0,6,6" Classes="primary" Command="{Binding BeginMapTeleportCommand}" CommandParameter="{Binding SelectedMapPlayer}"
+                      Content="{Binding L[map.tp.begin]}" ToolTip.Tip="{Binding L[map.tp.tip]}" />
+              <Button Margin="0,0,6,6" Command="{Binding OpenProfileCommand}" CommandParameter="{Binding SelectedMapPlayer}"
+                      Content="{Binding L[profile.open]}" />
+              <Button Margin="0,0,6,6" Command="{Binding OpenInCheatsCommand}" CommandParameter="{Binding SelectedMapPlayer}"
+                      Content="{Binding L[map.openCheats]}" />
+              <Button Margin="0,0,6,6" Command="{Binding OpenItemBrowserCommand}" CommandParameter="{Binding SelectedMapPlayer}"
+                      Content="{Binding L[items.open]}" />
+              <Button Margin="0,0,6,6" Command="{Binding TogglePriorityCommand}" CommandParameter="{Binding SelectedMapPlayer}"
+                      Content="{Binding L[map.priority]}" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Seçili yerleşim -->
+        <Border Classes="card enter" Padding="0" IsVisible="{Binding HasSelectedSettlement}" ClipToBounds="True">
+          <StackPanel>
+            <Border Height="140" ClipToBounds="True" Background="#0E0C08" IsVisible="{Binding SelectedSettlement.Picture.HasImage, FallbackValue=False}">
+              <Image Source="{Binding SelectedSettlement.Picture.Bitmap, FallbackValue={x:Null}}" Stretch="UniformToFill" />
+            </Border>
+            <StackPanel Margin="14" Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <Image Width="36" Height="46" Source="{Binding SelectedSettlement.Banner.Bitmap, FallbackValue={x:Null}}" Stretch="Uniform" />
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="1">
+                  <TextBlock Classes="h2" Text="{Binding SelectedSettlement.Name, FallbackValue=''}" />
+                  <TextBlock Classes="dim" FontSize="12">
+                    <Run Text="{Binding SelectedSettlement.OwnerName, FallbackValue=''}" /><Run Text="  ·  " /><Run Text="{Binding SelectedSettlement.KingdomName, FallbackValue=''}" />
+                  </TextBlock>
+                </StackPanel>
+              </Grid>
+              <ItemsControl ItemsSource="{Binding SelectedSettlement.OwnerHistory, FallbackValue={x:Null}}"
+                            IsVisible="{Binding SelectedSettlement.HasOwnerHistory, FallbackValue=False}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="x:String"><TextBlock Classes="dim" FontSize="11.5" Text="{Binding}" TextWrapping="Wrap" /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
             </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Seçili lord -->
+        <Border Classes="card enter" Padding="14" IsVisible="{Binding HasSelectedLord}">
+          <Grid ColumnDefinitions="Auto,*">
+            <Border Width="70" Height="110" CornerRadius="4" ClipToBounds="True" Background="#0E0C08">
+              <Image Source="{Binding SelectedLord.Portrait.Bitmap, FallbackValue={x:Null}}" Stretch="UniformToFill" VerticalAlignment="Top" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
+              <TextBlock Classes="h2" Text="{Binding SelectedLord.Name, FallbackValue=''}" />
+              <TextBlock Classes="dim" FontSize="12">
+                <Run Text="{Binding SelectedLord.ClanName, FallbackValue=''}" /><Run Text="  ·  " /><Run Text="{Binding SelectedLord.KingdomName, FallbackValue=''}" />
+              </TextBlock>
+              <TextBlock FontSize="12.5" Foreground="{StaticResource Accent}" Text="{Binding SelectedLord.Activity, FallbackValue=''}" TextWrapping="Wrap" />
+              <TextBlock FontSize="12" Classes="dim" Text="{Binding SelectedLord.Where, FallbackValue=''}" TextWrapping="Wrap" />
+              <TextBlock FontSize="12"><Run Text="⚔ " /><Run Text="{Binding SelectedLord.TroopsText, FallbackValue=''}" /></TextBlock>
+              <Button HorizontalAlignment="Left" Margin="0,4,0,0" Command="{Binding OpenLordInEncyclopediaCommand}"
+                      CommandParameter="{Binding SelectedLord}" Content="{Binding L[nav.encyclopedia]}" />
+              <Image Width="34" Height="44" HorizontalAlignment="Left" Source="{Binding SelectedLord.Banner.Bitmap, FallbackValue={x:Null}}" />
+            </StackPanel>
+          </Grid>
         </Border>
       </StackPanel>
     </ScrollViewer>

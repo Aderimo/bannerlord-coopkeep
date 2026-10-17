@@ -99,6 +99,7 @@
         <StreamGeometry x:Key="IconArrowRight">M5,12 H19 M13,6 L19,12 L13,18</StreamGeometry>
         <StreamGeometry x:Key="IconArrowLeft">M19,12 H5 M11,6 L5,12 L11,18</StreamGeometry>
         <StreamGeometry x:Key="IconInfo">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M12,11 V16.5 M12,7.6 V8</StreamGeometry>
+        <StreamGeometry x:Key="IconBook">M4,5 C7,3.5 10,3.5 12,5.5 C14,3.5 17,3.5 20,5 V19 C17,17.5 14,17.5 12,19.5 C10,17.5 7,17.5 4,19 Z M12,5.5 V19.5</StreamGeometry>
         <StreamGeometry x:Key="IconMap">M3,6 L9,4 L15,6 L21,4 V18 L15,20 L9,18 L3,20 Z M9,4 V18 M15,6 V20</StreamGeometry>
         <StreamGeometry x:Key="IconSparkle">M12,3 L13.8,10.2 L21,12 L13.8,13.8 L12,21 L10.2,13.8 L3,12 L10.2,10.2 Z</StreamGeometry>
     </Application.Resources>
@@ -480,6 +481,21 @@
             <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
         </Style>
 
+        <!-- Kapsam seçici (Yedekler): normalde sade, üzerine gelince hafif, seçiliyken altın -->
+        <Style Selector="RadioButton.scope /template/ Border#bg">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,9" />
+        </Style>
+        <Style Selector="RadioButton.scope:pointerover /template/ Border#bg">
+            <Setter Property="Background" Value="#1C1610" />
+            <Setter Property="BorderBrush" Value="#4A3C28" />
+        </Style>
+        <Style Selector="RadioButton.scope:checked /template/ Border#bg">
+            <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        </Style>
+
         <!-- ================= Giriş alanları ================= -->
 
         <Style Selector="TextBox">
@@ -496,6 +512,103 @@
         </Style>
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
             <Setter Property="Background" Value="{StaticResource BgHover}" />
+        </Style>
+
+        <!-- İnce değer çubuğu: sayı alanları (dakika, port, 1000 gibi değerler) -->
+        <Style Selector="TextBox.bar">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Width" Value="110" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- NumericUpDown: aynı çubuk, solda − sağda + -->
+        <Style Selector="NumericUpDown.bar">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Width" Value="130" />
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+            <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="NumericUpDown.bar /template/ ButtonSpinner#PART_Spinner">
+            <Setter Property="Template">
+                <ControlTemplate TargetType="ButtonSpinner">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid ColumnDefinitions="24,*,24">
+                            <RepeatButton Name="PART_DecreaseButton" Classes="barspin" Content="−" />
+                            <ContentPresenter Grid.Column="1" Name="PART_ContentPresenter"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              VerticalAlignment="Stretch" />
+                            <RepeatButton Grid.Column="2" Name="PART_IncreaseButton" Classes="barspin" Content="+" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="NumericUpDown.bar /template/ TextBox#PART_TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="NumericUpDown.bar /template/ TextBox#PART_TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="NumericUpDown.bar /template/ TextBox#PART_TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="NumericUpDown.bar:focus-within /template/ ButtonSpinner#PART_Spinner">
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        </Style>
+        <Style Selector="RepeatButton.barspin">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="RepeatButton.barspin:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BgHover}" />
+            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+        </Style>
+
+        <!-- Kaydırıcı yanındaki değer rozeti: aynı ince çubuk görünümü -->
+        <Style Selector="Border.valuebar">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="56" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{StaticResource BgRaised}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.valuebar > TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="ComboBox">

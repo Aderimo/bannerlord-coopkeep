@@ -68,19 +68,19 @@
 
                 <!-- Sayfalar -->
                 <StackPanel Grid.Row="2" Spacing="3">
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageHome}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageHome}" IsVisible="{Binding !IsViewerMode}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconHome}" />
                             <TextBlock Text="{Binding L[nav.home]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageWorlds}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageWorlds}" IsVisible="{Binding !IsViewerMode}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconGlobe}" />
                             <TextBlock Text="{Binding L[nav.worlds]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PagePlayers}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PagePlayers}" IsVisible="{Binding !IsViewerMode}">
                         <RadioButton.Tag>
                             <Border Classes="badge" Background="{StaticResource SuccessSoft}" Padding="7,1"
                                     IsVisible="{Binding HasPlayers}">
@@ -93,19 +93,31 @@
                             <TextBlock Text="{Binding L[nav.players]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageCheats}" IsVisible="{Binding !IsViewerMode}">
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconSparkle}" />
+                            <TextBlock Text="{Binding L[nav.cheats]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
                     <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMap}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconMap}" />
                             <TextBlock Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageBackups}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageEncyclopedia}">
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconBook}" />
+                            <TextBlock Text="{Binding L[nav.encyclopedia]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageBackups}" IsVisible="{Binding !IsViewerMode}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconArchive}" />
                             <TextBlock Text="{Binding L[nav.backups]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMods}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMods}" IsVisible="{Binding !IsViewerMode}">
                         <RadioButton.Tag>
                             <Border Classes="badge" Background="{StaticResource DangerSoft}" Padding="7,1"
                                     IsVisible="{Binding ModuleProblem}">
@@ -127,7 +139,7 @@
 
                     <Border Height="1" Background="{StaticResource BorderDim}" Margin="8,10" />
 
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageConsole}">
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageConsole}" IsVisible="{Binding !IsViewerMode}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconTerminal}" />
                             <TextBlock Text="{Binding L[nav.console]}" VerticalAlignment="Center" />
@@ -257,6 +269,18 @@
             </Style>
         </ItemsControl.Styles>
     </ItemsControl>
+
+    <!-- ================= EŞYA EKRANI ================= -->
+    <views:ItemBrowser IsVisible="{Binding ItemBrowserOpen}" />
+
+    <!-- ================= OYUNCU PROFİLİ ================= -->
+    <views:PlayerProfile IsVisible="{Binding ProfileOpen}" />
+
+    <!-- ================= MOD BİLGİSİ ================= -->
+    <views:ModInfoOverlay IsVisible="{Binding ModInfoOpen}" />
+
+    <!-- ================= İZLEYİCİ BAĞLANTISI ================= -->
+    <views:ViewerConnectOverlay IsVisible="{Binding ViewerConnectOpen}" />
 
     <!-- ================= YENİ DÜNYA SİHİRBAZI ================= -->
     <views:NewWorldWizard IsVisible="{Binding WizardOpen}" />

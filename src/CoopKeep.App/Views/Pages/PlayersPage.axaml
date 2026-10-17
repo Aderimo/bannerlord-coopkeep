@@ -2,17 +2,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CoopKeep.App.ViewModels"
              xmlns:proto="using:CoopKeep.Core.Protocol"
-             xmlns:core="using:CoopKeep.Core.Server"
              x:Class="CoopKeep.App.Views.Pages.PlayersPage"
              x:DataType="vm:MainViewModel">
 
+  <!--
+      Oyuncular: kim bağlı, kim kayıtlı, at / banla / ban kaldır / geri al.
+      Hile ve yönetici araçları ayrı "Hileler" sekmesinde.
+  -->
   <UserControl.Styles>
-    <!-- Araç grubu başlığı -->
-    <Style Selector="TextBlock.tool">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-        <Setter Property="Margin" Value="0,0,0,6" />
+    <Style Selector="Button.row">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.row:pointerover /template/ ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AccentDim}" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
     </Style>
   </UserControl.Styles>
 
@@ -20,6 +29,22 @@
     <StackPanel Margin="32,28,32,40" Spacing="16" MaxWidth="1080">
 
         <TextBlock Classes="display enter" Text="{Binding L[nav.players]}" />
+
+        <!-- Son işlem + geri al -->
+        <Border Classes="card enter" Padding="14,10" IsVisible="{Binding CanUndoPlayerAction}"
+                Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource Accent}" StrokeThickness="1.8"
+                      Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Text="{Binding LastPlayerAction}" />
+                <Button Grid.Column="2" Command="{Binding UndoPlayerActionCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Path Classes="icon" Data="{StaticResource IconArrowLeft}" Width="12" />
+                        <TextBlock Text="{Binding L[btn.undo]}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
 
         <!-- Sunucu kapalı -->
         <Border Classes="card enter d1" IsVisible="{Binding !IsServing}" Padding="16,12">
@@ -32,7 +57,7 @@
 
         <Grid ColumnDefinitions="*,16,*">
 
-          <!-- ============ SOL: BAĞLI OYUNCULAR + KARAKTERLER ============ -->
+          <!-- ============ SOL: BAĞLI + KAYITLI ============ -->
           <StackPanel Grid.Column="0" Spacing="16">
             <Border Classes="card enter d1" IsVisible="{Binding IsServing}">
                 <StackPanel Spacing="10">
@@ -51,20 +76,31 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="proto:ConnectedPlayer">
                                 <Border Classes="enter" Padding="10,8" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,6">
-                                    <Grid ColumnDefinitions="*,Auto,Auto">
-                                        <StackPanel VerticalAlignment="Center" Spacing="1">
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                            <TextBlock Classes="dim" FontSize="11"><Run Text="#" /><Run Text="{Binding Id}" /><Run Text=" · " /><Run Text="{Binding State}" /></TextBlock>
-                                        </StackPanel>
-                                        <Button Grid.Column="1" Margin="0,0,6,0" Padding="10,5"
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                        <Border Classes="pulse" Width="8" Height="8" CornerRadius="4" Background="{StaticResource Success}"
+                                                VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <Button Grid.Column="1" Classes="ghost" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[profile.open]}"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).OpenProfileCommand}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel VerticalAlignment="Center" Spacing="1">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <TextBlock Classes="dim" FontSize="11"><Run Text="#" /><Run Text="{Binding Id}" /><Run Text=" · " /><Run Text="{Binding State}" /></TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Column="2" Margin="0,0,6,0" Padding="10,5"
+                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[players.kickTip]}"
                                                 Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).KickCommand}"
                                                 CommandParameter="{Binding}"
                                                 Content="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.kick]}" />
-                                        <Button Grid.Column="2" Classes="danger" Padding="8,5"
-                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[players.blockHint]}"
+                                        <Button Grid.Column="3" Classes="danger" Padding="10,5"
+                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[players.banTip]}"
                                                 Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).BlockPlayerCommand}"
                                                 CommandParameter="{Binding}">
-                                            <Path Classes="icon" Data="{StaticResource IconBan}" Width="13" />
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Path Classes="icon" Data="{StaticResource IconBan}" Width="12" />
+                                                <TextBlock Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.ban]}" />
+                                            </StackPanel>
                                         </Button>
                                     </Grid>
                                 </Border>
@@ -75,197 +111,117 @@
 
                     <Grid ColumnDefinitions="*,6,Auto">
                         <TextBox Text="{Binding AnnounceText}" Watermark="{Binding L[msg.announcePlaceholder]}" />
-                        <Button Grid.Column="2" Command="{Binding AnnounceCommand}">
+                        <Button Grid.Column="2" Command="{Binding AnnounceCommand}" ToolTip.Tip="{Binding L[btn.announce]}">
                             <Path Classes="icon" Data="{StaticResource IconMegaphone}" Width="15" />
                         </Button>
                     </Grid>
                 </StackPanel>
             </Border>
 
+            <!-- Kayıtlı karakterler -->
             <Border Classes="card enter d2">
                 <StackPanel Spacing="10">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="h2" Text="{Binding L[heroes.title]}" ToolTip.Tip="{Binding L[heroes.sub]}" />
-                        <Button Grid.Column="1" Padding="8,5" Command="{Binding RefreshHeroesCommand}" ToolTip.Tip="{Binding L[btn.refresh]}">
+                    <Grid ColumnDefinitions="Auto,*,6,Auto">
+                        <TextBlock Classes="h2" Text="{Binding L[heroes.title]}" ToolTip.Tip="{Binding L[heroes.sub]}" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Width="200" Margin="12,0,0,0" HorizontalAlignment="Right" Text="{Binding HeroFilter}"
+                                 Watermark="{Binding L[heroes.search]}" />
+                        <Button Grid.Column="3" Padding="8,5" Command="{Binding RefreshHeroesCommand}" ToolTip.Tip="{Binding L[btn.refresh]}">
                             <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="14" />
                         </Button>
                     </Grid>
-                    <TextBlock Classes="hint" Text="{Binding L[heroes.empty]}" IsVisible="{Binding !HasHeroes}" />
-                    <ListBox ItemsSource="{Binding Heroes}" SelectedItem="{Binding SelectedHero}" IsVisible="{Binding HasHeroes}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:HeroRow">
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource AccentSoft}"
-                                            BorderBrush="{StaticResource AccentDim}" BorderThickness="1">
-                                        <TextBlock Text="{Binding Initial}" FontWeight="Bold" Foreground="{StaticResource Accent}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Spacing="3">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                        <ProgressBar Value="{Binding HealthRatio}" Maximum="1" Height="3" MinHeight="3" Width="90"
-                                                     HorizontalAlignment="Left" Foreground="{StaticResource Danger}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource IconCoin}" Stroke="{StaticResource Accent}" StrokeThickness="1.5"
-                                              Width="13" Height="13" Stretch="Uniform" />
-                                        <TextBlock Classes="value" Text="{Binding GoldText}" />
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </StackPanel>
-            </Border>
-          </StackPanel>
-
-          <!-- ============ SAĞ: YÖNETİCİ ARAÇLARI ============ -->
-          <StackPanel Grid.Column="2" Spacing="16">
-            <Border Classes="card enter d1">
-                <StackPanel Spacing="14">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="h2" Text="{Binding L[admin.title]}" ToolTip.Tip="{Binding L[admin.tip]}" />
-                        <Path Grid.Column="1" Data="{StaticResource IconShield}" Stroke="{StaticResource Accent}"
-                              StrokeThickness="1.6" Width="16" Height="16" Stretch="Uniform" />
-                    </Grid>
-
-                    <!-- Hedef -->
-                    <UniformGrid Columns="2">
-                        <RadioButton Classes="choice" GroupName="adminTarget" IsChecked="{Binding AdminTargetOne}" Margin="0,0,4,0">
-                            <StackPanel Spacing="2">
-                                <TextBlock Text="{Binding L[admin.targetOne]}" FontWeight="SemiBold" />
-                                <TextBlock Classes="dim" FontSize="11.5" Text="{Binding SelectedHero.Name, FallbackValue='—'}" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Classes="choice" GroupName="adminTarget" IsChecked="{Binding AdminTargetAll}" Margin="4,0,0,0">
-                            <StackPanel Spacing="2">
-                                <TextBlock Text="{Binding L[admin.targetAll]}" FontWeight="SemiBold" />
-                                <TextBlock Classes="dim" FontSize="11.5" Text="{Binding AdminTargetText}" />
-                            </StackPanel>
-                        </RadioButton>
-                    </UniformGrid>
-
-                    <!-- Can ve altın -->
-                    <StackPanel>
-                        <TextBlock Classes="tool" Text="{Binding L[admin.grp.basics]}" />
-                        <WrapPanel>
-                            <Button Margin="0,0,6,6" Command="{Binding HealHeroCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Path Classes="icon" Data="{StaticResource IconHeart}" Width="13" />
-                                    <TextBlock Text="{Binding L[btn.heal]}" />
-                                </StackPanel>
-                            </Button>
-                            <Button Margin="0,0,6,6" Command="{Binding AddGoldCommand}" CommandParameter="1000" Content="+1.000" />
-                            <Button Margin="0,0,6,6" Command="{Binding AddGoldCommand}" CommandParameter="10000" Content="+10.000" />
-                            <Button Margin="0,0,6,6" Command="{Binding AddGoldCommand}" CommandParameter="100000" Content="+100.000" />
-                        </WrapPanel>
-                        <Grid ColumnDefinitions="*,6,Auto,12,70,6,Auto">
-                            <TextBox Text="{Binding GoldAmount}" />
-                            <Button Grid.Column="2" Command="{Binding SetGoldCommand}" Content="{Binding L[btn.setGold]}" />
-                            <TextBox Grid.Column="4" Text="{Binding AgeAmount}" />
-                            <Button Grid.Column="6" Command="{Binding SetAgeCommand}" Content="{Binding L[btn.setAge]}" />
-                        </Grid>
-                    </StackPanel>
-
-                    <!-- Ordu -->
-                    <StackPanel>
-                        <TextBlock Classes="tool" Text="{Binding L[admin.grp.army]}" ToolTip.Tip="{Binding L[admin.troopsTip]}" />
-                        <Grid ColumnDefinitions="Auto,6,70,*,Auto">
-                            <Button Command="{Binding AddTroopsCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Path Classes="icon" Data="{StaticResource IconSword}" Width="13" />
-                                    <TextBlock Text="{Binding L[btn.addTroops]}" />
-                                </StackPanel>
-                            </Button>
-                            <NumericUpDown Grid.Column="2" Value="{Binding TroopBatches}" Minimum="1" Maximum="20" Increment="1"
-                                           FormatString="0" ShowButtonSpinner="False" ToolTip.Tip="{Binding L[admin.batches]}" />
-                            <TextBlock Grid.Column="3" Classes="dim" Margin="6,0" VerticalAlignment="Center" Text="{Binding L[admin.times]}" />
-                        </Grid>
-                        <Grid ColumnDefinitions="*,6,Auto" Margin="0,6,0,0">
-                            <TextBox Text="{Binding TroopXpAmount}" />
-                            <Button Grid.Column="2" Command="{Binding AddTroopXpCommand}" Content="{Binding L[btn.troopXp]}" />
-                        </Grid>
-                    </StackPanel>
-
-                    <!-- Klan -->
-                    <StackPanel>
-                        <TextBlock Classes="tool" Text="{Binding L[admin.grp.clan]}" />
-                        <Grid ColumnDefinitions="*,6,Auto,12,*,6,Auto">
-                            <TextBox Text="{Binding InfluenceAmount}" />
-                            <Button Grid.Column="2" Command="{Binding GiveInfluenceCommand}" Content="{Binding L[btn.influence]}" />
-                            <TextBox Grid.Column="4" Text="{Binding RenownAmount}" />
-                            <Button Grid.Column="6" Command="{Binding AddRenownCommand}" Content="{Binding L[btn.renown]}" />
-                        </Grid>
-                    </StackPanel>
-
-                    <!-- Karakter gelişimi -->
-                    <StackPanel>
-                        <TextBlock Classes="tool" Text="{Binding L[admin.grp.skills]}" />
-                        <Grid ColumnDefinitions="*,6,90,6,Auto">
-                            <ComboBox ItemsSource="{Binding Skills}" SelectedItem="{Binding SelectedSkill}" HorizontalAlignment="Stretch" />
-                            <TextBox Grid.Column="2" Text="{Binding SkillXpAmount}" />
-                            <Button Grid.Column="4" Command="{Binding AddSkillXpCommand}" Content="{Binding L[btn.skillXp]}" />
-                        </Grid>
-                        <WrapPanel Margin="0,6,0,0">
-                            <Button Margin="0,0,6,0" Command="{Binding AddAttributePointCommand}" Content="{Binding L[btn.attributePoint]}" />
-                            <Button Command="{Binding AddFocusPointCommand}" Content="{Binding L[btn.focusPoint]}" />
-                        </WrapPanel>
-                    </StackPanel>
-
-                    <!-- Not -->
-                    <TextBox Text="{Binding AdminNote}" Watermark="{Binding L[admin.note]}" />
-                </StackPanel>
-            </Border>
-
-            <!-- Engel listesi -->
-            <Border Classes="card enter d2">
-                <StackPanel Spacing="10">
-                    <TextBlock Classes="h2" Text="{Binding L[block.title]}" ToolTip.Tip="{Binding L[block.sub]}" />
-                    <Grid ColumnDefinitions="*,6,Auto">
-                        <TextBox Text="{Binding BlockNameInput}" Watermark="{Binding L[block.placeholder]}" />
-                        <Button Grid.Column="2" Command="{Binding AddBlockNameCommand}" Content="{Binding L[btn.add]}" />
-                    </Grid>
-                    <ItemsControl ItemsSource="{Binding BlockList}" IsVisible="{Binding HasBlockList}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+                    <TextBlock Classes="hint" Text="{Binding L[heroes.empty]}" IsVisible="{Binding !HasHeroes}" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding VisibleHeroes}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Border Classes="badge" Background="{StaticResource DangerSoft}" Margin="0,0,6,6" Padding="10,4,4,4">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding}" FontSize="12.5" VerticalAlignment="Center" Foreground="#F5C2C2" />
-                                        <Button Classes="ghost" Padding="4"
-                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).RemoveBlockNameCommand}"
+                            <DataTemplate x:DataType="vm:HeroRow">
+                                <Button Classes="row" Padding="10,8" Margin="0,0,0,6"
+                                        ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[profile.open]}"
+                                        Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).OpenProfileCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Panel Width="34" Height="34">
+                                            <Border CornerRadius="17" Background="{StaticResource AccentSoft}"
+                                                    BorderBrush="{StaticResource AccentDim}" BorderThickness="1">
+                                                <TextBlock Text="{Binding Initial}" FontWeight="Bold" Foreground="{StaticResource Accent}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <Border Width="10" Height="10" CornerRadius="5" Background="{StaticResource Success}"
+                                                    BorderBrush="{StaticResource BgRaised}" BorderThickness="2"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding IsOnline}" />
+                                        </Panel>
+                                        <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Spacing="2">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <Border Classes="badge" Background="{StaticResource DangerSoft}" Padding="6,0" IsVisible="{Binding IsBanned}">
+                                                    <TextBlock Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[players.banned]}"
+                                                               FontSize="10.5" Foreground="{StaticResource Danger}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Classes="dim" FontSize="11.5" TextTrimming="CharacterEllipsis">
+                                                <Run Text="{Binding SteamIdShort}" /><Run Text="  ·  " /><Run Text="{Binding StatText}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Classes="danger" Padding="10,5" VerticalAlignment="Center"
+                                                IsVisible="{Binding !IsBanned}"
+                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[players.banTip]}"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).BanHeroCommand}"
                                                 CommandParameter="{Binding}">
-                                            <Path Data="{StaticResource IconClose}" Stroke="#F5C2C2" StrokeThickness="1.8"
-                                                  Width="9" Height="9" Stretch="Uniform" />
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Path Classes="icon" Data="{StaticResource IconBan}" Width="12" />
+                                                <TextBlock Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.ban]}" />
+                                            </StackPanel>
                                         </Button>
-                                    </StackPanel>
-                                </Border>
+                                    </Grid>
+                                </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
             </Border>
           </StackPanel>
-        </Grid>
 
-        <!-- ============ YÖNETİCİ KAYITLARI ============ -->
-        <Border Classes="card enter d3" IsVisible="{Binding HasAuditEntries}">
-            <StackPanel Spacing="8">
-                <TextBlock Classes="h2" Text="{Binding L[sec.auditLog]}" />
-                <ItemsControl ItemsSource="{Binding AuditLog}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="core:AdminAuditEntry">
-                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2">
-                                <TextBlock Classes="dim" Text="{Binding TimeText}" FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12" />
-                                <TextBlock Foreground="{StaticResource Accent}" FontSize="12.5" FontWeight="SemiBold" Text="{Binding PlayerName}" />
-                                <TextBlock Classes="value" FontSize="12.5" Text="{Binding Description}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+          <!-- ============ SAĞ: BANLILAR ============ -->
+          <StackPanel Grid.Column="2" Spacing="16">
+            <Border Classes="card enter d1">
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="h2" Text="{Binding L[bans.title]}" ToolTip.Tip="{Binding L[bans.tip]}" />
+                        <Path Grid.Column="1" Data="{StaticResource IconBan}" Stroke="{StaticResource Danger}"
+                              StrokeThickness="1.6" Width="15" Height="15" Stretch="Uniform" />
+                    </Grid>
+                    <TextBlock Classes="hint" Text="{Binding L[bans.empty]}" IsVisible="{Binding !HasBans}" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Bans}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BanRow">
+                                <Border Padding="10,8" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,6"
+                                        BorderBrush="{StaticResource DangerSoft}" BorderThickness="1">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="2">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <Border Classes="badge" Background="{StaticResource WarningSoft}" Padding="6,0" IsVisible="{Binding IsByName}"
+                                                        ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[bans.byNameTip]}">
+                                                    <TextBlock FontSize="10.5" Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[bans.byName]}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Classes="dim" FontSize="11.5" IsVisible="{Binding !IsByName}"><Run Text="{Binding SteamIdShort}" /><Run Text="  ·  " /><Run Text="{Binding DateText}" /></TextBlock>
+                                            <TextBlock Classes="dim" FontSize="11.5" FontStyle="Italic" Text="{Binding Note}" IsVisible="{Binding HasNote}"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" VerticalAlignment="Center"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).UnbanCommand}"
+                                                CommandParameter="{Binding}"
+                                                Content="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.unban]}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBox Text="{Binding AdminNote}" Watermark="{Binding L[bans.note]}" />
+                </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </Grid>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

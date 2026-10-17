@@ -33,7 +33,7 @@
                         <Slider Width="200" Minimum="{Binding Minimum}" Maximum="{Binding Maximum}"
                                 Value="{Binding NumberValue}" SmallChange="{Binding Step}" LargeChange="{Binding Step}"
                                 TickFrequency="{Binding Step}" IsSnapToTickEnabled="True" />
-                        <Border Classes="badge" MinWidth="54">
+                        <Border Classes="valuebar">
                             <TextBlock Text="{Binding NumberText}" FontWeight="SemiBold" FontSize="12.5"
                                        HorizontalAlignment="Center" />
                         </Border>

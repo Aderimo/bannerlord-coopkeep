@@ -75,3 +75,38 @@ public sealed class ModCompatDatabaseTests : IDisposable
         Assert.Contains(hepsi, b => b.SaveName == "Vlandia" && b.Reason == BackupReason.Unknown);
     }
 }
+
+public class ModCompatLibraryTests
+{
+    [Fact]
+    public void reponun_mod_listesi_okunur_ve_yeni_alanlar_dolar()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "compat", "mods.json");
+        if (!File.Exists(path)) return;
+
+        var db = ModCompatDatabase.Parse(File.ReadAllText(path));
+        Assert.NotNull(db);
+        Assert.True(db.Count > 300);
+        Assert.Equal(CommunityStatus.Broken, db.Find("NavalDLC")!.Status);
+        Assert.Contains(db.All, e => e.Status == CommunityStatus.Unknown && !string.IsNullOrEmpty(e.Name));
+        Assert.Contains(db.All, e => e.Url is { } u && u.StartsWith("https://", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void workshop_ve_nexus_adresi_uretilir()
+    {
+        var db = ModCompatDatabase.Parse("""
+            { "mods": [
+              { "id": "A", "name": "Mod A", "status": "Unknown", "workshop": "2859188632", "works": 2, "broken": 1 },
+              { "id": "B", "status": "Works", "nexus": 2006 }
+            ] }
+            """)!;
+
+        var a = db.Find("A")!;
+        Assert.Equal("Mod A", a.DisplayName);
+        Assert.Equal("https://steamcommunity.com/sharedfiles/filedetails/?id=2859188632", a.Url);
+        Assert.Equal((2, 1), (a.Works, a.Broken));
+        Assert.Equal("https://www.nexusmods.com/mountandblade2bannerlord/mods/2006", db.Find("B")!.Url);
+        Assert.Equal("B", db.Find("B")!.DisplayName);
+    }
+}

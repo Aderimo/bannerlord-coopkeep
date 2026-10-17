@@ -4,7 +4,7 @@
 
 **Bannerlord Coop server manager**
 
-[![Version](https://img.shields.io/badge/version-v0.3.0-C9A227)](../../releases)
+[![Version](https://img.shields.io/badge/version-v0.5.0-C9A227)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#install)
 
@@ -24,7 +24,8 @@ unblock DLLs, create a singleplayer save first, edit `server-config.json` in Not
 double-click an `.exe` and keep a console window open, copy files by hand when a save
 breaks.
 
-CoopKeep takes all of that over — and **never touches the mod's files.**
+CoopKeep takes all of that over. It does not touch the mod's files — unless you turn on
+the optional server plugin (see below).
 
 ---
 
@@ -47,7 +48,8 @@ CoopKeep takes all of that over — and **never touches the mod's files.**
 4. Double-click it. That's it.
 
 > **No installer.** Nothing is copied into the game folder and no game file is modified.
-> Keep it wherever you like; to uninstall, delete the exe.
+> Keep it wherever you like; to uninstall, delete the exe. (The optional server plugin is
+> the only exception; it is removed again when you turn it off.)
 
 **Your friends do not need CoopKeep.** They just subscribe to the same mod and join
 from the game.
@@ -103,14 +105,34 @@ For a direct IP join, forward **UDP 4200** on your router. Not needed for Steam 
 
 ### Players
 - Live list, search, kick, broadcast
-- **Characters:** name, gold, health and age read from the server; full health,
-  add/set gold, set age. Works with any number of players; results are verified and
-  every action goes to a persistent audit log
-- **Block list:** blocked names are kicked automatically
-- **Cheats:** let players use cheat menus via the world setting
+- **Steam bans** through the Coop server's own ban list — no restart needed. Players
+  whose Steam ID is not known yet are banned by name
+- **Player profile:** level, gold, health, age, influence, renown, a skills screen like
+  the game's, battle and civilian equipment with real item images, inventory and army
+
+### Cheats
+For repairing what a cheater broke. Pick one, several or all players:
+- Gold, health, clan influence and renown, age
+- **Troops by type and count** with real portraits; take troops from an army; heal wounded
+- **Items:** every item in the game, grouped and searchable, with town prices
+- **Skills, focus and attribute points** on the skills screen
+- Undo for recent actions; every action is verified and written to an audit log
+
+### Map
+- The real Calradia map with towns, castles, villages, kingdoms and capture alerts
+- Players and **all lords** move live; click for an info card
+- **Teleport from the map:** pick a player, then click or search a settlement
+- **Viewer mode:** friends can watch your map from their own CoopKeep
+
+### Encyclopedia
+- Kingdoms, clans, lords, settlements, troops (upgrade trees) and items with the game's
+  own texts — in Turkish from the game's own translation
+- **Guides** computed from game data: strongest troops, richest towns, strongest clans,
+  best castle locations, best weapons, armor and horses
 
 ### Mods
 - Status of every module in your launcher (compatible / not on server / refused by Coop)
+- **All mods list** with community results; click a mod for its description
 - **Set up for Coop:** turn off problem mods in one click, restore them later
 
 ### Backups
@@ -156,11 +178,12 @@ These are not CoopKeep gaps — they are **limits of the mod itself**, verified 
 
 - **No player cap.** Bannerlord Coop does not enforce a slot limit, and connections
   cannot be refused from the outside.
-- **No ban, only kick.** The Steam identity is not written to the live protocol, so a
-  persistent ban could only ever be name-based.
-- **The game's own console cheats stay off** on the server (`Cheat mode is disabled!`)
-  and no command enables them. Player cheat menus are available through the world
-  setting, and gold/health/age through the Players page.
+- **The game's own console cheats stay off** on the server (`Cheat mode is disabled!`).
+  CoopKeep's Cheats tab works through Coop's own commands and the optional
+  **CoopKeep server plugin** (items, skills, profile, fast map). The plugin is off until
+  you turn it on; it is then added as a sub-module to the Coop mod's folder (the original
+  file is backed up) and removed when you turn it off. Only the server console can use it.
+- **Renown cannot be taken away** and there is no god mode.
 - **No mods on the server.** It only loads the official modules and Coop; clients must
   turn other mods off (the Mods page helps).
 - **"Friends only" visibility** could not be verified on the dedicated server.

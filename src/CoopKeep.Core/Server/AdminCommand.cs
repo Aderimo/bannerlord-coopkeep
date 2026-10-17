@@ -48,10 +48,37 @@ public static class AdminCommand
         "coop.debug.hero.set_age",
         "coop.debug.hero.info",
         "coop.debug.clan.give_influence",
+        "coop.debug.clan.add_influence",
         "coop.debug.clan.add_renown",
-        "coop.debug.hero_developer.add_skill_xp",
-        "coop.debug.hero_developer.add_attribute_points",
-        "coop.debug.hero_developer.add_focus_points",
+        "coop.debug.clan.info",
+        "coop.debug.clan.list",
+        "coop.debug.kingdom.list",
+        "coop.debug.hero.list",
+        "coop.debug.mobile_party.set_troop_state",
+        "coop.debug.mobile_party.set_troop_wounded",
+        "coop.debug.mobile_party.character_ids",
+        "coop.debug.mobile_party.position",
+        "coop.debug.mobile_party.move_to_settlement",
+        "coop.debug.settlements.owner_state",
+        "coop.debug.item_object.data",
+        "coopkeep.ping",
+        "coopkeep.give_item",
+        "coopkeep.take_item",
+        "coopkeep.party_items",
+        "coopkeep.items",
+        "coopkeep.prices",
+        "coopkeep.hero_stats",
+        "coopkeep.add_skill",
+        "coopkeep.add_skill_xp",
+        "coopkeep.add_focus",
+        "coopkeep.add_attribute",
+        "coopkeep.add_unspent",
+        "coopkeep.hero_equipment",
+        "coopkeep.roster",
+        "coopkeep.parties",
+        "coopkeep.owners",
+        "coopkeep.settlement_stats",
+        "coopkeep.item_stats",
         "coop.debug.mobile_party.add_troops",
         "coop.debug.mobile_party.add_troop_xp",
         "coop.debug.mobileparty.info",
@@ -99,40 +126,158 @@ public static class AdminCommand
 
     public const int MaxInfluence = 10_000;
     public const int MaxRenown = 10_000;
-    public const int MaxSkillXp = 100_000;
-    public const int MaxPoints = 20;
     public const int MaxTroopXp = 1_000_000;
-
-    /// <summary>Oyunun yetenek kimlikleri (<c>add_skill_xp</c> için).</summary>
-    public static readonly IReadOnlyList<string> Skills =
-    [
-        "OneHanded", "TwoHanded", "Polearm", "Bow", "Crossbow", "Throwing",
-        "Riding", "Athletics", "Crafting", "Scouting", "Tactics", "Roguery",
-        "Charm", "Leadership", "Trade", "Steward", "Medicine", "Engineering",
-    ];
 
     /// <summary>Klana nüfuz ekler. Usage: <c>coop.debug.clan.give_influence &lt;clan_id&gt; &lt;amount&gt;</c></summary>
     public static string GiveInfluence(string clanId, int amount) =>
         $"coop.debug.clan.give_influence {RequireId(clanId)} {Math.Clamp(amount, 1, MaxInfluence).ToString(CultureInfo.InvariantCulture)}";
 
+    /// <summary>
+    /// Klanın nüfuzunu artırır ya da <b>azaltır</b> (eksi değer).
+    /// </summary>
+    /// <remarks>
+    /// Usage: <c>coop.debug.clan.add_influence &lt;clan_id&gt; &lt;amount&gt;</c> →
+    /// <c>Applied -50 influence to 'Osticos'; clan is now at 415 influence</c>. Eksi değeri
+    /// kabul ettiği ve yeni değeri yazdığı için hem "ver" hem "al" bununla yapılır.
+    /// </remarks>
+    public static string AddInfluence(string clanId, int amount) =>
+        $"coop.debug.clan.add_influence {RequireId(clanId)} {Math.Clamp(amount, -MaxInfluence, MaxInfluence).ToString(CultureInfo.InvariantCulture)}";
+
+    /// <summary>Klanın ünü, nüfuzu, lideri, krallığı. Usage: <c>coop.debug.clan.info &lt;clan_id&gt;</c></summary>
+    public static string ClanInfo(string clanId) => $"coop.debug.clan.info {RequireId(clanId)}";
+
+    public static string HeroList() => "coop.debug.hero.list";
+    public static string ClanList() => "coop.debug.clan.list";
+    public static string KingdomList() => "coop.debug.kingdom.list";
+
+    /// <summary>Bir partide en fazla bu kadar asker ayarlanabilir.</summary>
+    public const int MaxTroopCount = 1000;
+
+    /// <summary>
+    /// Partideki bir asker türünün sayısını <b>ayarlar</b> (vermek de almak da bununla).
+    /// </summary>
+    /// <remarks>
+    /// Usage: <c>coop.debug.mobile_party.set_troop_state &lt;party_id&gt; &lt;character_id&gt; &lt;exists&gt; &lt;number&gt; &lt;wounded_count&gt; &lt;xp&gt;</c>
+    /// → <c>TROOP_STATE_SET party=… character=… oldNumber=1 … newNumber=25 …</c>.
+    /// Sayı 0 olunca tür kadrodan çıkarılır (<c>exists=false</c>). Kahraman satırlarını
+    /// kabul etmiyor (<c>Hero roster elements are not supported</c>).
+    /// </remarks>
+    public static string SetTroopState(string partyId, string troopId, int number, int wounded = 0, int xp = 0)
+    {
+        number = Math.Clamp(number, 0, MaxTroopCount);
+        wounded = Math.Clamp(wounded, 0, number);
+        var exists = number > 0 ? "true" : "false";
+        return string.Create(CultureInfo.InvariantCulture,
+            $"coop.debug.mobile_party.set_troop_state {RequireId(partyId)} {RequireId(troopId)} {exists} {number} {wounded} {Math.Max(0, xp)}");
+    }
+
+    /// <summary>Yaralı asker sayısını ayarlar (0 = hepsini iyileştir).</summary>
+    public static string SetTroopWounded(string partyId, string troopId, int wounded) =>
+        string.Create(CultureInfo.InvariantCulture,
+            $"coop.debug.mobile_party.set_troop_wounded {RequireId(partyId)} {RequireId(troopId)} {Math.Max(0, wounded)}");
+
+    /// <summary>Kahramanın partisinin kadrosu. Usage: <c>coop.debug.mobile_party.character_ids &lt;hero_name_or_id&gt;</c></summary>
+    /// <remarks>
+    /// Bu komut Coop'un kayıt kimliğini (<c>Hero_lord_1_1</c>) tanımıyor, yalnızca oyunun kimliğini
+    /// (<c>lord_1_1</c>) kabul ediyor (2026-10-17, test sunucusu). Save'deki oyuncu kimlikleri
+    /// kayıt kimliği olduğundan önek atılır; v0.4'te "Asker al" listesi bu yüzden boştu.
+    /// </remarks>
+    public static string PartyRoster(string heroId) => $"coop.debug.mobile_party.character_ids {GameStringId(RequireId(heroId))}";
+
+    /// <summary>Coop kayıt kimliğinden oyunun kimliği: <c>Hero_lord_1_1</c> → <c>lord_1_1</c>.</summary>
+    public static string GameStringId(string registryId) =>
+        registryId.StartsWith("Hero_", StringComparison.Ordinal) && registryId.Length > 5 ? registryId[5..] : registryId;
+
+    /// <summary>Partinin konumu (hafif sorgu). Usage: <c>coop.debug.mobile_party.position &lt;party_id&gt;</c></summary>
+    public static string PartyPosition(string partyId) => $"coop.debug.mobile_party.position {RequireId(partyId)}";
+
+    /// <summary>
+    /// Oyuncu partisini bir yerleşime ışınlar.
+    /// </summary>
+    /// <remarks>
+    /// Usage: <c>coop.debug.mobile_party.move_to_settlement &lt;party_id&gt; &lt;settlement_id&gt; [&lt;instant&gt;]</c>.
+    /// Yalnızca oyuncu partileri: lord partisinde <c>Party … is not a player party.</c> döner.
+    /// </remarks>
+    public static string MoveToSettlement(string partyId, string settlementId) =>
+        $"coop.debug.mobile_party.move_to_settlement {RequireId(partyId)} {RequireId(settlementId)} true";
+
+    /// <summary>Yerleşimin güncel sahibi. Usage: <c>coop.debug.settlements.owner_state &lt;settlementNameOrId&gt;</c></summary>
+    public static string SettlementOwner(string settlementId) => $"coop.debug.settlements.owner_state {RequireId(settlementId)}";
+
+    // --- CoopKeep sunucu eklentisi (ServerToolsInstaller) ---------------------
+
+    /// <summary>Eklenti yüklü mü? → <c>COOPKEEP_TOOLS v1</c></summary>
+    public static string ToolsPing() => "coopkeep.ping";
+
+    /// <summary>Kahramanın partisinin envanterine eşya ekler. → <c>COOPKEEP_ITEM hero=… item=… old=… new=…</c></summary>
+    public static string GiveItem(string heroId, string itemId, int count) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.give_item {RequireId(heroId)} {RequireId(itemId)} {Math.Clamp(count, 1, 10_000)}");
+
+    /// <summary>Envanterden eşya alır (en fazla elindeki kadar).</summary>
+    public static string TakeItem(string heroId, string itemId, int count) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.take_item {RequireId(heroId)} {RequireId(itemId)} {Math.Clamp(count, 1, 10_000)}");
+
+    /// <summary>Envanter: <c>item_id: sayı</c> satırları, <c>COOPKEEP_ITEMS_END</c>.</summary>
+    public static string PartyItems(string heroId) => $"coopkeep.party_items {RequireId(heroId)}";
+
+    /// <summary>Oyundaki bütün eşyalar (<c>ITEM|…</c>).</summary>
+    public static string ItemList() => "coopkeep.items";
+
+    /// <summary>Kasaba fiyatları (<c>PRICE|…</c>).</summary>
+    public static string ItemPrices() => "coopkeep.prices";
+
+    /// <summary>Seviye, XP, özellikler ve beceriler (<c>HERO|…</c>, <c>ATTR|…</c>, <c>SKILL|…</c>).</summary>
+    public static string ToolsHeroStats(string heroId) => $"coopkeep.hero_stats {RequireId(heroId)}";
+
+    /// <summary>Beceri seviyesini değiştirir (eksi: düşürür), 0–330 arasında kalır.</summary>
+    public static string ToolsAddSkill(string heroId, string skillId, int delta) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.add_skill {RequireId(heroId)} {RequireSkill(skillId)} {Math.Clamp(delta, -330, 330)}");
+
+    /// <summary>Beceriye XP ekler (oyunun kendi öğrenme hızıyla; yüksek seviyede seviye zor artar).</summary>
+    public static string ToolsAddSkillXp(string heroId, string skillId, int xp) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.add_skill_xp {RequireId(heroId)} {RequireSkill(skillId)} {Math.Clamp(xp, 1, 1_000_000)}");
+
+    /// <summary>Beceriye odak puanı (eksi: geri alır).</summary>
+    public static string ToolsAddFocus(string heroId, string skillId, int delta) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.add_focus {RequireId(heroId)} {RequireSkill(skillId)} {Math.Clamp(delta, -10, 10)}");
+
+    /// <summary>Özelliğe puan (eksi: geri alır).</summary>
+    public static string ToolsAddAttribute(string heroId, string attributeId, int delta) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.add_attribute {RequireId(heroId)} {RequireSkill(attributeId)} {Math.Clamp(delta, -10, 10)}");
+
+    /// <summary>Harcanmamış özellik ya da odak puanı.</summary>
+    public static string ToolsAddUnspent(string heroId, bool attribute, int delta) =>
+        string.Create(CultureInfo.InvariantCulture, $"coopkeep.add_unspent {RequireId(heroId)} {(attribute ? "attribute" : "focus")} {Math.Clamp(delta, -100, 100)}");
+
+    /// <summary>Savaş ve şehir kuşanımı (<c>EQ|…</c>).</summary>
+    public static string ToolsHeroEquipment(string heroId) => $"coopkeep.hero_equipment {RequireId(heroId)}";
+
+    /// <summary>Kahramanın partisinin kadrosu (<c>PARTY|…</c>, <c>TROOP|…</c>).</summary>
+    public static string ToolsRoster(string heroId) => $"coopkeep.roster {RequireId(heroId)}";
+
+    /// <summary>Bütün lord ve oyuncu partileri (<c>MP|…</c>).</summary>
+    public static string ToolsParties() => "coopkeep.parties";
+
+    /// <summary>Bütün yerleşimlerin sahibi (<c>OWN|…</c>).</summary>
+    public static string ToolsOwners() => "coopkeep.owners";
+
+    /// <summary>Kasaba ve kalelerin durumu (<c>SET|…</c>).</summary>
+    public static string ToolsSettlementStats() => "coopkeep.settlement_stats";
+
+    /// <summary>Silah, zırh ve at değerleri (<c>STAT|…</c>).</summary>
+    public static string ToolsItemStats() => "coopkeep.item_stats";
+
+    private static string RequireSkill(string? id) =>
+        !string.IsNullOrEmpty(id) && id.All(char.IsAsciiLetter)
+            ? id
+            : throw new ArgumentException($"Geçersiz beceri/özellik: '{id}'", nameof(id));
+
+    /// <summary>Eşyanın oyun içi değeri. Usage: <c>coop.debug.item_object.data &lt;item_id&gt;</c> → <c>Value: 10</c></summary>
+    public static string ItemData(string itemId) => $"coop.debug.item_object.data {RequireId(itemId)}";
+
     /// <summary>Klana ün ekler. Usage: <c>coop.debug.clan.add_renown &lt;clan_id&gt; &lt;renown&gt;</c></summary>
     public static string AddRenown(string clanId, int amount) =>
         $"coop.debug.clan.add_renown {RequireId(clanId)} {Math.Clamp(amount, 1, MaxRenown).ToString(CultureInfo.InvariantCulture)}";
-
-    /// <summary>Yetenek deneyimi. Usage: <c>add_skill_xp &lt;hero_name_or_id&gt; &lt;skill_name&gt; &lt;xp_amount&gt;</c></summary>
-    public static string AddSkillXp(string heroId, string skill, int xp)
-    {
-        if (!Skills.Contains(skill))
-            throw new ArgumentException($"Bilinmeyen yetenek: '{skill}'", nameof(skill));
-
-        return $"coop.debug.hero_developer.add_skill_xp {RequireId(heroId)} {skill} {Math.Clamp(xp, 1, MaxSkillXp).ToString(CultureInfo.InvariantCulture)}";
-    }
-
-    public static string AddAttributePoints(string heroId, int points) =>
-        $"coop.debug.hero_developer.add_attribute_points {RequireId(heroId)} {Math.Clamp(points, 1, MaxPoints).ToString(CultureInfo.InvariantCulture)}";
-
-    public static string AddFocusPoints(string heroId, int points) =>
-        $"coop.debug.hero_developer.add_focus_points {RequireId(heroId)} {Math.Clamp(points, 1, MaxPoints).ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>
     /// Kahramanın partisine Coop'un sabit asker grubunu ekler.

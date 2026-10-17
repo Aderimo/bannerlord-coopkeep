@@ -16,14 +16,24 @@ body:
     validations:
       required: true
   - type: input
+    id: mod_name
+    attributes:
+      label: Mod name · Mod adı
+      description: Display name, if you know it · Biliyorsan modun görünen adı
+  - type: input
     id: mod_version
     attributes:
       label: Mod version · Mod sürümü
-  - type: input
+  # Seçenek metinleri CoopKeep'in gönderdiği "status" değeriyle ve
+  # .github/scripts/tally-mod-compat.mjs ile aynı olmalı.
+  - type: dropdown
     id: status
     attributes:
       label: Result · Sonuç
-      description: "works / broken / client-only"
+      options:
+        - works
+        - broken
+        - client-only
     validations:
       required: true
   - type: input

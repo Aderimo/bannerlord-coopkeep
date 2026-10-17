@@ -17,3 +17,6 @@ publish/
 # publish.ps1 tarafindan uretilen tek dosyalik exe.
 # Depoya girmiyor (~100 MB); surumler GitHub Releases uzerinden dagitilir.
 /CoopKeep.exe
+
+# Görselli indirme paketi: ayrı yayınlanır, repoya girmez
+image-pack/

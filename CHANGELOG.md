@@ -8,6 +8,135 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v0.5.0 — 2026-10-17
+
+Fourth round, after a live test with a friend. The new server commands were tried on a
+copy of the Coop v0.1.6 server first (`Fixtures/server-tools-v2.txt`).
+
+*Dördüncü tur: arkadaşla yapılan canlı testten sonra. Yeni sunucu komutları önce Coop
+v0.1.6 sunucusunun bir kopyasında denendi.*
+
+### Added · Eklenenler
+
+- **Player profile** window, opened from Players, Cheats and the Map: level, gold,
+  health, age, influence, renown, the skills screen, battle and civilian equipment with
+  real item images, inventory and army with troop portraits; quick actions.
+  *Oyuncu profili: beceriler, kuşanım, envanter, ordu ve hızlı eylemler.*
+- **Skills screen like the game's:** 6 attributes, 18 skills with their icons, focus
+  points, level and total XP. Click a skill to change its level, focus or XP; click an
+  attribute to add points; unspent points can be given too. Values are read back from the
+  server after every change.
+  *Oyundaki gibi beceri ekranı; her değişiklikten sonra sunucudan yeniden okunur.*
+- **Encyclopedia tab:** kingdoms, clans, lords, settlements, troops (upgrade trees) and
+  items with the game's own texts — in Turkish from the game's own translation — plus
+  guides computed from game data: strongest troops per tier, richest towns, strongest
+  clans, best castle locations, best weapons/armor/horses. Live owner, prosperity and
+  lord location are added while the server runs.
+  *Ansiklopedi sekmesi ve verilerden hesaplanan rehberler.*
+- **Map:** teleport from the map (pick a player → Teleport → click or search a
+  settlement → confirm); all lords on the map with an info card; level-of-detail labels.
+  *Haritadan ışınlama, bütün lordlar, yakınlığa göre ayrıntı.*
+- Player search on Players and Cheats.
+  *Oyuncular ve Hileler'de oyuncu arama.*
+- Server plugin v2: `hero_stats`, `add_skill`, `add_skill_xp`, `add_focus`,
+  `add_attribute`, `add_unspent`, `hero_equipment`, `roster`, `parties`, `owners`,
+  `settlement_stats`, `item_stats`.
+
+### Changed · Değişenler
+
+- **New worlds are created instantly** from the game's `default_new_game.sav` template;
+  the server starts once (before: one full boot to create, another to start).
+  *Yeni dünya anında kurulur; sunucu bir kez açılır.*
+- Nothing heavy runs the moment the server goes live: the item list and prices are cached
+  for a day, characters are refreshed when their page opens (details only for online
+  players), the map reads all parties and owners with one command each.
+  *Yayına geçince sunucuya yük binmez.*
+- Map: zooming out keeps the map centered; markers keep their size on screen; village
+  and castle names only when zoomed in; kingdom names on top in a readable frame; lords
+  inside a settlement are not drawn (as in the game); movement is smooth (2 s polls with a
+  linear 2 s glide).
+  *Harita: ortalı uzaklaştırma, sabit boylu işaretler, akıcı hareket, karmaşa giderildi.*
+- Cheats: the info panel and actions appear only after a player is picked; the Teleport
+  tab moved to the Map.
+  *Hileler: panel yalnızca oyuncu seçilince; ışınlama haritaya taşındı.*
+- Players: the separate "block list" is gone — players banned by name show up in Bans
+  with a "by name" tag.
+  *Engel listesi kalktı; ad ile banlananlar Banlılar'da.*
+- Thin, centered number fields; Backups scope buttons no longer look highlighted;
+  Mods list is paged with an info window (Steam Workshop description and cover).
+  *İnce sayı alanları, Yedekler düğmeleri, sayfalı mod listesi ve mod bilgi penceresi.*
+- Plugin data lines are no longer printed to the console.
+
+### Fixed · Düzeltilenler
+
+- **"Take troops" list was empty for players:** Coop's `character_ids` only accepts the
+  game id (`lord_1_1`), not the registry id saved for players (`Hero_…`). The plugin now
+  accepts both; the fallback strips the prefix.
+  *"Asker al" listesi boştu: kimlik biçimi düzeltildi.*
+- **Attribute, focus and skill XP did not work:** replaced with plugin commands that are
+  verified by reading the values back. Skill XP follows the game's learning rate, so the
+  screen also offers direct level changes.
+  *Özellik, odak ve yetenek XP'si çalışmıyordu.*
+- Clicking a town's banner on the map now always opens it, whatever layers are on.
+  *Haritaya basılı sancaklar her zaman tıklanabilir.*
+
+---
+
+## v0.4.0 — 2026-10-16
+
+Third round of user feedback: a separate Cheats tab, real game visuals, a real map and
+Steam bans. Every new server command was tried on a Coop v0.1.6 server first
+(`Fixtures/troops-clans.txt`, `Fixtures/server-tools.txt`).
+
+*Üçüncü geri bildirim turu: ayrı Hileler sekmesi, oyunun gerçek görselleri, gerçek harita
+ve Steam banları. Her yeni sunucu komutu önce Coop v0.1.6 sunucusunda denendi.*
+
+### Added · Eklenenler
+
+- **Cheats tab** (moved out of Players): pick one, several or all players; Gold, Health,
+  Army, Clan, Character, Teleport, Items. Every "give" has a "take" where the server
+  supports it; the last actions can be undone.
+  *Hileler sekmesi: ver/al/ayarla, çoklu hedef, geri alma.*
+- **Troops by type and count** with the troops' real portraits, culture/class filters and
+  a basket; take troops from a player's army; heal wounded (`set_troop_state`).
+  *Asker türü ve sayısı seçilerek ver/al, gerçek asker portreleri.*
+- **Items screen:** all 1,285 game items (weapons, armor, civilian/battle clothes,
+  horses, food, materials) grouped, searchable, with the cheapest and most expensive town
+  price; give or take the items themselves, or their value as gold.
+  *Eşya ekranı: gruplar, arama, kasaba fiyatları, eşya ver/al.*
+- **CoopKeep server add-on** (opt-in, Settings): Coop has no item command, so CoopKeep can
+  add a small sub-module to your own Coop install for `coopkeep.give_item/take_item`, the
+  item list and town prices. Turning it off restores the original files.
+  *İsteğe bağlı sunucu eklentisi: eşya verme, tam eşya listesi, fiyatlar.*
+- **Real map:** the in-game Calradia map with the game's town banners, castles, villages,
+  kingdom names, rulers and searchable lords ("Who's where?"), player trails, starred
+  players drawn larger with a yellow ring, alerts for battles, sieges and captured
+  settlements, ownership history. Zoom with the wheel, drag to pan.
+  *Gerçek harita: katmanlar, öncelikli oyuncular, el değiştirme bildirimleri.*
+- **Viewer mode:** players who don't host can watch the live map from their own CoopKeep
+  (read-only, share code).
+  *İzleyici modu: arkadaşlar haritayı kendi CoopKeep'lerinden izler.*
+- **Steam bans** through Coop's own `steam-bans.json` (no restart needed), unban, undo,
+  last seen and play time per player.
+  *Steam hesabıyla ban, ban kaldırma, geri alma, son görülme.*
+- **All mods tab:** 529 Bannerlord mods from the community list, searchable even when not
+  installed, with ✓/✗ report counts; reports are tallied automatically by a GitHub Action.
+  *Tüm modlar sekmesi ve otomatik sayılan bildirimler.*
+- **Image pack** as a separate download (`tools/build-image-pack.ps1`): troop and lord
+  portraits, settlement pictures and the map from community wikis; items, troops and
+  banners rendered by the game itself (`CoopKeep.ImageExporter`). No game images are
+  stored in this repository.
+  *Ayrı indirilen görsel paketi; repoda oyun görseli yok.*
+
+### Known limitations · Bilinen sınırlar
+
+- Coop can't lower renown, attribute or focus points; there is no god mode.
+  *Ün, özellik ve odak puanı azaltılamıyor; tanrı modu yok.*
+- A player's own custom banner can't be read from the server; their kingdom's banner is shown.
+  *Oyuncunun kendi sancağı okunamıyor; krallığının sancağı gösterilir.*
+
+---
+
 ## v0.3.0 — 2026-10-16
 
 Second round of user feedback. New server commands below were read from a running

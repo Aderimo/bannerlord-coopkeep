@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media;
@@ -58,6 +59,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         HighPriority = _ui.HighPriority;
         MemoryWarningGb = _ui.MemoryWarningGb;
         CheckUpdates = _ui.CheckUpdates;
+        _serverToolsEnabled = _ui.ServerTools;
 
         _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _uptimeTimer.Tick += (_, _) =>
@@ -74,6 +76,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         WireSupervisor();
         Detect();
+        InitViewerSettings();
         CheckForForeignServer();
 
         if (CheckUpdates) _ = CheckForUpdateAsync();
@@ -252,8 +255,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     // --- yönetici işlemleri ---
 
-    [ObservableProperty] private string _goldAmount = "10000";
-    [ObservableProperty] private string _ageAmount = "25";
 
     public ObservableCollection<AdminAuditEntry> AuditLog { get; } = [];
 
@@ -365,6 +366,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         // Bağlama zincirinin kökünü tazele; C# tarafında hesaplanan metinler ayrıca.
         OnPropertyChanged(nameof(L));
+        _profileSheet?.ApplyNames();
+        _cheatSheet?.ApplyNames();
+        if (CurrentPage == AppPage.Encyclopedia) OnEncyclopediaOpened();
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PrivacyLabel));
         OnPropertyChanged(nameof(GameCheckText));
@@ -428,10 +432,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         Console.Clear();
         ClearConsoleSummary();
+        EnsureServerTools();
         _supervisor.Start(new ServerLaunchOptions
         {
             ExecutablePath = _coop.DedicatedServerExe,
             DataDirectory = DataDirectory,
+            SteamBanFile = System.IO.Path.Combine(DataDirectory, Core.Server.SteamBanList.FileName),
             AcceptEula = EulaAccepted,
         });
 
@@ -470,18 +476,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     }
 
     private bool CanAnnounce() => CanCommand() && !string.IsNullOrWhiteSpace(AnnounceText);
-
-    [RelayCommand(CanExecute = nameof(CanKick))]
-    private async Task KickAsync(ConnectedPlayer? player)
-    {
-        player ??= SelectedPlayer;
-        if (player is null) return;
-
-        await SendAsync(ServerCommand.Kick(player.Id.ToString()));
-        ShowToast(string.Format(L["msg.kicked"], player.Name));
-    }
-
-    private bool CanKick(ConnectedPlayer? player) => CanCommand() && (player ?? SelectedPlayer) is not null;
 
     private bool CanCommand() => IsServing && !IsBusy;
 
@@ -524,6 +518,17 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         if (_coop is null || _config is null || _saves is null) return false;
         if (!SaveSet.IsValidSaveName(name) || _saves.Exists(name)) return false;
+
+        // Hızlı yol: şablon kopyalanır, sunucu açılmaz. Dünya ayarları ilk "Başlat"ta
+        // mod-config.json'a yazılır ve sunucu dünyayı o açılışta kurar.
+        try
+        {
+            if (CreateWorldFromTemplate(name)) return true;
+        }
+        catch (Exception ex)
+        {
+            AppendConsole("! " + ex.Message);
+        }
 
         var ready = new TaskCompletionSource();
         void OnPhase(ServerPhase p) { if (p == ServerPhase.Serving) ready.TrySetResult(); }
@@ -570,6 +575,27 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             ReloadCampaigns();
             SelectedCampaign = Campaigns.FirstOrDefault(c => c.Name == name) ?? SelectedCampaign;
         }
+    }
+
+    /// <summary>Yeni dünyayı oyunun <c>default_new_game.sav</c> şablonundan kopyalar.</summary>
+    private bool CreateWorldFromTemplate(string name)
+    {
+        if (_coop is null || _config is null || _saves is null) return false;
+
+        var serverDir = Path.GetDirectoryName(_coop.DedicatedServerExe)!;
+        var created = _saves.CreateFromTemplate(name,
+        [
+            Path.Combine(serverDir, "server-data", "Game Saves", SaveRepository.TemplateFileName),
+            Path.Combine(serverDir, "engine", "bin", "Win64_Shipping_Server", SaveRepository.TemplateFileName),
+        ]);
+        if (created is null) return false;
+
+        _config.EnsureSaveName(name);
+        ApplyEditedSettings();
+        ReloadConfig();
+        ReloadCampaigns();
+        SelectedCampaign = Campaigns.FirstOrDefault(c => c.Name == name) ?? SelectedCampaign;
+        return true;
     }
 
     // --- kampanya dosya işlemleri ---------------------------------------
@@ -708,6 +734,13 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         await clipboard.SetTextAsync(ConnectSummary);
         ShowToast(L["msg.inviteCopied"]);
+    }
+
+    private static async Task CopyTextAsync(string text)
+    {
+        var top = Avalonia.Application.Current?.ApplicationLifetime
+            as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+        if (top?.MainWindow?.Clipboard is { } clipboard) await clipboard.SetTextAsync(text);
     }
 
     /// <summary>Yerel ağ adresini bulur — doğrudan bağlanacak arkadaşlar için.</summary>
@@ -1014,6 +1047,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
             if (IsHarmlessStartupNoise(line)) return;
             if (line.Contains(DsEventParser.Marker, StringComparison.Ordinal)) return;
+            if (IsToolsDataLine(line)) return;
             AppendConsole(line);
         });
 
@@ -1024,7 +1058,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             {
                 BusyMessage = "";
                 if (!IsCreatingWorld) ShowToast(L["msg.online"]);
-                _ = RefreshHeroesAsync();
+                // Yayına geçer geçmez sunucuya iş yığılmasın: kahramanlar diskteki save'den,
+                // sunucu sorguları sayfa açılınca. Eklenti yalnızca yoklanır.
+                ReloadHeroes();
+                if (CurrentPage is AppPage.Players or AppPage.Cheats) _ = RefreshHeroesAsync();
+                _ = DetectServerToolsAsync();
             }
 
             RaiseRunStateChanged();
@@ -1034,10 +1072,15 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             var joined = players.Where(p => _allPlayers.All(o => o.Id != p.Id)).ToList();
 
+            var left = _allPlayers.Where(o => players.All(p => p.Id != o.Id)).ToList();
+
             _allPlayers.Clear();
             _allPlayers.AddRange(players);
             ApplyPlayerFilter();
+            UpdateHeroFlags();
             RaiseHomeChanged();
+
+            foreach (var p in left) PlayerLeft(p.Name);
 
             foreach (var p in joined) OnPlayerJoined(p);
         });
@@ -1050,8 +1093,10 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             BusyMessage = "";
             SteamHostName = "";
 
+            foreach (var p in _allPlayers) PlayerLeft(p.Name);
             _allPlayers.Clear();
             ApplyPlayerFilter();
+            UpdateHeroFlags();
 
             RaiseRunStateChanged();
             ReloadCampaigns();

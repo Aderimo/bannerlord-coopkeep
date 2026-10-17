@@ -98,6 +98,8 @@ public sealed class ServerSupervisor : IAsyncDisposable
 
             foreach (var arg in options.BuildArguments())
                 psi.ArgumentList.Add(arg);
+            foreach (var (key, value) in options.BuildEnvironment())
+                psi.Environment[key] = value;
 
             var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
             process.Exited += OnProcessExited;

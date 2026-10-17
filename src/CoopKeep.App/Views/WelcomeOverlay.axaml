@@ -47,6 +47,9 @@
                 <Border Classes="dot" Classes.on="{Binding TutorialStep2}" />
             </StackPanel>
             <Button Grid.Column="1" Classes="ghost" HorizontalAlignment="Right" Margin="0,0,8,0"
+                    Command="{Binding OpenViewerConnectCommand}" Content="{Binding L[viewer.watch]}"
+                    Foreground="{StaticResource Accent}" IsVisible="{Binding TutorialIsLast}" />
+            <Button Grid.Column="1" Classes="ghost" HorizontalAlignment="Right" Margin="0,0,8,0"
                     Command="{Binding CloseTutorialCommand}" Content="{Binding L[tut2.skip]}"
                     Foreground="{StaticResource TextDim}" IsVisible="{Binding TutorialNotLast}" />
             <Button Grid.Column="2" Classes="primary" Command="{Binding TutorialNextCommand}">

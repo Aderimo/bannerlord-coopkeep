@@ -1,0 +1,243 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             xmlns:views="using:CoopKeep.App.Views"
+             x:Class="CoopKeep.App.Views.PlayerProfile"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Oyuncu profili: Oyuncular, Hileler ve Harita'dan açılır.
+      Üstte kimlik ve durum, altta sekmeler: beceriler · kuşanım · envanter · ordu.
+  -->
+  <UserControl.Styles>
+    <Style Selector="Border.stat">
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="MinWidth" Value="92" />
+    </Style>
+    <Style Selector="Border.tile">
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Width" Value="150" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="#E6090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource FrameBrush}"
+            BorderThickness="1" CornerRadius="12" Margin="40,30" MaxWidth="1180" BoxShadow="0 24 80 0 #99000000">
+      <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+        <!-- Başlık -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="22,18,16,8">
+          <Panel Width="54" Height="54">
+            <Border CornerRadius="27" Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource Accent}" BorderThickness="1.5">
+              <TextBlock Text="{Binding ProfileHero.Initial}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Accent}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <Border Width="14" Height="14" CornerRadius="7" Background="{StaticResource Success}" BorderBrush="{StaticResource BgPanel}"
+                    BorderThickness="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding ProfileHero.IsOnline}" />
+          </Panel>
+          <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="2">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Classes="h1" Text="{Binding ProfileHero.Name}" />
+              <Border Classes="badge" Background="{StaticResource SuccessSoft}" VerticalAlignment="Center" IsVisible="{Binding ProfileHero.IsOnline}">
+                <TextBlock Text="{Binding L[profile.online]}" FontSize="11" Foreground="{StaticResource Success}" />
+              </Border>
+              <Border Classes="badge" Background="{StaticResource DangerSoft}" VerticalAlignment="Center" IsVisible="{Binding ProfileHero.IsBanned}">
+                <TextBlock Text="{Binding L[players.banned]}" FontSize="11" Foreground="{StaticResource Danger}" />
+              </Border>
+            </StackPanel>
+            <TextBlock Classes="dim" TextTrimming="CharacterEllipsis">
+              <Run Text="{Binding ProfileHero.ClanLine}" /><Run Text="  ·  " /><Run Text="{Binding ProfileHero.SteamIdShort}" /><Run Text="  ·  " /><Run Text="{Binding ProfileHero.StatText}" />
+            </TextBlock>
+          </StackPanel>
+          <Button Grid.Column="2" Classes="ghost" Padding="8" Margin="0,0,4,0" VerticalAlignment="Top"
+                  Command="{Binding ReloadProfileCommand}" ToolTip.Tip="{Binding L[btn.refresh]}">
+            <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="14" />
+          </Button>
+          <Button Grid.Column="3" Classes="ghost" Padding="8" Command="{Binding CloseProfileCommand}" VerticalAlignment="Top">
+            <Path Classes="icon" Data="{StaticResource IconClose}" Width="14" />
+          </Button>
+        </Grid>
+
+        <!-- Durum kutucukları -->
+        <WrapPanel Grid.Row="1" Margin="22,4,22,4">
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.level]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileSheet.LevelText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.gold]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileHero.GoldText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.health]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileSheet.HealthText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.age]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileHero.AgeText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.influence]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileHero.InfluenceText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.renown]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileHero.RenownText}" /></StackPanel>
+          </Border>
+          <Border Classes="stat">
+            <StackPanel><TextBlock Classes="dim" FontSize="11" Text="{Binding L[profile.tab.army]}" /><TextBlock FontWeight="Bold" FontSize="16" Text="{Binding ProfileTroopsText}" /></StackPanel>
+          </Border>
+        </WrapPanel>
+
+        <!-- Sekmeler + uyarı -->
+        <StackPanel Grid.Row="2" Margin="22,0,22,10" Spacing="8">
+          <Border Padding="12,8" CornerRadius="6" Background="{StaticResource WarningSoft}" IsVisible="{Binding HasProfileLiveNote}">
+            <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="{Binding ProfileLiveNote}" />
+          </Border>
+          <UniformGrid Columns="4" MaxWidth="560" HorizontalAlignment="Left" IsVisible="{Binding ProfileLive}">
+            <RadioButton Classes="choice" GroupName="profileTab" Margin="0,0,4,0" IsChecked="{Binding ProfileTabSkills}" Content="{Binding L[profile.tab.skills]}" />
+            <RadioButton Classes="choice" GroupName="profileTab" Margin="0,0,4,0" IsChecked="{Binding ProfileTabGear}" Content="{Binding L[profile.tab.gear]}" />
+            <RadioButton Classes="choice" GroupName="profileTab" Margin="0,0,4,0" IsChecked="{Binding ProfileTabInventory}" Content="{Binding L[profile.tab.inventory]}" />
+            <RadioButton Classes="choice" GroupName="profileTab" IsChecked="{Binding ProfileTabArmy}" Content="{Binding L[profile.tab.army]}" />
+          </UniformGrid>
+        </StackPanel>
+
+        <!-- İçerik -->
+        <ScrollViewer Grid.Row="3" Margin="22,0,12,0" Padding="0,0,10,0" VerticalScrollBarVisibility="Auto" IsVisible="{Binding ProfileLive}">
+          <Panel>
+            <views:SkillSheetView DataContext="{Binding ProfileSheet}" IsVisible="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ProfileTabSkills}" />
+
+            <!-- Kuşanım -->
+            <StackPanel Spacing="10" IsVisible="{Binding ProfileTabGear}">
+              <TextBlock Classes="dim" Text="{Binding L[profile.emptyGear]}" IsVisible="{Binding !HasProfileGear}" />
+              <TextBlock Classes="h2" Text="{Binding L[profile.battle]}" IsVisible="{Binding HasProfileGear}" />
+              <ItemsControl ItemsSource="{Binding ProfileBattleGear}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:EquipmentCard">
+                    <Border Classes="tile">
+                      <StackPanel Spacing="4">
+                        <TextBlock Classes="dim" FontSize="10.5" Text="{Binding SlotName}" />
+                        <Border Height="82" CornerRadius="4" Background="{StaticResource BgPanel}" ClipToBounds="True">
+                          <Image Source="{Binding Image.Bitmap}" Stretch="Uniform" />
+                        </Border>
+                        <TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Classes="h2" Text="{Binding L[profile.civilian]}" IsVisible="{Binding HasProfileGear}" />
+              <ItemsControl ItemsSource="{Binding ProfileCivilianGear}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:EquipmentCard">
+                    <Border Classes="tile">
+                      <StackPanel Spacing="4">
+                        <TextBlock Classes="dim" FontSize="10.5" Text="{Binding SlotName}" />
+                        <Border Height="82" CornerRadius="4" Background="{StaticResource BgPanel}" ClipToBounds="True">
+                          <Image Source="{Binding Image.Bitmap}" Stretch="Uniform" />
+                        </Border>
+                        <TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Envanter -->
+            <StackPanel Spacing="10" IsVisible="{Binding ProfileTabInventory}">
+              <TextBlock Classes="dim" Text="{Binding ProfileInventoryText}" IsVisible="{Binding HasProfileInventory}" />
+              <TextBlock Classes="dim" Text="{Binding L[profile.emptyInventory]}" IsVisible="{Binding !HasProfileInventory}" />
+              <ItemsControl ItemsSource="{Binding ProfileInventory}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:InventoryLine">
+                    <Border Classes="tile">
+                      <StackPanel Spacing="4">
+                        <Panel Height="70">
+                          <Border CornerRadius="4" Background="{StaticResource BgPanel}" ClipToBounds="True">
+                            <Image Source="{Binding Card.Image.Bitmap}" Stretch="Uniform" />
+                          </Border>
+                          <Border Classes="badge" Background="#CC000000" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4">
+                            <TextBlock Text="{Binding Have, StringFormat='×{0:N0}'}" FontSize="11" FontWeight="Bold" />
+                          </Border>
+                        </Panel>
+                        <TextBlock Text="{Binding Card.Name}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Ordu -->
+            <StackPanel Spacing="10" IsVisible="{Binding ProfileTabArmy}">
+              <TextBlock Classes="dim" Text="{Binding ProfileArmyText}" IsVisible="{Binding HasProfileArmy}" />
+              <TextBlock Classes="dim" Text="{Binding L[profile.emptyArmy]}" IsVisible="{Binding !HasProfileArmy}" />
+              <ItemsControl ItemsSource="{Binding ProfileArmy}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ArmyCard">
+                    <Border Classes="tile">
+                      <StackPanel Spacing="4">
+                        <Panel Height="96">
+                          <Border CornerRadius="4" Background="{StaticResource BgPanel}" ClipToBounds="True">
+                            <Image Source="{Binding Image.Bitmap}" Stretch="UniformToFill" />
+                          </Border>
+                          <Border Classes="badge" Background="#CC000000" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4">
+                            <TextBlock Text="{Binding CountText}" FontSize="11" FontWeight="Bold" />
+                          </Border>
+                        </Panel>
+                        <TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Classes="h2" Text="{Binding L[profile.prisoners]}" IsVisible="{Binding HasProfilePrisoners}" />
+              <ItemsControl ItemsSource="{Binding ProfilePrisoners}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ArmyCard">
+                    <Border Classes="tile">
+                      <StackPanel Spacing="4">
+                        <Panel Height="96">
+                          <Border CornerRadius="4" Background="{StaticResource BgPanel}" ClipToBounds="True">
+                            <Image Source="{Binding Image.Bitmap}" Stretch="UniformToFill" />
+                          </Border>
+                          <Border Classes="badge" Background="#CC000000" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="4">
+                            <TextBlock Text="{Binding CountText}" FontSize="11" FontWeight="Bold" />
+                          </Border>
+                        </Panel>
+                        <TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Panel>
+        </ScrollViewer>
+
+        <!-- Hızlı eylemler -->
+        <Border Grid.Row="4" BorderBrush="{StaticResource BorderDim}" BorderThickness="0,1,0,0" Padding="22,12" Margin="0,10,0,0">
+          <WrapPanel>
+            <Button Margin="0,0,8,0" Command="{Binding ProfileOpenCheatsCommand}" Content="{Binding L[profile.cheats]}" />
+            <Button Margin="0,0,8,0" Command="{Binding ProfileOpenItemsCommand}" Content="{Binding L[profile.items]}" />
+            <Button Margin="0,0,8,0" Command="{Binding ProfileShowOnMapCommand}" Content="{Binding L[profile.map]}" />
+            <Border Width="1" Background="{StaticResource BorderDim}" Margin="4,2,12,2" />
+            <Button Margin="0,0,8,0" Command="{Binding ProfileKickCommand}" IsVisible="{Binding ProfileCanKick}" Content="{Binding L[profile.kick]}" />
+            <Button Classes="danger" Command="{Binding ProfileBanCommand}" IsVisible="{Binding !ProfileHero.IsBanned}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon" Data="{StaticResource IconBan}" Width="12" />
+                <TextBlock Text="{Binding L[profile.ban]}" />
+              </StackPanel>
+            </Button>
+          </WrapPanel>
+        </Border>
+      </Grid>
+    </Border>
+  </Border>
+</UserControl>

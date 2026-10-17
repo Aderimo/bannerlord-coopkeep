@@ -8,10 +8,35 @@ namespace CoopKeep.Core.Installation;
 /// <param name="Id">Oyunun karakter kimliği (örn. <c>imperial_recruit</c>).</param>
 /// <param name="Culture">Kültür kimliği (örn. <c>empire</c>).</param>
 /// <param name="Tier">Kademe (1-6), oyunun seviye tablosundan.</param>
-public sealed record TroopType(string Id, string Name, string Culture, int Level, int Tier);
+public sealed record TroopType(string Id, string Name, string Culture, int Level, int Tier)
+{
+    /// <summary>Oyunun asker sınıfı: <c>Infantry</c>, <c>Ranged</c>, <c>Cavalry</c>, <c>HorseArcher</c>.</summary>
+    public string Class { get; init; } = "Infantry";
+
+    /// <summary>Terfi edebileceği askerlerin kimlikleri.</summary>
+    public IReadOnlyList<string> UpgradeTargets { get; init; } = [];
+}
 
 /// <summary>Haritadaki bir yerleşim.</summary>
-public sealed record SettlementInfo(string Id, string Name, string Culture, SettlementKind Kind, double X, double Y);
+public sealed record SettlementInfo(string Id, string Name, string Culture, SettlementKind Kind, double X, double Y)
+{
+    /// <summary>Oyun başındaki sahip klan (kasaba ve kaleler). Güncel sahip sunucudan okunur.</summary>
+    public string? OwnerClanId { get; init; }
+
+    /// <summary>Köyün bağlı olduğu kasaba ya da kale.</summary>
+    public string? BoundTo { get; init; }
+}
+
+/// <summary>Bir klan (<c>spclans.xml</c>).</summary>
+public sealed record ClanCatalogEntry(string Id, string Name, string Culture, string? KingdomId, string? LeaderId,
+    uint Color, bool IsBandit, bool IsMinorFaction);
+
+/// <summary>Bir krallık (<c>spkingdoms.xml</c>).</summary>
+public sealed record KingdomCatalogEntry(string Id, string Name, string Culture, string? RulerId, uint Color, uint Color2,
+    uint PrimaryBannerColor, uint SecondaryBannerColor);
+
+/// <summary>Bir eşya (silah, zırh, at…).</summary>
+public sealed record ItemCatalogEntry(string Id, string Name, string Type, string Culture);
 
 public enum SettlementKind { Town, Castle, Village, Hideout, Other }
 
@@ -45,7 +70,14 @@ public static partial class GameCatalogs
             {
                 var level = int.TryParse((string?)e.Attribute("level"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) ? l : 0;
                 var culture = ((string?)e.Attribute("culture") ?? "").Replace("Culture.", "");
-                return new TroopType((string)e.Attribute("id")!, CleanName((string?)e.Attribute("name")), culture, level, TierOf(level));
+                return new TroopType((string)e.Attribute("id")!, CleanName((string?)e.Attribute("name")), culture, level, TierOf(level))
+                {
+                    Class = (string?)e.Attribute("default_group") ?? "Infantry",
+                    UpgradeTargets = e.Element("upgrade_targets")?.Elements("upgrade_target")
+                        .Select(u => StripPrefix((string?)u.Attribute("id")) ?? "")
+                        .Where(id => id.Length > 0)
+                        .ToList() ?? [],
+                };
             })
             .Where(t => t.Name.Length > 0 && t.Culture.Length > 0)
             .OrderBy(t => t.Culture, StringComparer.Ordinal)
@@ -88,11 +120,115 @@ public static partial class GameCatalogs
                     ((string?)e.Attribute("culture") ?? "").Replace("Culture.", ""),
                     kind,
                     ParseDouble((string?)e.Attribute("posX")),
-                    ParseDouble((string?)e.Attribute("posY")));
+                    ParseDouble((string?)e.Attribute("posY")))
+                {
+                    OwnerClanId = StripPrefix((string?)e.Attribute("owner")),
+                    BoundTo = StripPrefix((string?)components?.Element("Village")?.Attribute("bound")),
+                };
             })
             .Where(s => s.Kind != SettlementKind.Other && s.Name.Length > 0)
             .ToList();
     }
+
+    /// <summary>Klanlar: ad, kültür, krallık, lider, renk.</summary>
+    public static IReadOnlyList<ClanCatalogEntry> ReadClans(string spclansXml)
+    {
+        var doc = XDocument.Load(spclansXml);
+        return doc.Root!.Elements("Faction")
+            .Select(e => new ClanCatalogEntry(
+                (string)e.Attribute("id")!,
+                CleanName((string?)e.Attribute("name")),
+                StripPrefix((string?)e.Attribute("culture")) ?? "",
+                StripPrefix((string?)e.Attribute("super_faction")),
+                StripPrefix((string?)e.Attribute("owner")),
+                ParseColor((string?)e.Attribute("color")),
+                (string?)e.Attribute("is_bandit") == "true",
+                (string?)e.Attribute("is_minor_faction") == "true"))
+            .Where(c => c.Name.Length > 0)
+            .ToList();
+    }
+
+    /// <summary>Krallıklar: ad, hükümdar, renkler.</summary>
+    public static IReadOnlyList<KingdomCatalogEntry> ReadKingdoms(string spkingdomsXml)
+    {
+        var doc = XDocument.Load(spkingdomsXml);
+        return doc.Root!.Elements("Kingdom")
+            .Select(e => new KingdomCatalogEntry(
+                (string)e.Attribute("id")!,
+                CleanName((string?)e.Attribute("name")),
+                StripPrefix((string?)e.Attribute("culture")) ?? "",
+                StripPrefix((string?)e.Attribute("owner")),
+                ParseColor((string?)e.Attribute("color")),
+                ParseColor((string?)e.Attribute("color2")),
+                ParseColor((string?)e.Attribute("primary_banner_color")),
+                ParseColor((string?)e.Attribute("secondary_banner_color"))))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Eşyalar (<c>Modules\*\ModuleData\items\*.xml</c>): satılabilir silah, zırh ve atlar.
+    /// </summary>
+    /// <remarks>
+    /// Değer çoğu eşyada XML'de yok (oyun hesaplıyor); sunucudan
+    /// <c>coop.debug.item_object.data</c> ile okunur.
+    /// </remarks>
+    public static IReadOnlyList<ItemCatalogEntry> ReadItems(string modulesDirectory)
+    {
+        var result = new List<ItemCatalogEntry>();
+        foreach (var module in new[] { "SandBoxCore", "SandBox", "Native" })
+        {
+            var dir = Path.Combine(modulesDirectory, module, "ModuleData", "items");
+            if (!Directory.Exists(dir)) continue;
+
+            foreach (var file in Directory.EnumerateFiles(dir, "*.xml"))
+            {
+                if (Path.GetFileName(file).StartsWith("tournament", StringComparison.OrdinalIgnoreCase)) continue;
+
+                XDocument doc;
+                try { doc = XDocument.Load(file); }
+                catch (System.Xml.XmlException) { continue; }
+
+                foreach (var e in doc.Root!.Elements().Where(x => x.Name.LocalName is "Item" or "CraftedItem"))
+                {
+                    if ((string?)e.Attribute("is_merchandise") == "false") continue;
+
+                    var name = CleanName((string?)e.Attribute("name"));
+                    var plural = name.IndexOf("{@Plural}", StringComparison.Ordinal);
+                    if (plural >= 0) name = name[..plural];
+
+                    var type = (string?)e.Attribute("Type") ?? (e.Name.LocalName == "CraftedItem" ? "Weapon" : "");
+                    if (name.Length == 0 || type is "Banner" or "Animal") continue;
+
+                    result.Add(new ItemCatalogEntry((string)e.Attribute("id")!, name.Trim(), type,
+                        StripPrefix((string?)e.Attribute("culture")) ?? ""));
+                }
+            }
+        }
+
+        return result.GroupBy(i => i.Id).Select(g => g.First()).OrderBy(i => i.Type).ThenBy(i => i.Name).ToList();
+    }
+
+    /// <summary><c>Faction.clan_x</c> / <c>Settlement.town_x</c> → <c>clan_x</c>.</summary>
+    private static string? StripPrefix(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var dot = value.IndexOf('.');
+        return dot >= 0 ? value[(dot + 1)..] : value;
+    }
+
+    /// <summary><c>FF39223F</c> ya da <c>0xff793191</c> → ARGB.</summary>
+    public static uint ParseColor(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return 0xFF808080;
+        var hex = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+        return uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var c) ? c : 0xFF808080;
+    }
+
+    public static string ClansPath(BannerlordInstallation game) =>
+        Path.Combine(game.ModulesDirectory, "SandBox", "ModuleData", "spclans.xml");
+
+    public static string KingdomsPath(BannerlordInstallation game) =>
+        Path.Combine(game.ModulesDirectory, "SandBox", "ModuleData", "spkingdoms.xml");
 
     private static double ParseDouble(string? s) =>
         double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : 0;

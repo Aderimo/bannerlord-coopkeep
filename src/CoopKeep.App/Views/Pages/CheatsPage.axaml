@@ -1,0 +1,518 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             xmlns:inst="using:CoopKeep.Core.Installation"
+             xmlns:core="using:CoopKeep.Core.Server"
+             xmlns:views="using:CoopKeep.App.Views"
+             x:Class="CoopKeep.App.Views.Pages.CheatsPage"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Hileler: yalnızca sunucu sahibi kullanır. Solda hedef oyuncular, sağda kategoriler.
+      Her kategoride aynı düzen: miktar · Ver · Al · Ayarla.
+  -->
+  <UserControl.Styles>
+    <Style Selector="RadioButton.cat">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="bg" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2"
+                        Padding="12,8" Cursor="Hand">
+                    <Border.Transitions>
+                        <Transitions><BrushTransition Property="BorderBrush" Duration="0:0:0.15" /></Transitions>
+                    </Border.Transitions>
+                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" Foreground="{StaticResource TextDim}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.cat:pointerover /template/ ContentPresenter#cp">
+        <Setter Property="Foreground" Value="{StaticResource TextMain}" />
+    </Style>
+    <Style Selector="RadioButton.cat:checked /template/ Border#bg">
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="RadioButton.cat:checked /template/ ContentPresenter#cp">
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="RadioButton.cat Path.icon">
+        <Setter Property="Stroke" Value="{StaticResource TextDim}" />
+    </Style>
+    <Style Selector="RadioButton.cat:checked Path.icon">
+        <Setter Property="Stroke" Value="{StaticResource Accent}" />
+    </Style>
+
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+    <!-- Asker kartı -->
+    <Style Selector="Button.troop">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Width" Value="112" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <Setter Property="Transitions">
+            <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" /></Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.row">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="Margin" Value="0,0,0,5" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.row.target">
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+    </Style>
+    <Style Selector="Button.troop:pointerover">
+        <Setter Property="RenderTransform" Value="scale(1.04)" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="32,28,32,40" Spacing="16" MaxWidth="1180">
+
+      <StackPanel Spacing="2" Classes="enter">
+        <TextBlock Classes="display" Text="{Binding L[nav.cheats]}" />
+        <TextBlock Classes="hint" Text="{Binding L[cheat.sub]}" />
+      </StackPanel>
+
+      <Border Classes="card enter d1" IsVisible="{Binding !IsServing}" Padding="16,12">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" />
+              <TextBlock Classes="body" Text="{Binding L[cheat.offline]}" VerticalAlignment="Center" />
+          </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="270,16,*">
+
+        <!-- ============ HEDEFLER ============ -->
+        <StackPanel Grid.Column="0" Spacing="16">
+          <Border Classes="card enter d1">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="h2" Text="{Binding L[cheat.targets]}" />
+                <Button Grid.Column="1" Padding="7,4" Command="{Binding RefreshHeroesCommand}" ToolTip.Tip="{Binding L[btn.refresh]}">
+                    <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="13" />
+                </Button>
+              </Grid>
+              <TextBox Text="{Binding CheatHeroFilter}" Watermark="{Binding L[heroes.search]}" IsVisible="{Binding HasHeroes}" />
+              <CheckBox IsChecked="{Binding AllTargetsChecked}" Content="{Binding L[cheat.all]}" IsVisible="{Binding HasHeroes}" />
+              <TextBlock Classes="hint" Text="{Binding L[heroes.empty]}" IsVisible="{Binding !HasHeroes}" TextWrapping="Wrap" />
+              <ScrollViewer MaxHeight="520" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding CheatVisibleHeroes}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:HeroRow">
+                      <Button Classes="row" Classes.target="{Binding IsTarget}"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectCheatHeroCommand}"
+                              CommandParameter="{Binding}">
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                          <CheckBox IsChecked="{Binding IsTarget}" VerticalAlignment="Center" MinWidth="0" />
+                          <Panel Grid.Column="1" Width="30" Height="30" Margin="2,0,8,0">
+                            <Border CornerRadius="15" Background="{StaticResource AccentSoft}">
+                              <TextBlock Text="{Binding Initial}" FontWeight="Bold" Foreground="{StaticResource Accent}"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Width="9" Height="9" CornerRadius="5" Background="{StaticResource Success}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding IsOnline}" />
+                          </Panel>
+                          <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Classes="dim" FontSize="11"><Run Text="⛁ " /><Run Text="{Binding GoldText}" /><Run Text="   ♥ " /><Run Text="{Binding HealthText}" /></TextBlock>
+                          </StackPanel>
+                        </Grid>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </StackPanel>
+          </Border>
+
+          <!-- Odaktaki oyuncunun durumu -->
+          <Border Classes="card enter d2" IsVisible="{Binding HasCheatTarget}">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="1">
+                  <TextBlock Classes="h2" Text="{Binding CheatFocus.Name, FallbackValue=''}" />
+                  <TextBlock Classes="dim" FontSize="12" Text="{Binding CheatFocus.ClanLine, FallbackValue=''}" />
+                </StackPanel>
+                <Button Grid.Column="1" Padding="8,4" VerticalAlignment="Top" Command="{Binding OpenProfileCommand}"
+                        CommandParameter="{Binding CheatFocus}" Content="{Binding L[profile.open]}" />
+              </Grid>
+              <ProgressBar Value="{Binding CheatFocus.HealthRatio, FallbackValue=0}" Maximum="1" Height="5" MinHeight="5"
+                           Foreground="{StaticResource Danger}" />
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,6,Auto">
+                <StackPanel Spacing="1">
+                  <TextBlock Classes="dim" FontSize="11" Text="{Binding L[map.gold]}" />
+                  <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding CheatFocus.GoldText, FallbackValue='—'}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="1">
+                  <TextBlock Classes="dim" FontSize="11" Text="{Binding L[cheat.troops]}" />
+                  <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding CheatFocus.TroopsText, FallbackValue='—'}" />
+                </StackPanel>
+                <StackPanel Grid.Row="2" Spacing="1">
+                  <TextBlock Classes="dim" FontSize="11" Text="{Binding L[cheat.influence]}" />
+                  <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding CheatFocus.InfluenceText, FallbackValue='—'}" />
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="1">
+                  <TextBlock Classes="dim" FontSize="11" Text="{Binding L[cheat.renown]}" />
+                  <TextBlock Classes="value" FontWeight="SemiBold" Text="{Binding CheatFocus.RenownText, FallbackValue='—'}" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ============ KATEGORİLER ============ -->
+        <StackPanel Grid.Column="2" Spacing="16">
+          <Border Classes="card enter d1" Padding="18,16" IsVisible="{Binding !HasCheatTarget}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource Accent}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" />
+              <TextBlock Classes="body" Text="{Binding L[cheat.pickTarget]}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card enter d1" Padding="0" IsVisible="{Binding HasCheatTarget}">
+            <StackPanel>
+              <!-- Sekmeler -->
+              <Border BorderBrush="{StaticResource BorderDim}" BorderThickness="0,0,0,1" Padding="10,4,10,0">
+                <WrapPanel>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatGold}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconCoin}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.gold]}" /></StackPanel>
+                  </RadioButton>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatHealth}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconHeart}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.health]}" /></StackPanel>
+                  </RadioButton>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatArmy}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconSword}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.army]}" /></StackPanel>
+                  </RadioButton>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatClan}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconShield}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.clan]}" /></StackPanel>
+                  </RadioButton>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatCharacter}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconSparkle}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.character]}" /></StackPanel>
+                  </RadioButton>
+                  <RadioButton Classes="cat" GroupName="cat" IsChecked="{Binding CatCompensation}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconArchive}" Width="14" /><TextBlock Text="{Binding L[cheat.cat.comp]}" /></StackPanel>
+                  </RadioButton>
+                </WrapPanel>
+              </Border>
+
+              <Panel Margin="20,18,20,20">
+
+                <!-- ===== ALTIN ===== -->
+                <StackPanel Spacing="12" IsVisible="{Binding CatGold}" Classes="enter">
+                  <TextBlock Classes="label" Text="{Binding L[cheat.amount]}" />
+                  <WrapPanel>
+                    <Button Margin="0,0,6,6" Content="1.000" Command="{Binding AddGoldCommand}" CommandParameter="1000" />
+                    <Button Margin="0,0,6,6" Content="+10.000" Command="{Binding AddGoldCommand}" CommandParameter="10000" />
+                    <Button Margin="0,0,6,6" Content="+50.000" Command="{Binding AddGoldCommand}" CommandParameter="50000" />
+                    <Button Margin="0,0,6,6" Content="+100.000" Command="{Binding AddGoldCommand}" CommandParameter="100000" />
+                  </WrapPanel>
+                  <Grid ColumnDefinitions="160,8,Auto,6,Auto,6,Auto">
+                    <TextBox Text="{Binding GoldAmount}" />
+                    <Button Grid.Column="2" Classes="primary" Command="{Binding GoldGiveCommand}" Content="{Binding L[btn.give]}" />
+                    <Button Grid.Column="4" Classes="danger" Command="{Binding GoldTakeCommand}" Content="{Binding L[btn.take]}" />
+                    <Button Grid.Column="6" Command="{Binding SetGoldCommand}" Content="{Binding L[btn.set]}" />
+                  </Grid>
+                </StackPanel>
+
+                <!-- ===== CAN ===== -->
+                <StackPanel Spacing="12" IsVisible="{Binding CatHealth}" Classes="enter">
+                  <Button HorizontalAlignment="Left" Classes="primary" Command="{Binding HealHeroCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                      <Path Classes="icon" Data="{StaticResource IconHeart}" Width="13" />
+                      <TextBlock Text="{Binding L[btn.heal]}" />
+                    </StackPanel>
+                  </Button>
+                  <TextBlock Classes="label" Text="{Binding L[cheat.healthAmount]}" />
+                  <Grid ColumnDefinitions="120,8,Auto,6,Auto,6,Auto" HorizontalAlignment="Left">
+                    <TextBox Text="{Binding HealthAmount}" />
+                    <Button Grid.Column="2" Command="{Binding HealthGiveCommand}" Content="{Binding L[btn.give]}" />
+                    <Button Grid.Column="4" Classes="danger" Command="{Binding HealthTakeCommand}" Content="{Binding L[btn.take]}" />
+                    <Button Grid.Column="6" Command="{Binding HealthSetCommand}" Content="{Binding L[btn.set]}" />
+                  </Grid>
+                  <TextBlock Classes="hint" Text="{Binding L[cheat.godMode]}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- ===== ORDU ===== -->
+                <StackPanel Spacing="14" IsVisible="{Binding CatArmy}" Classes="enter">
+                  <UniformGrid Columns="2" HorizontalAlignment="Left" Width="360">
+                    <RadioButton Classes="choice" GroupName="armyMode" IsChecked="{Binding ArmyGiveMode}" Margin="0,0,4,0"
+                                 Content="{Binding L[cheat.army.give]}" />
+                    <RadioButton Classes="choice" GroupName="armyMode" IsChecked="{Binding ArmyRemoveMode}" Margin="4,0,0,0"
+                                 Content="{Binding L[cheat.army.remove]}" />
+                  </UniformGrid>
+
+                  <!-- Ver: asker seçici -->
+                  <StackPanel Spacing="12" IsVisible="{Binding ArmyGiveMode}">
+                    <Grid ColumnDefinitions="170,8,150,8,*,8,Auto,6,90">
+                      <ComboBox ItemsSource="{Binding TroopCultures}" SelectedItem="{Binding TroopCulture}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:FilterOption"><TextBlock Text="{Binding Value}" /></DataTemplate></ComboBox.ItemTemplate>
+                      </ComboBox>
+                      <ComboBox Grid.Column="2" ItemsSource="{Binding TroopClasses}" SelectedItem="{Binding TroopClass}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:FilterOption"><TextBlock Text="{Binding Value}" /></DataTemplate></ComboBox.ItemTemplate>
+                      </ComboBox>
+                      <TextBox Grid.Column="4" Text="{Binding TroopSearch}" Watermark="{Binding L[cheat.troopSearch]}" />
+                      <TextBlock Grid.Column="6" Classes="dim" VerticalAlignment="Center" Text="{Binding L[cheat.perClick]}" />
+                      <NumericUpDown Grid.Column="8" Value="{Binding TroopAddCount}" Minimum="1" Maximum="1000" Increment="5" FormatString="0" />
+                    </Grid>
+
+                    <!-- Askerler: gerçek portreleriyle -->
+                    <ScrollViewer MaxHeight="430" VerticalScrollBarVisibility="Auto">
+                      <ItemsControl ItemsSource="{Binding TroopChoices}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:TroopChoice">
+                            <Button Classes="troop"
+                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).AddToTroopBasketCommand}"
+                                    CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                              <StackPanel>
+                                <Border Height="130" Background="#0E0C08" CornerRadius="4,4,0,0" ClipToBounds="True">
+                                  <Panel>
+                                    <Image Source="{Binding Image.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                                    <Border Background="#99000000" CornerRadius="3" Padding="4,1" Margin="4"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top">
+                                      <TextBlock Text="{Binding TierText}" FontSize="9" Foreground="{StaticResource Accent}" />
+                                    </Border>
+                                  </Panel>
+                                </Border>
+                                <StackPanel Margin="7,5,7,7" Spacing="1">
+                                  <TextBlock Text="{Binding Name}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"
+                                             TextTrimming="CharacterEllipsis" Height="30" />
+                                  <TextBlock Classes="dim" FontSize="10.5" Text="{Binding ClassName}" />
+                                </StackPanel>
+                              </StackPanel>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Sepet -->
+                    <Border Classes="inset" Padding="12" IsVisible="{Binding HasTroopBasket}">
+                      <StackPanel Spacing="8">
+                        <TextBlock Classes="label" Text="{Binding L[cheat.basket]}" />
+                        <ItemsControl ItemsSource="{Binding TroopBasket}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TroopBasketLine">
+                              <Grid ColumnDefinitions="Auto,*,100,6,Auto" Margin="0,0,0,6">
+                                <Border Width="34" Height="40" CornerRadius="3" ClipToBounds="True" Background="#0E0C08">
+                                  <Image Source="{Binding Troop.Image.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
+                                  <TextBlock Text="{Binding Troop.Name}" FontWeight="SemiBold" />
+                                  <TextBlock Classes="dim" FontSize="11"><Run Text="{Binding Troop.CultureName}" /><Run Text=" · " /><Run Text="{Binding Troop.TierText}" /></TextBlock>
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="2" Value="{Binding Count}" Minimum="1" Maximum="1000" Increment="5" FormatString="0" />
+                                <Button Grid.Column="4" Classes="ghost" Padding="6"
+                                        Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).RemoveFromTroopBasketCommand}"
+                                        CommandParameter="{Binding}">
+                                  <Path Classes="icon" Data="{StaticResource IconClose}" Width="10" />
+                                </Button>
+                              </Grid>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding GiveTroopBasketCommand}">
+                          <TextBlock><Run Text="{Binding L[cheat.giveTroops]}" /><Run Text=" (" /><Run Text="{Binding TroopBasketTotal}" /><Run Text=")" /></TextBlock>
+                        </Button>
+                      </StackPanel>
+                    </Border>
+                  </StackPanel>
+
+                  <!-- Al: oyuncunun ordusu -->
+                  <StackPanel Spacing="10" IsVisible="{Binding ArmyRemoveMode}">
+                    <TextBlock Classes="hint" Text="{Binding L[cheat.army.removeHint]}" TextWrapping="Wrap" />
+                    <TextBlock Classes="dim" Text="{Binding L[cheat.army.empty]}" IsVisible="{Binding !HasRosterLines}" />
+                    <ItemsControl ItemsSource="{Binding RosterLines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RosterLine">
+                          <Border Padding="8,6" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,5">
+                            <Grid ColumnDefinitions="Auto,*,Auto,12,100">
+                              <Border Width="34" Height="40" CornerRadius="3" ClipToBounds="True" Background="#0E0C08">
+                                <Image Source="{Binding Image.Bitmap}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                              </Border>
+                              <TextBlock Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Text="{Binding Name}" FontWeight="SemiBold" />
+                              <TextBlock Grid.Column="2" Classes="value" VerticalAlignment="Center" Text="{Binding CountText}" />
+                              <NumericUpDown Grid.Column="4" Value="{Binding Remove}" Minimum="0" Maximum="{Binding Entry.Number}" Increment="5"
+                                             FormatString="0" Watermark="0" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Classes="danger" HorizontalAlignment="Right" Command="{Binding RemoveRosterTroopsCommand}"
+                            Content="{Binding L[cheat.removeTroops]}" IsVisible="{Binding HasRosterLines}" />
+                  </StackPanel>
+
+                  <Border Height="1" Background="{StaticResource BorderDim}" />
+                  <WrapPanel>
+                    <Button Margin="0,0,8,6" Command="{Binding HealWoundedCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6"><Path Classes="icon" Data="{StaticResource IconHeart}" Width="12" /><TextBlock Text="{Binding L[cheat.healWounded]}" /></StackPanel>
+                    </Button>
+                    <TextBox Width="100" Margin="0,0,6,6" Text="{Binding TroopXpAmount}" />
+                    <Button Margin="0,0,6,6" Command="{Binding AddTroopXpCommand}" Content="{Binding L[btn.troopXp]}"
+                            ToolTip.Tip="{Binding L[cheat.troopXpTip]}" />
+                  </WrapPanel>
+                </StackPanel>
+
+                <!-- ===== KLAN ===== -->
+                <StackPanel Spacing="14" IsVisible="{Binding CatClan}" Classes="enter">
+                  <StackPanel>
+                    <TextBlock Classes="label" Text="{Binding L[cheat.influence]}" />
+                    <Grid ColumnDefinitions="140,8,Auto,6,Auto" HorizontalAlignment="Left">
+                      <TextBox Text="{Binding InfluenceAmount}" />
+                      <Button Grid.Column="2" Command="{Binding InfluenceGiveCommand}" Content="{Binding L[btn.give]}" />
+                      <Button Grid.Column="4" Classes="danger" Command="{Binding InfluenceTakeCommand}" Content="{Binding L[btn.take]}" />
+                    </Grid>
+                  </StackPanel>
+                  <StackPanel>
+                    <TextBlock Classes="label" Text="{Binding L[cheat.renown]}" />
+                    <Grid ColumnDefinitions="140,8,Auto" HorizontalAlignment="Left">
+                      <TextBox Text="{Binding RenownAmount}" />
+                      <Button Grid.Column="2" Command="{Binding AddRenownCommand}" Content="{Binding L[btn.give]}" />
+                    </Grid>
+                    <TextBlock Classes="hint" Margin="0,6,0,0" Text="{Binding L[cheat.renownNoTake]}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </StackPanel>
+
+                <!-- ===== KARAKTER ===== -->
+                <StackPanel Spacing="14" IsVisible="{Binding CatCharacter}" Classes="enter">
+                  <TextBlock Classes="hint" Text="{Binding L[profile.noTools]}" TextWrapping="Wrap" IsVisible="{Binding !ServerToolsAvailable}" />
+                  <views:SkillSheetView DataContext="{Binding CheatSheet}"
+                                        IsVisible="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ServerToolsAvailable}" />
+                  <StackPanel>
+                    <TextBlock Classes="label" Text="{Binding L[cheat.age]}" />
+                    <Grid ColumnDefinitions="90,8,Auto" HorizontalAlignment="Left">
+                      <TextBox Text="{Binding AgeAmount}" />
+                      <Button Grid.Column="2" Command="{Binding SetAgeCommand}" Content="{Binding L[btn.set]}" />
+                    </Grid>
+                  </StackPanel>
+                </StackPanel>
+
+                <!-- ===== TELAFİ ===== -->
+                <StackPanel Spacing="14" IsVisible="{Binding CatCompensation}" Classes="enter">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="4" VerticalAlignment="Center">
+                      <TextBlock Classes="h2" Text="{Binding L[items.title]}" />
+                      <TextBlock Classes="hint" Text="{Binding L[items.sub]}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="primary" Command="{Binding OpenItemBrowserCommand}" Margin="12,0,0,0">
+                      <StackPanel Orientation="Horizontal" Spacing="7">
+                        <Path Classes="icon" Data="{StaticResource IconArchive}" Width="14" />
+                        <TextBlock Text="{Binding L[items.open]}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+
+                  <!-- Telafi paketleri -->
+                  <Border Height="1" Background="{StaticResource BorderDim}" />
+                  <StackPanel Spacing="8">
+                    <TextBlock Classes="label" Text="{Binding L[cheat.packages]}" ToolTip.Tip="{Binding L[cheat.packagesTip]}" />
+                    <ItemsControl ItemsSource="{Binding Packages}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CompensationPackage">
+                          <Border Padding="10,6" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,5">
+                            <Grid ColumnDefinitions="*,Auto,6,Auto">
+                              <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Classes="dim" FontSize="11" Text="{Binding Summary}" />
+                              </StackPanel>
+                              <Button Grid.Column="1" Classes="primary"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ApplyPackageCommand}"
+                                      CommandParameter="{Binding}"
+                                      Content="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.apply]}" />
+                              <Button Grid.Column="3" Classes="ghost" Padding="6"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).DeletePackageCommand}"
+                                      CommandParameter="{Binding}">
+                                <Path Classes="icon" Data="{StaticResource IconTrash}" Width="12" />
+                              </Button>
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+                      <TextBox Text="{Binding PackageName}" Watermark="{Binding L[cheat.packageName]}" />
+                      <CheckBox Grid.Column="2" IsChecked="{Binding PackageHeal}" Content="{Binding L[btn.heal]}" />
+                      <Button Grid.Column="4" Command="{Binding SavePackageCommand}" Content="{Binding L[cheat.savePackage]}"
+                              ToolTip.Tip="{Binding L[cheat.packagesTip]}" />
+                    </Grid>
+                  </StackPanel>
+                </StackPanel>
+              </Panel>
+
+              <!-- Not: her işleme eklenir -->
+              <Border BorderBrush="{StaticResource BorderDim}" BorderThickness="0,1,0,0" Padding="20,12">
+                <Grid ColumnDefinitions="Auto,*">
+                  <TextBlock Classes="dim" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Run Text="{Binding L[cheat.target]}" /><Run Text=": " /><Run Text="{Binding AdminTargetText}" Foreground="{StaticResource Accent}" FontWeight="SemiBold" />
+                  </TextBlock>
+                  <TextBox Grid.Column="1" Text="{Binding AdminNote}" Watermark="{Binding L[admin.note]}" />
+                </Grid>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <!-- Son işlemler + geri al -->
+          <Border Classes="card enter d2" IsVisible="{Binding HasCheatHistory}">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="h2" Text="{Binding L[cheat.history]}" />
+              <ItemsControl ItemsSource="{Binding CheatHistory}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:CheatHistoryEntry">
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                      <TextBlock Classes="dim" Text="{Binding TimeText}" FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12"
+                                 VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Margin="10,0" Classes="value" FontSize="12.5" Text="{Binding Text}" VerticalAlignment="Center"
+                                 TextTrimming="CharacterEllipsis" />
+                      <Button Grid.Column="2" Padding="8,3" IsVisible="{Binding CanUndo}"
+                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).UndoCheatCommand}"
+                              CommandParameter="{Binding}"
+                              Content="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[btn.undo]}" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <!-- Denetim kaydı -->
+          <Border Classes="card enter d3" IsVisible="{Binding HasAuditEntries}">
+            <StackPanel Spacing="8">
+              <ToggleButton Classes="disclosure" Name="AuditToggle">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Path Classes="chevron" Data="M9,6 L15,12 L9,18" Stroke="{StaticResource Accent}" StrokeThickness="2"
+                        Width="12" Height="12" Stretch="Uniform" StrokeLineCap="Round" StrokeJoin="Round" />
+                  <TextBlock Classes="h2" Text="{Binding L[sec.auditLog]}" />
+                </StackPanel>
+              </ToggleButton>
+              <ItemsControl ItemsSource="{Binding AuditLog}" IsVisible="{Binding #AuditToggle.IsChecked}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="core:AdminAuditEntry">
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2">
+                      <TextBlock Classes="dim" Text="{Binding TimeText}" FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12" />
+                      <TextBlock Foreground="{StaticResource Accent}" FontSize="12.5" FontWeight="SemiBold" Text="{Binding PlayerName}" />
+                      <TextBlock Classes="value" FontSize="12.5" Text="{Binding Description}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

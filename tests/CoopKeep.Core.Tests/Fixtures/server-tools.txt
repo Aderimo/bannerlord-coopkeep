@@ -1,0 +1,72 @@
+# CoopKeep.ServerTools v1, Coop v0.1.6 sunucusunda (test kopyası), 2026-10-16.
+[DedicatedServer] > coopkeep.ping
+COOPKEEP_TOOLS v1
+[DedicatedServer] > coopkeep.party_items lord_1_1
+grain: 41
+empire_horse: 17
+t2_empire_horse: 5
+hunter: 1
+fish: 6
+cheese: 2
+t3_empire_horse: 2
+charger: 2
+sturgia_horse: 1
+t2_sturgia_horse: 1
+COOPKEEP_ITEMS_END
+[DedicatedServer] > coopkeep.give_item lord_1_1 grain 5
+COOPKEEP_ITEM hero=lord_1_1 item=grain old=41 new=46
+[DedicatedServer] > coopkeep.give_item lord_1_1 imperial_sword_t2 2
+COOPKEEP_ERROR item 'imperial_sword_t2' not found.
+[DedicatedServer] > coop.debug.item_rosters.info lord_1_1_party_1
+ItemRoster info for 'Lucon':
+  Items: 10
+  Count: 83
+  SHA1: 50500C7BC821EBC5752D0F8F1010A4E8D3609CA0
+  Food: 54
+[DedicatedServer] > coopkeep.take_item lord_1_1 grain 3
+COOPKEEP_ITEM hero=lord_1_1 item=grain old=46 new=43
+[DedicatedServer] > coopkeep.give_item lord_1_1 no_such_item 1
+COOPKEEP_ERROR item 'no_such_item' not found.
+[DedicatedServer] > coopkeep.give_item no_such_hero grain 1
+COOPKEEP_ERROR hero 'no_such_hero' not found.
+[DedicatedServer] > coopkeep.party_items lord_1_1
+grain: 43
+empire_horse: 17
+t2_empire_horse: 5
+hunter: 1
+fish: 6
+cheese: 2
+t3_empire_horse: 2
+charger: 2
+sturgia_horse: 1
+t2_sturgia_horse: 1
+COOPKEEP_ITEMS_END
+[DedicatedServer] > coopkeep.give_item lord_1_1 peasant_maul_t1 1
+COOPKEEP_ITEM hero=lord_1_1 item=peasant_maul_t1 old=0 new=1
+[DedicatedServer] > coopkeep.prices grain
+PRICE|grain|6|Seonon|28|Diathma|13
+COOPKEEP_PRICES_END
+[DedicatedServer] > coopkeep.items
+ITEM|tools|Tools|Goods|tools|250|-1||1|0|1||10
+ITEM|cow|Cow|Animal|cow|200|-1||1|0|0||200
+ITEM|khuzait_horse|Steppe Horse|Horse|horse|217|0|khuzait|1|0|0||320
+ITEM|iron_spatha_sword_t2|Iron Spatha|OneHandedWeapon|melee_weapons_2|1114|1|empire|1|0|0|OneHandedSword|1.69
+ITEM|studded_bound_kite_shield|Studded Bound Kite Shield|Shield|shield_3|1756|2||0|0|0|LargeShield|3.6
+ITEM|imperial_spear_t2|Short Militia Spear|Polearm|melee_weapons|180|0|empire|0|0|0|OneHandedPolearm|1.94
+ITEM|tunic_with_rolled_cloth|Tunic with Rolled Cloth|BodyArmor|garment|243|0|empire|1|0|0||0.7
+ITEM|empire_horseman_boots|Horseman Boots|LegArmor|garment|220|-1|empire|1|0|0||0.8
+ITEM|light_harness|Light Harness|HorseHarness|horse_equipment|183|0||1|0|0||20
+ITEM|scarf|Scarf|Cape|garment|361|-1|neutral_culture|1|0|0||0.3
+ITEM|stealth_throwing_stone|Stone|Thrown|ranged_weapons|0|-1||0|0|0|Stone|0.01
+ITEM|pilgrim_hood|Pilgrim Hood|HeadArmor|garment|88|-1|empire|1|0|0||0.2
+ITEM|noble_long_bow|Noble Long Bow|Bow|ranged_weapons_5|83799|5||0|0|0|Bow|0.8
+ITEM|default_arrows|Arrows|Arrows|arrows|203|0||0|0|0|Arrow|0.04
+ITEM|scouts_flag_t1|Scout's Flag|Banner|banner|680|1|battania|0|0|0|Banner|0.2
+ITEM|battania_noble_bracers|Fian Bracers|HandArmor|medium_armor|2677|2|battania|1|0|0||0.6
+ITEM|aserai_2haxe_3_t5|Heavy Executioner Axe|TwoHandedWeapon|melee_weapons_5|51693|5|aserai|0|0|0|TwoHandedAxe|1.49
+ITEM|crossbow_g|Fine Light Crossbow|Crossbow|ranged_weapons_5|22157|4|vlandia|0|0|0|Crossbow|2.2
+ITEM|bolt_a|Light Bolts|Bolts|arrows|756|1||0|0|0|Bolt|0.05
+ITEM|sling_stoneammo|Stone Sling Bullets|SlingStones|arrows|275|0||0|0|0|SlingStone|0.1
+ITEM|sling_wool|Wool Sling|Sling|ranged_weapons|300|-1||0|0|0|Sling|0.1
+ITEM|grain|Grain|Goods|grain|10|-1||1|1|1||10
+COOPKEEP_ITEMS_END

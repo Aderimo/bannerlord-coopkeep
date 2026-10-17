@@ -44,13 +44,13 @@
 
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.autosaveHint]}"><TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
-                    <TextBox Grid.Column="1" Width="90" Text="{Binding EditAutosave}" IsEnabled="{Binding !IsRunning}"
+                    <TextBox Grid.Column="1" Classes="bar" Text="{Binding EditAutosave}" IsEnabled="{Binding !IsRunning}"
                              VerticalAlignment="Center" />
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.portHint]}"><TextBlock Text="{Binding L[lbl.port]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
-                    <TextBox Grid.Column="1" Width="90" Text="{Binding EditPort}" IsEnabled="{Binding !IsRunning}"
+                    <TextBox Grid.Column="1" Classes="bar" Text="{Binding EditPort}" IsEnabled="{Binding !IsRunning}"
                              VerticalAlignment="Center" />
                 </Grid>
 
@@ -91,6 +91,46 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.updatesHint]}"><TextBlock Text="{Binding L[settings.updates]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckUpdates}" VerticalAlignment="Center" />
                 </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ SUNUCU EKLENTİSİ ============ -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Classes="h2" Text="{Binding L[tools.title]}" />
+                        <TextBlock Classes="hint" Text="{Binding L[tools.sub]}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ServerToolsEnabled}" VerticalAlignment="Center" />
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding ServerToolsAvailable}">
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2" Width="13" Height="13" Stretch="Uniform" />
+                    <TextBlock FontSize="12" Foreground="{StaticResource Success}" Text="{Binding L[tools.active]}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ HARİTA PAYLAŞIMI ============ -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3" Margin="0,0,20,0">
+                        <TextBlock Classes="h2" Text="{Binding L[share.title]}" />
+                        <TextBlock Classes="hint" Text="{Binding L[share.sub]}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShareMap}" VerticalAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,Auto,16,Auto,*,Auto,6,Auto">
+                    <TextBlock Classes="dim" VerticalAlignment="Center" Margin="0,0,8,0" Text="Port" />
+                    <TextBox Grid.Column="1" Classes="bar" VerticalAlignment="Center" Text="{Binding SharePortText}" IsEnabled="{Binding !ShareMap}" />
+                    <TextBlock Grid.Column="3" Classes="value" VerticalAlignment="Center" Text="{Binding ShareAddressText}" />
+                    <Button Grid.Column="5" Command="{Binding NewShareCodeCommand}" Content="{Binding L[share.newCode]}" />
+                    <Button Grid.Column="7" Command="{Binding CopyShareInviteCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><Path Classes="icon" Data="{StaticResource IconCopy}" Width="13" /><TextBlock Text="{Binding L[share.copy]}" /></StackPanel>
+                    </Button>
+                </Grid>
+                <TextBlock FontSize="12" Foreground="{StaticResource Accent}" Text="{Binding ShareStatus}" />
             </StackPanel>
         </Border>
 

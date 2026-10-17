@@ -10,7 +10,7 @@ using CoopKeep.Core.Protocol;
 namespace CoopKeep.App.ViewModels;
 
 /// <summary>Uygulamanın sayfaları.</summary>
-public enum AppPage { Home, Worlds, Players, Map, Backups, Mods, Settings, Console }
+public enum AppPage { Home, Worlds, Players, Cheats, Map, Backups, Mods, Settings, Console, Encyclopedia }
 
 /// <summary>Ana sayfanın gösterdiği "sıradaki adım".</summary>
 public enum HomeState
@@ -69,25 +69,32 @@ public partial class MainViewModel
     public bool PageHome { get => CurrentPage == AppPage.Home; set { if (value) CurrentPage = AppPage.Home; } }
     public bool PageWorlds { get => CurrentPage == AppPage.Worlds; set { if (value) CurrentPage = AppPage.Worlds; } }
     public bool PagePlayers { get => CurrentPage == AppPage.Players; set { if (value) CurrentPage = AppPage.Players; } }
+    public bool PageCheats { get => CurrentPage == AppPage.Cheats; set { if (value) CurrentPage = AppPage.Cheats; } }
     public bool PageMap { get => CurrentPage == AppPage.Map; set { if (value) CurrentPage = AppPage.Map; } }
     public bool PageBackups { get => CurrentPage == AppPage.Backups; set { if (value) CurrentPage = AppPage.Backups; } }
     public bool PageMods { get => CurrentPage == AppPage.Mods; set { if (value) CurrentPage = AppPage.Mods; } }
     public bool PageSettings { get => CurrentPage == AppPage.Settings; set { if (value) CurrentPage = AppPage.Settings; } }
     public bool PageConsole { get => CurrentPage == AppPage.Console; set { if (value) CurrentPage = AppPage.Console; } }
+    public bool PageEncyclopedia { get => CurrentPage == AppPage.Encyclopedia; set { if (value) CurrentPage = AppPage.Encyclopedia; } }
 
     partial void OnCurrentPageChanged(AppPage value)
     {
         OnPropertyChanged(nameof(PageHome));
         OnPropertyChanged(nameof(PageWorlds));
         OnPropertyChanged(nameof(PagePlayers));
+        OnPropertyChanged(nameof(PageCheats));
         OnPropertyChanged(nameof(PageMap));
         OnPropertyChanged(nameof(PageBackups));
         OnPropertyChanged(nameof(PageMods));
         OnPropertyChanged(nameof(PageSettings));
         OnPropertyChanged(nameof(PageConsole));
+        OnPropertyChanged(nameof(PageEncyclopedia));
+        if (value == AppPage.Encyclopedia) OnEncyclopediaOpened();
 
         if (value == AppPage.Mods) CheckModules();
-        if (value == AppPage.Players && IsServing) _ = RefreshHeroesAsync();
+        if (value is AppPage.Players or AppPage.Cheats && IsServing) _ = RefreshHeroesAsync();
+        if (value == AppPage.Players) ReloadBans();
+        if (value == AppPage.Cheats) LoadCheatCatalogs();
         OnMapPageChanged(value == AppPage.Map);
     }
 

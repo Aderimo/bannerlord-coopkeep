@@ -115,6 +115,36 @@ public sealed class SaveRepository(string gameSavesDirectory)
         return Find(targetName)!;
     }
 
+    /// <summary>Oyunun boş yeni dünya şablonunun dosya adı.</summary>
+    public const string TemplateFileName = "default_new_game" + SaveSet.SaveExtension;
+
+    /// <summary>
+    /// Yeni bir dünyayı sunucuyu açmadan kurar: oyunun <c>default_new_game.sav</c> şablonu
+    /// yeni adla kopyalanır.
+    /// </summary>
+    /// <remarks>
+    /// Sunucu, yapılandırılan save diskte yoksa zaten aynısını yapıyor. Şablondan kopyalanan
+    /// dünyayı ilk açılışta yüklüyor ve eş JSON'u kendisi yazıyor (2026-10-17'de test
+    /// sunucusunda doğrulandı). Böylece yeni dünya için sunucu iki kez açılmıyor.
+    /// Şablon önce bu dizinde, sonra <paramref name="fallbackTemplates"/> içinde aranır.
+    /// </remarks>
+    /// <returns>Kurulan dünya; şablon bulunamazsa <c>null</c>.</returns>
+    public SaveSet? CreateFromTemplate(string targetName, IEnumerable<string>? fallbackTemplates = null)
+    {
+        var targetSave = ResolveSavePath(targetName);
+        if (File.Exists(targetSave))
+            throw new InvalidOperationException($"'{targetName}' adlı bir save zaten var.");
+
+        var template = new[] { Path.Combine(Directory, TemplateFileName) }
+            .Concat(fallbackTemplates ?? [])
+            .FirstOrDefault(File.Exists);
+        if (template is null) return null;
+
+        System.IO.Directory.CreateDirectory(Directory);
+        File.Copy(template, targetSave);
+        return Find(targetName);
+    }
+
     /// <summary>
     /// Bu dizinin dışındaki bir save'i (örn. oyunun kendi tek oyunculu save'i) sunucuya kopyalar.
     /// </summary>

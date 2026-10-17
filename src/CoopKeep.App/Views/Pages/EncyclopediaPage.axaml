@@ -1,0 +1,164 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.EncyclopediaPage"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Ansiklopedi: solda bölümler, ortada aranabilir liste, sağda kayıt.
+      Kayıttaki bağlantılar başka kayıtlara götürür; "Geri" önceki kayda döner.
+  -->
+  <UserControl.Styles>
+    <Style Selector="RadioButton.sec">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="bg" Background="Transparent" CornerRadius="6" Padding="12,8" Cursor="Hand" Margin="0,0,0,2">
+                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" Foreground="{StaticResource TextDim}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.sec:pointerover /template/ Border#bg">
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+    </Style>
+    <Style Selector="RadioButton.sec:checked /template/ Border#bg">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+    </Style>
+    <Style Selector="RadioButton.sec:checked /template/ ContentPresenter#cp">
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="ListBox.entries ListBoxItem">
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Button.link">
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="Margin" Value="0,0,6,6" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.fact">
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="MinWidth" Value="110" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*" Margin="28,22,28,20">
+    <StackPanel Spacing="2" Classes="enter" Margin="0,0,0,14">
+      <TextBlock Classes="display" Text="{Binding L[nav.encyclopedia]}" />
+      <TextBlock Classes="hint" Text="{Binding L[enc.sub]}" />
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="170,14,300,14,*">
+
+      <!-- Bölümler -->
+      <StackPanel>
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncKingdoms}" Content="{Binding L[enc.sec.Kingdoms]}" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncClans}" Content="{Binding L[enc.sec.Clans]}" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncLords}" Content="{Binding L[enc.sec.Lords]}" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncSettlements}" Content="{Binding L[enc.sec.Settlements]}" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncTroops}" Content="{Binding L[enc.sec.Troops]}" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncItems}" Content="{Binding L[enc.sec.Items]}" />
+        <Border Height="1" Background="{StaticResource BorderDim}" Margin="4,6" />
+        <RadioButton Classes="sec" GroupName="enc" IsChecked="{Binding EncGuides}" Content="{Binding L[enc.sec.Guides]}" />
+      </StackPanel>
+
+      <!-- Liste -->
+      <Border Grid.Column="2" Classes="card" Padding="10">
+        <Grid RowDefinitions="Auto,Auto,*">
+          <TextBox Text="{Binding EncQuery}" Watermark="{Binding L[enc.search]}" />
+          <TextBlock Grid.Row="1" Classes="dim" FontSize="11.5" Margin="2,6" Text="{Binding EncCountText}" />
+          <ListBox Grid.Row="2" Classes="entries" ItemsSource="{Binding EncResults}" SelectedItem="{Binding EncSelected}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:EncEntry">
+                <StackPanel Spacing="0">
+                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Classes="dim" FontSize="11" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Grid.Row="2" Classes="dim" Margin="4,10" Text="{Binding L[enc.loading]}" IsVisible="{Binding EncLoading}" />
+        </Grid>
+      </Border>
+
+      <!-- Kayıt -->
+      <Border Grid.Column="4" Classes="card" Padding="0" ClipToBounds="True">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="22,18" Spacing="14" IsVisible="{Binding HasEncSelected}">
+            <Button Classes="ghost" HorizontalAlignment="Left" Padding="6,3" Command="{Binding EncBackCommand}" IsVisible="{Binding CanEncBack}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon" Data="{StaticResource IconArrowLeft}" Width="12" />
+                <TextBlock Text="{Binding L[enc.back]}" />
+              </StackPanel>
+            </Button>
+
+            <Grid ColumnDefinitions="Auto,*">
+              <Border Width="120" Height="150" CornerRadius="6" ClipToBounds="True" Background="#0E0C08" Margin="0,0,16,0"
+                      IsVisible="{Binding EncSelected.HasImage, FallbackValue=False}">
+                <Image Source="{Binding EncSelected.Image.Bitmap, FallbackValue={x:Null}}" Stretch="UniformToFill" VerticalAlignment="Top" />
+              </Border>
+              <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Top">
+                <TextBlock Classes="h1" Text="{Binding EncSelected.Title, FallbackValue=''}" TextWrapping="Wrap" />
+                <TextBlock Classes="dim" Text="{Binding EncSelected.Subtitle, FallbackValue=''}" TextWrapping="Wrap" />
+                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" LineHeight="21" FontSize="13.5"
+                           Text="{Binding EncSelected.Text, FallbackValue=''}" IsVisible="{Binding EncSelected.HasText, FallbackValue=False}" />
+              </StackPanel>
+            </Grid>
+
+            <!-- Bilgiler -->
+            <ItemsControl ItemsSource="{Binding EncSelected.Facts, FallbackValue={x:Null}}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:EncFact">
+                  <Border Classes="fact">
+                    <StackPanel>
+                      <TextBlock Classes="dim" FontSize="11" Text="{Binding Label}" />
+                      <TextBlock FontWeight="SemiBold" FontSize="14" Text="{Binding Value}" TextWrapping="Wrap" MaxWidth="320" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Bağlantılar -->
+            <ItemsControl ItemsSource="{Binding EncSelected.Groups, FallbackValue={x:Null}}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:EncLinkGroup">
+                  <StackPanel Spacing="6" Margin="0,0,0,10" IsVisible="{Binding HasLinks}">
+                    <TextBlock Classes="h2" Text="{Binding Title}" />
+                    <ItemsControl ItemsSource="{Binding Links}">
+                      <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:EncLink">
+                          <Button Classes="link"
+                                  Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).OpenEncLinkCommand}"
+                                  CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                              <TextBlock Text="{Binding Sub}" Classes="dim" FontSize="11.5" VerticalAlignment="Center"
+                                         IsVisible="{Binding Sub, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

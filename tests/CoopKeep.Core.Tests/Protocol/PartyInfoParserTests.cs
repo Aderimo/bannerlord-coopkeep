@@ -69,11 +69,8 @@ public sealed class PartyInfoParserTests : IDisposable
     {
         Assert.Equal("coop.debug.clan.give_influence clan_1 250", AdminCommand.GiveInfluence("clan_1", 250));
         Assert.Equal("coop.debug.clan.add_renown clan_1 100", AdminCommand.AddRenown("clan_1", 100));
-        Assert.Equal("coop.debug.hero_developer.add_skill_xp hero_1 Leadership 5000",
-            AdminCommand.AddSkillXp("hero_1", "Leadership", 5000));
         Assert.Equal("coop.debug.mobile_party.add_troops \"Ayşe Kılıç\"", AdminCommand.AddTroops("Ayşe Kılıç"));
         Assert.Equal("coop.debug.mobile_party.add_troop_xp Pacarios 1000", AdminCommand.AddTroopXp("Pacarios", 1000));
-        Assert.Throws<ArgumentException>(() => AdminCommand.AddSkillXp("hero_1", "Hacking", 1));
         Assert.Throws<ArgumentException>(() => AdminCommand.AddTroops("kötü\"ad"));
 
         foreach (var komut in new[] { AdminCommand.GiveInfluence("c", 1), AdminCommand.AddTroops("x"), AdminCommand.PartyInfo("p") })

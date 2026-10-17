@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Module>
+  <Name value="CoopKeep Image Exporter" />
+  <Id value="CoopKeep.ImageExporter" />
+  <Version value="v0.4.0" />
+  <SingleplayerModule value="true" />
+  <MultiplayerModule value="false" />
+  <DependedModules>
+    <DependedModule Id="Native" DependentVersion="v1.4.8" />
+    <DependedModule Id="SandBoxCore" DependentVersion="v1.4.8" />
+    <DependedModule Id="Sandbox" DependentVersion="v1.4.8" />
+  </DependedModules>
+  <SubModules>
+    <SubModule>
+      <Name value="CoopKeep.ImageExporter" />
+      <DLLName value="CoopKeep.ImageExporter.dll" />
+      <SubModuleClassType value="CoopKeep.ImageExporter.ImageExporterSubModule" />
+      <Tags />
+    </SubModule>
+  </SubModules>
+  <Xmls />
+</Module>

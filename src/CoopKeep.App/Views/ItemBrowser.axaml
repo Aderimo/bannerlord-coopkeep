@@ -1,0 +1,244 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.ItemBrowser"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Eşya ekranı: gruplar · arama · kıyafette şehir/savaş · fiyat sıralaması · görselli kartlar.
+      Kart tıklanınca sepete eklenir; sepet hedef oyunculara verilir.
+  -->
+  <UserControl.Styles>
+    <Style Selector="Button.itemCard">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Width" Value="150" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <Setter Property="Transitions">
+            <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" /></Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.itemCard:pointerover">
+        <Setter Property="RenderTransform" Value="scale(1.04)" />
+    </Style>
+    <Style Selector="Button.group">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="RadioButton.pill">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="bg" Background="{StaticResource BgRaised}" BorderBrush="{StaticResource BorderDim}" BorderThickness="1"
+                        CornerRadius="12" Padding="10,4" Margin="0,0,6,0" Cursor="Hand">
+                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" FontSize="12" Foreground="{StaticResource TextDim}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.pill:checked /template/ Border#bg">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="RadioButton.pill:checked /template/ ContentPresenter#cp">
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="#E6090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource FrameBrush}"
+            BorderThickness="1" CornerRadius="12" Margin="40,30" BoxShadow="0 24 80 0 #99000000">
+      <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Başlık -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="22,16,16,10">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="h1" Text="{Binding L[items.title]}" />
+            <TextBlock Classes="dim">
+              <Run Text="{Binding L[cheat.target]}" /><Run Text=": " /><Run Text="{Binding AdminTargetText}" Foreground="{StaticResource Accent}" FontWeight="SemiBold" />
+            </TextBlock>
+          </StackPanel>
+          <UniformGrid Grid.Column="1" Columns="2" Width="260" Margin="0,0,14,0" VerticalAlignment="Center">
+            <RadioButton Classes="choice" GroupName="itemMode" IsChecked="{Binding ItemGiveMode}" Margin="0,0,4,0" Content="{Binding L[items.give]}" />
+            <RadioButton Classes="choice" GroupName="itemMode" IsChecked="{Binding ItemTakeMode}" Margin="4,0,0,0" Content="{Binding L[items.take]}" />
+          </UniformGrid>
+          <Button Grid.Column="2" Classes="ghost" Padding="8" Command="{Binding CloseItemBrowserCommand}" VerticalAlignment="Top">
+            <Path Classes="icon" Data="{StaticResource IconClose}" Width="14" />
+          </Button>
+        </Grid>
+
+        <!-- Eklenti yoksa uyarı -->
+        <Border Grid.Row="1" Margin="22,0,22,10" Padding="12,8" CornerRadius="6" Background="{StaticResource WarningSoft}"
+                IsVisible="{Binding ItemsNeedTools}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12.5" Text="{Binding L[items.needTools]}" />
+            <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding EnableServerToolsCommand}" Content="{Binding L[items.enableTools]}"
+                    IsVisible="{Binding !ServerToolsEnabled}" />
+          </Grid>
+        </Border>
+
+        <!-- ===== VER ===== -->
+        <Grid Grid.Row="2" ColumnDefinitions="220,*" IsVisible="{Binding ItemGiveMode}">
+          <!-- Gruplar -->
+          <ScrollViewer Margin="14,0,0,0" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding ItemGroups}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ItemGroupOption">
+                  <Button Classes="group"
+                          Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectItemGroupCommand}"
+                          CommandParameter="{Binding}">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="{Binding Name}" />
+                      <TextBlock Grid.Column="1" Classes="dim" FontSize="11" Text="{Binding Count}" />
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="12,0,18,0">
+            <StackPanel Spacing="8" Margin="0,0,0,10">
+              <Grid ColumnDefinitions="*,10,Auto,6,80">
+                <TextBox Text="{Binding ItemQuery}" Watermark="{Binding L[items.search]}" />
+                <TextBlock Grid.Column="2" Classes="dim" VerticalAlignment="Center" Text="{Binding L[cheat.perClick]}" />
+                <NumericUpDown Grid.Column="4" Value="{Binding ItemPerClick}" Minimum="1" Maximum="10000" FormatString="0" />
+              </Grid>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="dim" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" Text="{Binding L[items.sort]}" />
+                <RadioButton Classes="pill" GroupName="itemSort" IsChecked="{Binding SortPrice}" Content="{Binding L[items.sort.cheap]}" />
+                <RadioButton Classes="pill" GroupName="itemSort" IsChecked="{Binding SortPriceDesc}" Content="{Binding L[items.sort.expensive]}" />
+                <RadioButton Classes="pill" GroupName="itemSort" IsChecked="{Binding SortTier}" Content="{Binding L[items.sort.tier]}" />
+                <RadioButton Classes="pill" GroupName="itemSort" IsChecked="{Binding SortName}" Content="{Binding L[items.sort.name]}" />
+                <Border Width="1" Background="{StaticResource BorderDim}" Margin="8,2" IsVisible="{Binding IsClothingGroup}" />
+                <StackPanel Orientation="Horizontal" IsVisible="{Binding IsClothingGroup}">
+                  <RadioButton Classes="pill" GroupName="cloth" IsChecked="{Binding ClothingAll}" Content="{Binding L[items.cloth.all]}" />
+                  <RadioButton Classes="pill" GroupName="cloth" IsChecked="{Binding ClothingCivilian}" Content="{Binding L[items.cloth.civilian]}" />
+                  <RadioButton Classes="pill" GroupName="cloth" IsChecked="{Binding ClothingBattle}" Content="{Binding L[items.cloth.battle]}" />
+                </StackPanel>
+                <TextBlock Classes="dim" FontSize="11.5" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding ItemResultText}" />
+              </StackPanel>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding VisibleItems}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ItemCard">
+                    <Button Classes="itemCard" ToolTip.Tip="{Binding PriceTip}"
+                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).AddItemCardCommand}"
+                            CommandParameter="{Binding}">
+                      <StackPanel>
+                        <Border Height="96" Background="#0E0C08" CornerRadius="4,4,0,0" ClipToBounds="True">
+                          <Panel>
+                            <TextBlock Text="{Binding GroupName}" Classes="dim" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       IsVisible="{Binding !Image.HasImage}" />
+                            <Image Source="{Binding Image.Bitmap}" Stretch="Uniform" Margin="6" />
+                            <Border Background="#99000000" CornerRadius="3" Padding="4,1" Margin="4" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    IsVisible="{Binding TierText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                              <TextBlock Text="{Binding TierText}" FontSize="9" Foreground="{StaticResource Accent}" />
+                            </Border>
+                            <Border Background="#99000000" CornerRadius="3" Padding="4,1" Margin="4" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                    IsVisible="{Binding IsCivilian}">
+                              <TextBlock Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[items.cloth.civilian]}" FontSize="9" Foreground="#C9BC92" />
+                            </Border>
+                          </Panel>
+                        </Border>
+                        <StackPanel Margin="8,5,8,7" Spacing="1">
+                          <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"
+                                     TextTrimming="CharacterEllipsis" Height="32" />
+                          <TextBlock Classes="dim" FontSize="10.5" Text="{Binding CultureName}" />
+                          <TextBlock FontSize="11.5" Foreground="{StaticResource Accent}"><Run Text="⛁ " /><Run Text="{Binding PriceRangeText}" /></TextBlock>
+                        </StackPanel>
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Grid>
+
+        <!-- ===== AL: oyuncunun envanteri ===== -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*" Margin="22,0" IsVisible="{Binding ItemTakeMode}">
+          <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+            <TextBlock Classes="hint" Text="{Binding L[items.takeHint]}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Padding="8,5" Command="{Binding RefreshInventoryCommand}" ToolTip.Tip="{Binding L[btn.refresh]}">
+              <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="13" />
+            </Button>
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+              <TextBlock Classes="dim" Text="{Binding L[items.inventoryEmpty]}" IsVisible="{Binding !HasInventoryLines}" />
+              <ItemsControl ItemsSource="{Binding InventoryLines}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:InventoryLine">
+                    <Border Padding="8,5" CornerRadius="4" Background="{StaticResource BgRaised}" Margin="0,0,0,5">
+                      <Grid ColumnDefinitions="Auto,*,Auto,12,110">
+                        <Border Width="44" Height="36" CornerRadius="3" Background="#0E0C08" ClipToBounds="True">
+                          <Image Source="{Binding Card.Image.Bitmap}" Stretch="Uniform" Margin="2" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Card.Name}" FontWeight="SemiBold" />
+                          <TextBlock Classes="dim" FontSize="11" Text="{Binding Card.GroupName}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Classes="value" VerticalAlignment="Center"><Run Text="× " /><Run Text="{Binding Have}" /></TextBlock>
+                        <NumericUpDown Grid.Column="4" Value="{Binding Remove}" Minimum="0" Maximum="{Binding Have}" FormatString="0" Watermark="0" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+
+        <!-- Alt çubuk: sepet -->
+        <Border Grid.Row="3" BorderBrush="{StaticResource BorderDim}" BorderThickness="0,1,0,0" Padding="22,12">
+          <Panel>
+            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding ItemGiveMode}">
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" MaxHeight="74">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Classes="dim" VerticalAlignment="Center" Text="{Binding L[items.basketEmpty]}" IsVisible="{Binding !HasItemBasket}" />
+                  <ItemsControl ItemsSource="{Binding ItemBasket}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:ItemBasketEntry">
+                        <Border Background="{StaticResource BgRaised}" CornerRadius="6" Padding="6,4" Margin="0,0,6,0">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Border Width="34" Height="30" Background="#0E0C08" CornerRadius="3" ClipToBounds="True">
+                              <Image Source="{Binding Card.Image.Bitmap}" Stretch="Uniform" />
+                            </Border>
+                            <TextBlock Text="{Binding Card.Name}" VerticalAlignment="Center" MaxWidth="130" TextTrimming="CharacterEllipsis" />
+                            <NumericUpDown Value="{Binding Count}" Minimum="1" Maximum="10000" FormatString="0" Width="80" />
+                            <Button Classes="ghost" Padding="4"
+                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).RemoveItemBasketEntryCommand}"
+                                    CommandParameter="{Binding}">
+                              <Path Classes="icon" Data="{StaticResource IconClose}" Width="9" />
+                            </Button>
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </ScrollViewer>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock VerticalAlignment="Center" Classes="dim"><Run Text="⛁ " /><Run Text="{Binding ItemBasketValueText}" FontWeight="SemiBold" /></TextBlock>
+                <Button Command="{Binding GiveItemBasketAsGoldCommand}" Content="{Binding L[items.giveGold]}" ToolTip.Tip="{Binding L[items.giveGoldTip]}" />
+                <Button Classes="primary" Command="{Binding GiveItemBasketCommand}">
+                  <TextBlock><Run Text="{Binding L[items.giveItems]}" /><Run Text=" (" /><Run Text="{Binding ItemBasketCount}" /><Run Text=")" /></TextBlock>
+                </Button>
+              </StackPanel>
+            </Grid>
+            <Button Classes="danger" HorizontalAlignment="Right" IsVisible="{Binding ItemTakeMode}" Command="{Binding TakeItemsCommand}"
+                    Content="{Binding L[items.takeSelected]}" />
+          </Panel>
+        </Border>
+      </Grid>
+    </Border>
+  </Border>
+</UserControl>

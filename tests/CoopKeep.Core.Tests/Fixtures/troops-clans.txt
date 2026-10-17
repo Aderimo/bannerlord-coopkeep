@@ -1,0 +1,137 @@
+# Coop v0.1.6 (build 0.1.6+5f4d63cc) dedicated server, 2026-10-16.
+# Lord partisi lord_1_1_party_1 üzerinde; canlı sunucunun stdout'undan birebir.
+[DedicatedServer] > coop.debug.mobile_party.character_ids lord_1_1
+##Lucon  (hero id: lord_1_1)
+Member roster:
+lord_1_1: number=1 wounded=0 xp=0 hero=True
+imperial_recruit: number=46 wounded=0 xp=0 hero=False
+imperial_infantryman: number=34 wounded=0 xp=0 hero=False
+imperial_equite: number=18 wounded=0 xp=0 hero=False
+imperial_heavy_horseman: number=9 wounded=0 xp=0 hero=False
+imperial_trained_infantryman: number=20 wounded=0 xp=0 hero=False
+imperial_archer: number=26 wounded=0 xp=0 hero=False
+imperial_trained_archer: number=20 wounded=0 xp=0 hero=False
+imperial_crossbowman: number=14 wounded=0 xp=0 hero=False
+imperial_veteran_infantryman: number=7 wounded=0 xp=0 hero=False
+imperial_legionary: number=1 wounded=0 xp=0 hero=False
+imperial_sergeant_crossbowman: number=2 wounded=0 xp=0 hero=False
+imperial_cataphract: number=3 wounded=0 xp=0 hero=False
+Prisoner roster:
+[DedicatedServer] > coop.debug.mobile_party.set_troop_state lord_1_1_party_1 imperial_legionary true 25 0 0
+TROOP_STATE_SET party=lord_1_1_party_1 character=imperial_legionary oldExists=True oldNumber=1 oldWounded=0 oldXp=0 newExists=True newNumber=25 newWounded=0 newXp=0
+[DedicatedServer] > coop.debug.mobile_party.character_ids lord_1_1
+##Lucon  (hero id: lord_1_1)
+Member roster:
+lord_1_1: number=1 wounded=0 xp=0 hero=True
+imperial_recruit: number=46 wounded=0 xp=0 hero=False
+imperial_infantryman: number=34 wounded=0 xp=0 hero=False
+imperial_equite: number=18 wounded=0 xp=0 hero=False
+imperial_heavy_horseman: number=9 wounded=0 xp=0 hero=False
+imperial_trained_infantryman: number=20 wounded=0 xp=0 hero=False
+imperial_archer: number=26 wounded=0 xp=0 hero=False
+imperial_trained_archer: number=20 wounded=0 xp=0 hero=False
+imperial_crossbowman: number=14 wounded=0 xp=0 hero=False
+imperial_veteran_infantryman: number=7 wounded=0 xp=0 hero=False
+imperial_legionary: number=25 wounded=0 xp=0 hero=False
+imperial_sergeant_crossbowman: number=2 wounded=0 xp=0 hero=False
+imperial_cataphract: number=3 wounded=0 xp=0 hero=False
+Prisoner roster:
+[DedicatedServer] > coop.debug.mobile_party.set_troop_state lord_1_1_party_1 imperial_legionary true 5 2 0
+TROOP_STATE_SET party=lord_1_1_party_1 character=imperial_legionary oldExists=True oldNumber=25 oldWounded=0 oldXp=0 newExists=True newNumber=5 newWounded=2 newXp=0
+[DedicatedServer] > coop.debug.mobile_party.set_troop_wounded lord_1_1_party_1 imperial_legionary 0
+Set imperial_legionary oldWounded=2 newWounded=0.
+[DedicatedServer] > coop.debug.mobile_party.set_troop_state lord_1_1_party_1 imperial_legionary false 0 0 0
+TROOP_STATE_SET party=lord_1_1_party_1 character=imperial_legionary oldExists=True oldNumber=5 oldWounded=0 oldXp=0 newExists=False newNumber=0 newWounded=0 newXp=0
+[DedicatedServer] > coop.debug.mobile_party.set_troop_state lord_1_1_party_1 no_such_troop true 3 0 0
+Character with id no_such_troop not found.
+[DedicatedServer] > coop.debug.mobile_party.character_ids lord_1_1
+##Lucon  (hero id: lord_1_1)
+Member roster:
+lord_1_1: number=1 wounded=0 xp=0 hero=True
+imperial_recruit: number=46 wounded=0 xp=0 hero=False
+imperial_infantryman: number=34 wounded=0 xp=0 hero=False
+imperial_equite: number=18 wounded=0 xp=0 hero=False
+imperial_heavy_horseman: number=9 wounded=0 xp=0 hero=False
+imperial_trained_infantryman: number=20 wounded=0 xp=0 hero=False
+imperial_archer: number=26 wounded=0 xp=0 hero=False
+imperial_trained_archer: number=20 wounded=0 xp=0 hero=False
+imperial_crossbowman: number=14 wounded=0 xp=0 hero=False
+imperial_veteran_infantryman: number=7 wounded=0 xp=0 hero=False
+imperial_sergeant_crossbowman: number=2 wounded=0 xp=0 hero=False
+imperial_cataphract: number=3 wounded=0 xp=0 hero=False
+Prisoner roster:
+[DedicatedServer] > coop.debug.mobile_party.position lord_1_1_party_1
+id=MobileParty_lord_1_1_party_1|party=lord_1_1_party_1|x=464.26944|y=469.2502|isOnLand=True|settlement=none|moveMode=Point
+[DedicatedServer] > coop.debug.mobile_party.move_to_settlement lord_1_1_party_1 town_EN1 true
+Party lord_1_1_party_1 is not a player party.
+[DedicatedServer] > coop.debug.settlements.owner_state town_EN1
+SERVER settlement=town_EN1 ownerClan=clan_empire_north_2 ownerLeader=lord_1_3
+LIVE_TEST_JSON={"role":"SERVER","settlement":"town_EN1","ownerClan":"clan_empire_north_2","ownerLeader":"lord_1_3"}
+[DedicatedServer] > coop.debug.settlements.info town_EN1
+------------------- SETTLEMENT: Epicrotea -------------------
+NumberOfEnemiesSpottedAround: '0'
+NumberOfAlliesSpottedAround: '0'
+BribePaid: 0
+SettlementHitPoints: '1'
+GarrisonWagePaymentLimit: '993'
+LastAttackerParty: 'None'
+LastThreatTime:  'Spring 1, 0'
+CurrentSiegeState:   'OnTheWalls'
+Militia :   '321.5'
+LastVisitTimeOfOwner  :   '2185857'
+------------------- SETTLEMENT: Epicrotea -------------------
+[DedicatedServer] > coop.debug.town.info town_EN1
+ID: 'town_EN1' not found
+[DedicatedServer] > coop.debug.village.info castle_village_EN1_1
+ID: 'castle_village_EN1_1' not found
+[DedicatedServer] > coop.debug.clan.info clan_empire_north_1
+Name: Osticos
+StringId: clan_empire_north_1
+Leader: Lucon
+Kingdom: Northern Empire
+Influence: 465
+Renown: 6408
+Tier: 6
+IsEliminated: False
+Members: Lucon, Zerosica, Arcor, Susada, Arion, Zoana, Decantia, Ascyron, Semnon, Achena, Gerotheon, Adinea
+[DedicatedServer] > coop.debug.clan.economy clan_empire_north_1
+Clan 'Osticos' (clan_empire_north_1)
+  Renown:    6408
+  Influence: 465
+  Leader party 'Lucon's Party':
+    RecentEventsMorale: 0
+    Total troop xp:     0
+[DedicatedServer] > coop.debug.clan.add_influence clan_empire_north_1 -50
+Applied -50 influence to 'Osticos'; clan is now at 415 influence
+[DedicatedServer] > coop.debug.clan.give_influence clan_empire_north_1 -25
+Gave -25 influence to Osticos
+[DedicatedServer] > coop.debug.clan.add_renown clan_empire_north_1 -40
+Osticos given renown
+[DedicatedServer] > coop.debug.clan.economy clan_empire_north_1
+Clan 'Osticos' (clan_empire_north_1)
+  Renown:    6408
+  Influence: 390
+  Leader party 'Lucon's Party':
+    RecentEventsMorale: 0
+    Total troop xp:     0
+[DedicatedServer] > coop.debug.hero_developer.add_attribute_points lord_1_1 -1
+lord_1_1 was given -1 attribute points.
+[DedicatedServer] > coop.debug.hero_developer.add_focus_points lord_1_1 -1
+lord_1_1 was given -1 focus points.
+[DedicatedServer] > coop.debug.hero_developer.add_skill_xp lord_1_1 Leadership -500
+lord_1_1 was given -500 xp for Leadership
+[DedicatedServer] > coop.debug.item_rosters.info lord_1_1_party_1
+ItemRoster info for 'Lucon':
+  Items: 10
+  Count: 78
+  SHA1: E88B5663F1E92555B9BF9B08B6B00D2A47F39A0D
+  Food: 49
+[DedicatedServer] > coop.debug.item_object.data grain
+grain: Grain
+Value: 10
+Difficulty: 0
+Tier: -1
+Tierf: 0
+Appearance: 0
+[DedicatedServer] > coop.debug.hero.set_hitpoints lord_1_1 20
+Hero HitPoints changed to: 20

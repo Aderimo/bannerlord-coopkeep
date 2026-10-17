@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.ViewerConnectOverlay"
+             x:DataType="vm:MainViewModel">
+
+  <!-- Sunucuyu kendisi açmayan oyuncular için: ev sahibinin haritasını izle. -->
+  <Border Background="#D9090A0D">
+    <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource FrameBrush}"
+            BorderThickness="1" CornerRadius="12" Width="460" Padding="28,24"
+            VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 24 80 0 #99000000">
+      <StackPanel Spacing="14">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="h1" Text="{Binding L[viewer.watch]}" />
+          <TextBlock Classes="hint" Text="{Binding L[viewer.watchSub]}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Grid ColumnDefinitions="*,10,100">
+          <TextBox Text="{Binding ViewerHost}" Watermark="{Binding L[viewer.address]}" />
+          <TextBox Grid.Column="2" Text="{Binding ViewerPortText}" Watermark="Port" />
+        </Grid>
+        <TextBox Text="{Binding ViewerCode}" Watermark="{Binding L[viewer.code]}" />
+        <TextBlock Foreground="{StaticResource Danger}" FontSize="12.5" Text="{Binding ViewerError}" TextWrapping="Wrap"
+                   IsVisible="{Binding ViewerError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+          <Button Classes="ghost" Command="{Binding CloseViewerConnectCommand}" Content="{Binding L[btn.cancel]}" />
+          <Button Classes="primary" Command="{Binding ConnectViewerCommand}" Content="{Binding L[viewer.connect]}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Border>
+</UserControl>

@@ -1,0 +1,113 @@
+# Coop v0.1.6 + CoopKeep.ServerTools v2, 2026-10-17 (lord_1_1, şablon dünya)
+## hero_stats
+[DedicatedServer] > coopkeep.hero_stats lord_1_1
+HERO|lord_1_1|Lucon|27|3558372|2|3|100|112|160000|62.13
+ATTR|vigor|Vigor|4
+ATTR|control|Control|3
+ATTR|endurance|Endurance|3
+ATTR|cunning|Cunning|4
+ATTR|social|Social|5
+ATTR|intelligence|Intelligence|3
+SKILL|Riding|Riding|106|0|0|endurance
+SKILL|Polearm|Polearm|217|3|0|vigor
+SKILL|Leadership|Leadership|209|2|5000|social
+SKILL|Tactics|Tactics|247|4|0|cunning
+SKILL|Athletics|Athletics|176|2|0|endurance
+SKILL|Throwing|Throwing|167|1|0|control
+SKILL|Steward|Steward|165|1|0|intelligence
+SKILL|OneHanded|One Handed|185|2|0|vigor
+SKILL|TwoHanded|Two Handed|206|2|0|vigor
+SKILL|Bow|Bow|180|2|0|control
+SKILL|Crossbow|Crossbow|201|2|0|control
+SKILL|Crafting|Smithing|158|1|0|endurance
+SKILL|Scouting|Scouting|119|0|0|cunning
+SKILL|Roguery|Roguery|199|2|0|cunning
+SKILL|Charm|Charm|246|4|0|social
+SKILL|Trade|Trade|178|1|0|social
+SKILL|Medicine|Medicine|128|0|0|intelligence
+SKILL|Engineering|Engineering|187|2|0|intelligence
+COOPKEEP_END
+## dev
+COOPKEEP_DEV hero=lord_1_1 what=skill:Leadership old=209 new=209
+COOPKEEP_DEV hero=lord_1_1 what=focus:Leadership old=2 new=3
+COOPKEEP_DEV hero=lord_1_1 what=attribute:social old=4 new=5
+COOPKEEP_DEV hero=lord_1_1 what=unspent:attribute old=0 new=2
+COOPKEEP_DEV hero=lord_1_1 what=skill:Leadership old=214 new=210
+COOPKEEP_DEV hero=lord_1_1 what=skill:Leadership old=210 new=216
+## equipment
+EQ|battle|Weapon0|empire_lance_2_t4|Courser Lance
+EQ|battle|Weapon1|heavy_horsemans_kite_shield|Reinforced Cavalry Kite Shield
+EQ|battle|Weapon2|empire_sword_5_t4|Fine Steel Paramerion
+EQ|battle|Banner|testudo_standard_t3|Testudo Standard
+EQ|battle|Head|empire_battle_crown_north|Jeweled Plumed Battle Crown
+EQ|battle|Body|imperial_scale_armor|Heavy Scale Armor over Mail Hauberk
+EQ|battle|Leg|lamellar_plate_boots|Lamellar Plate Boots
+EQ|battle|Gloves|decorated_imperial_gauntlets|Decorated Imperial Gauntlets
+EQ|battle|Cape|varangian_bra_royal|Caped Leather Harness
+EQ|battle|Horse|noble_horse_imperial|Cossian
+EQ|battle|HorseHarness|imperial_scale_barding|Cataphract Scale Barding
+EQ|civilian|Weapon0|empire_noble_sword_2_t5|Thamaskene Steel Spatha
+EQ|civilian|Head|empire_crown_north|Golden Laurel Crown
+EQ|civilian|Body|imperial_robes|Toga
+EQ|civilian|Leg|fine_town_boots|Fine Town Boots
+EQ|civilian|Gloves|highland_gloves|Fur Rimmed Leather Gloves
+EQ|civilian|Horse|noble_horse_imperial|Cossian
+EQ|civilian|HorseHarness|light_harness|Light Harness
+COOPKEEP_END
+## roster
+PARTY|lord_1_1_party_1|201|0
+TROOP|members|lord_1_1|Lucon|1|0|0|1
+TROOP|members|imperial_recruit|Imperial Recruit|46|0|0|0
+TROOP|members|imperial_infantryman|Imperial Infantryman|34|0|0|0
+TROOP|members|imperial_equite|Imperial Equite|18|0|0|0
+TROOP|members|imperial_heavy_horseman|Imperial Heavy Horseman|9|0|0|0
+TROOP|members|imperial_trained_infantryman|Imperial Trained Infantryman|20|0|0|0
+TROOP|members|imperial_archer|Imperial Archer|26|0|0|0
+TROOP|members|imperial_trained_archer|Imperial Trained Archer|20|0|0|0
+TROOP|members|imperial_crossbowman|Imperial Crossbowman|14|0|0|0
+TROOP|members|imperial_veteran_infantryman|Imperial Veteran Infantryman|7|0|0|0
+TROOP|members|imperial_legionary|Imperial Legionary|1|0|0|0
+TROOP|members|imperial_sergeant_crossbowman|Imperial Sergeant Crossbowman|2|0|0|0
+TROOP|members|imperial_cataphract|Imperial Cataphract|3|0|0|0
+COOPKEEP_END
+## parties
+MP|player_party_7|Player7|Oyuncu Test|coop_clan_7||657.95|279.08|12|1|town_ES3|Hold|0|0|1||0
+MP|player_party_8|Player8|Kusatan|coop_clan_8||600.10|300.20|80|3||BesiegeSettlement|0|0|1|castle_ES1|1
+[DedicatedServer] > coopkeep.parties
+MP|lord_2_3_party_1|lord_2_3|Olek|clan_sturgia_2|sturgia|426.46|492.15|131|0||GoToSettlement|0|0|0
+MP|lord_2_11_party_1|lord_2_11|Idrun|clan_sturgia_2|sturgia|432.25|495.82|127|0||PatrolAroundPoint|0|0|0
+MP|lord_2_4_1_party_1|lord_2_4_1|Apolanea|clan_sturgia_2|sturgia|447.18|506.76|115|0||GoToSettlement|0|0|0
+MP|lord_3_3_party_1|lord_3_3|Adram|clan_aserai_2|aserai|446.19|152.48|136|0||GoToSettlement|0|0|0
+MP|lord_3_8_party_1|lord_3_8|Addas|clan_aserai_2|aserai|688.95|226.55|105|0||GoToSettlement|0|0|0
+MP|lord_6_1_party_1|lord_6_1|Monchug|clan_khuzait_1|khuzait|685.19|419.31|220|0||GoToSettlement|0|0|0
+MP|lord_6_2_party_1|lord_6_2|Anat|clan_khuzait_1|khuzait|693.34|416.79|150|0||GoToSettlement|0|0|0
+MP|lord_6_10_party_1|lord_6_10|Alijin|clan_khuzait_1|khuzait|686.63|418.79|133|0||GoToSettlement|0|0|0
+MP|lord_6_4_party_1|lord_6_4|Mesui|clan_khuzait_2|khuzait|729.61|534.55|142|0||GoToSettlement|0|0|0
+MP|lord_6_81_party_1|lord_6_81|Nayantai|clan_khuzait_2|khuzait|720.98|561.28|99|0||RaidSettlement|0|0|0
+COOPKEEP_END
+## owners
+[DedicatedServer] > coopkeep.owners
+OWN|town_EN2|clan_empire_north_1
+OWN|town_EW2|clan_empire_west_1
+OWN|town_ES4|clan_empire_south_1
+OWN|town_S1|clan_sturgia_1
+COOPKEEP_END
+## settlement_stats
+[DedicatedServer] > coopkeep.settlement_stats
+SET|town_EN2|4700|51|33|302.5|clan_empire_north_1
+SET|town_EW2|4500|46|61|294.5|clan_empire_west_1
+SET|town_ES4|3800|52|63|263|clan_empire_south_1
+SET|town_S1|3100|58|43|230.5|clan_sturgia_1
+COOPKEEP_END
+## item_stats
+[DedicatedServer] > coopkeep.item_stats
+STAT|cow|0|0|0|0|0|0|0|0|0|0|22|30|5|150
+STAT|sheep|0|0|0|0|0|0|0|0|0|0|12|40|0|25
+STAT|khuzait_horse|0|0|0|0|0|0|0|0|0|0|45|67|16|200
+STAT|imperial_scale_armor|0|0|0|0|0|0|0|57|16|20|0|0|0|0
+STAT|empire_sword_5_t4|72|49|83|90|117|0|0|0|0|0|0|0|0|0
+STAT|iron_spatha_sword_t2|62|40|88|89|94|0|0|0|0|0|0|0|0|0
+STAT|studded_bound_kite_shield|0|0|91|82|110|100|0|0|0|0|0|0|0|0
+STAT|imperial_spear_t2|0|24|25|83|175|0|0|0|0|0|0|0|0|0
+STAT|tunic_with_rolled_cloth|0|0|0|0|0|0|0|6|2|3|0|0|0|0
+COOPKEEP_END
