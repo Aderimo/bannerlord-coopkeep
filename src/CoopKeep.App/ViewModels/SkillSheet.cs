@@ -98,7 +98,8 @@ public sealed partial class SkillSheet : ObservableObject
         ApplyNames();
     }
 
-    private Loc L => _loc();
+    /// <summary>Görünüm metinleri buradan bağlanır; dil değişince <see cref="ApplyNames"/> tazeler.</summary>
+    public Loc L => _loc();
 
     public IReadOnlyList<AttributeColumn> Attributes { get; }
 
@@ -179,6 +180,7 @@ public sealed partial class SkillSheet : ObservableObject
             foreach (var s in a.Skills) s.Name = L["skill." + s.Id];
         }
 
+        OnPropertyChanged(nameof(L));
         OnPropertyChanged(nameof(SelectionText));
     }
 

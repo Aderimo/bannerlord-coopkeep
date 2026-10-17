@@ -53,29 +53,29 @@
     <!-- Üst şerit: seviye, XP, harcanmamış puanlar -->
     <WrapPanel>
         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,20,6">
-            <TextBlock Classes="dim" Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.level]}" VerticalAlignment="Center" />
+            <TextBlock Classes="dim" Text="{Binding L[skills.level]}" VerticalAlignment="Center" />
             <TextBlock Text="{Binding LevelText}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Accent}" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6" VerticalAlignment="Center">
-            <TextBlock Classes="dim" Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.charXp]}" VerticalAlignment="Center" />
+            <TextBlock Classes="dim" Text="{Binding L[skills.charXp]}" VerticalAlignment="Center" />
             <TextBlock Text="{Binding TotalXpText}" FontWeight="SemiBold" VerticalAlignment="Center" />
         </StackPanel>
 
         <Border Classes="badge" Background="{StaticResource BgRaised}" Padding="8,3" Margin="0,0,8,6"
-                ToolTip.Tip="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.unspentTip]}">
+                ToolTip.Tip="{Binding L[skills.unspentTip]}">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <TextBlock Classes="dim" FontSize="11.5" VerticalAlignment="Center"
-                           Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.unspentAttr]}" />
+                           Text="{Binding L[skills.unspentAttr]}" />
                 <TextBlock Text="{Binding UnspentAttributeText}" FontWeight="Bold" VerticalAlignment="Center" />
                 <Button Classes="ghost" Padding="5,0" Content="−" Command="{Binding ChangeUnspentAttributeCommand}" CommandParameter="-1" />
                 <Button Classes="ghost" Padding="5,0" Content="+" Command="{Binding ChangeUnspentAttributeCommand}" CommandParameter="1" />
             </StackPanel>
         </Border>
         <Border Classes="badge" Background="{StaticResource BgRaised}" Padding="8,3" Margin="0,0,0,6"
-                ToolTip.Tip="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.unspentTip]}">
+                ToolTip.Tip="{Binding L[skills.unspentTip]}">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <TextBlock Classes="dim" FontSize="11.5" VerticalAlignment="Center"
-                           Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.unspentFocus]}" />
+                           Text="{Binding L[skills.unspentFocus]}" />
                 <TextBlock Text="{Binding UnspentFocusText}" FontWeight="Bold" VerticalAlignment="Center" />
                 <Button Classes="ghost" Padding="5,0" Content="−" Command="{Binding ChangeUnspentFocusCommand}" CommandParameter="-1" />
                 <Button Classes="ghost" Padding="5,0" Content="+" Command="{Binding ChangeUnspentFocusCommand}" CommandParameter="1" />
@@ -83,7 +83,7 @@
         </Border>
     </WrapPanel>
 
-    <TextBlock Classes="dim" Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.loading]}" IsVisible="{Binding Loading}" />
+    <TextBlock Classes="dim" Text="{Binding L[skills.loading]}" IsVisible="{Binding Loading}" />
     <TextBlock Classes="hint" Foreground="{StaticResource Danger}" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" />
 
     <!-- 6 sütun -->
@@ -151,7 +151,7 @@
             <StackPanel Spacing="8" IsVisible="{Binding HasSelectedSkill}">
                 <WrapPanel>
                     <TextBlock Classes="dim" Width="120" VerticalAlignment="Center"
-                               Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.skillLevel]}" />
+                               Text="{Binding L[skills.skillLevel]}" />
                     <Button Classes="step" Content="−10" Command="{Binding ChangeSkillCommand}" CommandParameter="-10" Margin="0,0,4,0" />
                     <Button Classes="step" Content="−1" Command="{Binding ChangeSkillCommand}" CommandParameter="-1" Margin="0,0,4,0" />
                     <Button Classes="step primary" Content="+1" Command="{Binding ChangeSkillCommand}" CommandParameter="1" Margin="0,0,4,0" />
@@ -160,24 +160,24 @@
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Classes="dim" Width="120" VerticalAlignment="Center"
-                               Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.focus]}" />
+                               Text="{Binding L[skills.focus]}" />
                     <Button Classes="step" Content="−1" Command="{Binding ChangeFocusCommand}" CommandParameter="-1" Margin="0,0,4,0" />
                     <Button Classes="step primary" Content="+1" Command="{Binding ChangeFocusCommand}" CommandParameter="1" />
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Classes="dim" Width="120" VerticalAlignment="Center"
-                               Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.xp]}" />
+                               Text="{Binding L[skills.xp]}" />
                     <NumericUpDown Value="{Binding XpAmount}" Minimum="1" Maximum="1000000" Increment="1000" FormatString="N0"
                                    Width="150" Margin="0,0,6,0" />
                     <Button Classes="primary" Command="{Binding GiveXpCommand}"
-                            Content="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.giveXp]}" />
+                            Content="{Binding L[skills.giveXp]}" />
                 </WrapPanel>
-                <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.xpNote]}" />
+                <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[skills.xpNote]}" />
             </StackPanel>
 
             <WrapPanel IsVisible="{Binding HasSelectedAttribute}">
                 <TextBlock Classes="dim" Width="120" VerticalAlignment="Center"
-                           Text="{Binding Source={x:Static loc:Loc.Current}, Path=[skills.attrPoints]}" />
+                           Text="{Binding L[skills.attrPoints]}" />
                 <Button Classes="step" Content="−1" Command="{Binding ChangeAttributeCommand}" CommandParameter="-1" Margin="0,0,4,0" />
                 <Button Classes="step primary" Content="+1" Command="{Binding ChangeAttributeCommand}" CommandParameter="1" />
             </WrapPanel>
