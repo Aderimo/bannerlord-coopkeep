@@ -62,6 +62,10 @@ public partial class WorldSettingsEditor : ObservableObject
     public ObservableCollection<WorldSettingItem> CheatItems { get; } = [];
 
     public bool HasLifeItems => LifeItems.Count > 0;
+
+    /// <summary>Dünyalar sayfasındaki kapalı başlık: "Kurallar ve dünya ayarları (24 ayar)".</summary>
+    public string RulesHeaderText => string.Format(L["grp.rulesHeader"],
+        LifeItems.Count + WorldItems.Count + MultiplayerItems.Count + CheatItems.Count);
     public bool HasWorldItems => WorldItems.Count > 0;
     public bool HasMultiplayerItems => MultiplayerItems.Count > 0;
     public bool HasCheatItems => CheatItems.Count > 0;

@@ -125,9 +125,10 @@
                         </StackPanel>
                     </RadioButton>
 
+                    <!-- Araçlar: ileri düzey sayfalar; yalnızca Gelişmiş görünümde -->
+                    <StackPanel Spacing="3" IsVisible="{Binding ShowTools}">
                     <Border Height="1" Background="{StaticResource BorderDim}" Margin="8,10" />
 
-                    <!-- Araçlar: ileri düzey sayfalar; kapalıyken ana yol sade kalır -->
                     <ToggleButton Classes="disclosure navgroup" IsChecked="{Binding ToolsExpanded}" HorizontalAlignment="Stretch"
                                   ToolTip.Tip="{Binding L[nav.toolsTip]}">
                         <Grid ColumnDefinitions="*,Auto" Margin="12,0,8,0">
@@ -165,6 +166,7 @@
                                 <TextBlock Text="{Binding L[nav.console]}" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
+                    </StackPanel>
                     </StackPanel>
                 </StackPanel>
 
@@ -260,7 +262,7 @@
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <Path Classes="icon" Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" />
                     <TextBlock Grid.Column="1" Margin="10,0" Text="{Binding ForeignServerWarning}"
-                               TextWrapping="Wrap" FontSize="12.5" Foreground="#F5C2C2" VerticalAlignment="Center" />
+                               TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource DangerText}" VerticalAlignment="Center" />
                     <Button Grid.Column="2" Command="{Binding RefreshCommand}" Content="{Binding L[btn.refresh]}"
                             Padding="10,5" FontSize="12" />
                 </Grid>

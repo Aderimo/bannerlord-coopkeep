@@ -8,6 +8,61 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v1.0.1 — 2026-10-23
+
+### Added · Eklenenler
+
+- **Themes:** Settings → Appearance has four backgrounds (Classic, Night, Graphite, Light) and
+  nine accent colours (gold, blue, purple, red, green, orange, yellow, pink, teal). The change
+  applies at once and is remembered. Every combination is checked for readable text.
+  *Temalar: Ayarlar → Görünüm'de dört zemin (Klasik, Gece, Antrasit, Açık) ve dokuz vurgu rengi.
+  Hemen uygulanır ve hatırlanır; her birleşimde yazıların okunurluğu denetlenir.*
+- **Match system** theme: Light when Windows is light, Night when it is dark, and it follows
+  Windows when you switch.
+  *"Sistemle aynı" teması: Windows açıksa Açık, koyuysa Gece; Windows değişince o da değişir.*
+- **Advanced view** (Settings → Appearance): admin tools, map, help wiki and console show in the
+  side menu only when it is on. If you used to keep Tools open, it starts on.
+  *Gelişmiş görünüm: yönetici araçları, harita, yardım wiki ve konsol yalnızca açıkken yan
+  menüde görünür. Araçlar grubunu açık tutuyorsan açık başlar.*
+
+### Changed · Değişenler
+
+- The Encyclopedia is now called **Help wiki**.
+  *Ansiklopedi'nin adı artık **Yardım wiki**.*
+
+- Less text: the Mods page explanations moved behind small "i" icons, mod rows show one quiet
+  line (role · source · version) instead of badges, the guide is in short bullet points,
+  notifications are one sentence, and Home no longer repeats the firewall warning.
+  *Daha az yazı: Modlar sayfasındaki açıklamalar "i" simgelerine taşındı, mod satırlarında
+  rozetler yerine tek soluk satır var, rehber kısa maddeler hâlinde, bildirimler tek cümle,
+  ana sayfa güvenlik duvarı uyarısını iki kez göstermiyor.*
+
+### Fixed · Düzeltilenler
+
+- A mod a pack needs but that wasn't on the PC was **silently skipped**: the game opened without
+  it (e.g. Better Time without Mod Configuration Menu v5), showed "could not be loaded due to a
+  dependency conflict" and could freeze. Now such mods are listed in the pack with **Subscribe**,
+  the game won't open without them, and sending a pack adds the mods it needs.
+  *Paketteki bir modun ihtiyaç duyduğu ama bilgisayarda olmayan mod sessizce atlanıyordu; oyun
+  onsuz açılıp hata veriyordu. Artık pakette "Abone ol" ile görünür, oyun onsuz açılmaz, paket
+  gönderilirken gereken modlar da eklenir.*
+- A pack (or zip) could install a folder posing as **Coop**, CoopKeep or one of the game's modules
+  into the game's Modules folder, where the game prefers it over the real one. Such folders, and
+  copies of mods already installed from the Workshop, are no longer installed; packs that bring mod
+  files show a "only from people you trust" note.
+  *Paketle sahte Coop ya da Atölye'deki modun önüne geçen kopya kurulamaz; güven uyarısı.*
+- Worlds page: rules and world settings sit under a collapsed header instead of showing 20+
+  settings at once.
+  *Dünyalar sayfası: kurallar kapalı bir başlığın altında.*
+- Streamer mode also hides the friend's address you type to join.
+  *Yayın modu arkadaşın adresini de gizler.*
+- **Update now** works even if the exe was saved as "CoopKeep (1).exe" or the folder has a % sign.
+  *Güncelleme exe'nin adı farklı olsa da çalışır.*
+- Importing a pack no longer leaves a temporary folder behind.
+  *Paket içe aktarınca geçici klasör kalmaz.*
+- Start and play: if the server can't start after the game opened, you're told so clearly.
+  *Başlat ve oyna: sunucu başlamazsa açıkça söylenir.*
+
 ## v1.0.0 — 2026-10-23
 
 First public release: a launcher and server manager for the **Bannerlord Coop** mod on the

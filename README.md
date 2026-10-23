@@ -168,7 +168,7 @@ Pick one player, several or everyone:
 <img src="docs/screenshots/en/11-map.png" alt="Live map" width="760">
 <img src="docs/screenshots/en/12-map-teleport.png" alt="Teleport from the map" width="760">
 
-### Encyclopedia
+### Help wiki
 - Kingdoms, clans, lords, settlements, troops (upgrade trees) and items with the game's
   own encyclopedia texts
 - **Guides** computed from the game's data: strongest troops per tier, richest towns,
@@ -176,7 +176,7 @@ Pick one player, several or everyone:
 - Live owner, prosperity and lord location while the server runs
 
 <table><tr>
-<td><img src="docs/screenshots/en/13-encyclopedia.png" alt="Encyclopedia"></td>
+<td><img src="docs/screenshots/en/13-encyclopedia.png" alt="Help wiki"></td>
 <td><img src="docs/screenshots/en/14-guides.png" alt="Guides"></td>
 </tr></table>
 
@@ -190,6 +190,12 @@ Pick one player, several or everyone:
 - Community results for known mods; click one for its description
 
 <img src="docs/screenshots/en/15-mods.png" alt="Mods" width="760">
+
+### Appearance
+- **Themes** in Settings → Appearance: Match system, Classic, Night, Graphite or Light, with
+  nine accent colours
+- **Advanced view** shows admin tools, the map, the help wiki and the console in the side
+  menu; without it the menu keeps only what you need to host and play
 
 ### Setup check and guide
 - The home page checks the game version, Coop and its server package, DLCs, files
@@ -293,7 +299,7 @@ The configuration file is edited **preserving its comments, key order and unknow
 ## Development
 
 ```bash
-dotnet test                                    # 376 tests
+dotnet test                                    # 384 tests
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # produces the single-file exe
 ```
@@ -301,10 +307,10 @@ powershell -File publish.ps1                   # produces the single-file exe
 | Project | Responsibility |
 |---|---|
 | `src/CoopKeep.Core` | Process supervision, protocol, backups, game data, encyclopedia — **UI-independent** |
-| `src/CoopKeep.App` | Avalonia UI (English/Turkish, dark theme) |
+| `src/CoopKeep.App` | Avalonia UI (English/Turkish, themes) |
 | `src/CoopKeep.Cli` | Command line tool |
 | `src/CoopKeep.ServerTools` | The optional server plugin (built against the server's game DLLs) |
-| `tests/CoopKeep.Core.Tests` | 376 tests |
+| `tests/CoopKeep.Core.Tests` | 384 tests |
 
 The single source of the version number is `Directory.Build.props`.
 

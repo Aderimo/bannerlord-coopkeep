@@ -61,7 +61,11 @@ public partial class MainViewModel
         LaunchCoopCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnCoopFirewallOkChanged(bool? value) => OnPropertyChanged(nameof(CoopFirewallMissing));
+    partial void OnCoopFirewallOkChanged(bool? value)
+    {
+        OnPropertyChanged(nameof(CoopFirewallMissing));
+        RefreshSetupChecks(); // ana sayfada güvenlik duvarı "Düzeltilmesi gerekenler" listesinde söylenir
+    }
     partial void OnCoopJoinAddressChanged(string value) => JoinCoopCommand.NotifyCanExecuteChanged();
 
     // ------------------------------------------------------------------

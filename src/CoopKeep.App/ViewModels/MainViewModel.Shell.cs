@@ -97,6 +97,24 @@ public partial class MainViewModel
         _ui.Save();
     }
 
+    /// <summary>Ayarlar'daki "Gelişmiş görünüm": kapalıyken yan menüde Araçlar grubu yok.</summary>
+    public bool AdvancedMode
+    {
+        get => _ui.AdvancedMode ?? _ui.ToolsExpanded;
+        set
+        {
+            if (AdvancedMode == value && _ui.AdvancedMode is not null) return;
+            _ui.AdvancedMode = value;
+            _ui.Save();
+            if (value) ToolsExpanded = true;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowTools));
+        }
+    }
+
+    /// <summary>Araçlar grubu görünür mü (izleyicide ve bir araç sayfası açıkken her zaman).</summary>
+    public bool ShowTools => AdvancedMode || IsViewerMode || IsToolPage(CurrentPage);
+
     private static bool IsToolPage(AppPage page) =>
         page is AppPage.Cheats or AppPage.Map or AppPage.Encyclopedia or AppPage.Console;
 
@@ -115,6 +133,7 @@ public partial class MainViewModel
         OnPropertyChanged(nameof(PageConsole));
         OnPropertyChanged(nameof(PageGuide));
         OnPropertyChanged(nameof(PageEncyclopedia));
+        OnPropertyChanged(nameof(ShowTools));
         if (value == AppPage.Encyclopedia) OnEncyclopediaOpened();
         if (value is AppPage.Home or AppPage.Settings) OnCoopPageOpened();
 

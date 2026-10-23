@@ -11,7 +11,6 @@ public sealed partial class Loc
 {
     private static readonly Dictionary<string, string> TurkishV4 = new(StringComparer.Ordinal)
     {
-        ["nav.cheats"] = "Hileler",
 
         // ---- düğmeler ----
         ["btn.give"] = "Ver",
@@ -23,7 +22,6 @@ public sealed partial class Loc
 
         // ---- oyuncular ----
         ["players.kickTip"] = "Sunucudan atar. Oyuncu tekrar girebilir.",
-        ["players.banTip"] = "Steam hesabıyla banlar ve bağlıysa atar. Sunucuyu yeniden başlatmak gerekmez.",
         ["players.banned"] = "BANLI",
         ["players.last.kick"] = "{0} atıldı.",
         ["players.last.ban"] = "{0} banlandı.",
@@ -33,7 +31,6 @@ public sealed partial class Loc
         ["players.onlineNow"] = "şu an oyunda",
         ["players.statLine"] = "{0} · toplam {1}",
         ["bans.title"] = "Banlılar",
-        ["bans.tip"] = "Coop'un kendi ban listesi (steam-bans.json). Sunucu her girişte okur; banlı Steam hesabı karakteri yüklenmeden reddedilir.",
         ["bans.empty"] = "Banlı kimse yok.",
         ["bans.note"] = "Ban notu (isteğe bağlı) — örn. altın hilesi",
         ["time.hm"] = "{0} sa {1} dk",
@@ -48,8 +45,6 @@ public sealed partial class Loc
         ["audit.unban"] = "ban kaldırıldı",
 
         // ---- hileler ----
-        ["cheat.sub"] = "Yalnızca sen kullanırsın. Hile yapan birinin verdiği zararı telafi etmek için.",
-        ["cheat.offline"] = "Hileler sunucu açıkken çalışır.",
         ["cheat.targets"] = "Kime?",
         ["cheat.all"] = "Herkes",
         ["cheat.target"] = "Hedef",
@@ -135,7 +130,6 @@ public sealed partial class Loc
         ["map.whereIs"] = "Kim nerede? Lord ya da kral ara…",
         ["map.priority"] = "Öne çıkar",
         ["map.priorityHint"] = "★ ile işaretlediğin oyuncular haritada büyük ve sarı çerçeveli görünür.",
-        ["map.openCheats"] = "Hilelerde aç",
         ["map.lordNoParty"] = "Şu an bir partisi yok (yerleşimde ya da esir).",
         ["map.near"] = "{0} yakınında",
         ["map.alert.battle"] = "{0} savaşa girdi!",
@@ -187,7 +181,6 @@ public sealed partial class Loc
         ["items.takeHint"] = "Hedef oyuncunun envanteri. Kaç tane alınacağını yaz.",
         ["items.inventoryEmpty"] = "Envanter boş ya da okunamadı (sunucu eklentisi gerekli).",
         ["items.takeSelected"] = "Seçilenleri al",
-        ["items.needTools"] = "Eşyanın kendisini vermek için CoopKeep sunucu eklentisi gerekiyor (Coop'ta bu komut yok). Eklenti açık değilse şimdilik değeri kadar altın verebilirsin.",
         ["items.enableTools"] = "Eklentiyi aç",
         ["itemgroup.Sword"] = "Kılıçlar",
         ["itemgroup.Dagger"] = "Hançerler",
@@ -215,9 +208,6 @@ public sealed partial class Loc
         ["audit.itemsTaken"] = "−{0} eşya",
 
         // ---- sunucu eklentisi ----
-        ["tools.title"] = "CoopKeep sunucu eklentisi",
-        ["tools.sub"] = "Oyunculara eşya verip alabilmen, tam eşya listesi ve kasaba fiyatları için. Coop kurulumundaki Coop modülüne küçük bir alt modül ekler; kapatınca özgün hâli geri yüklenir. Değişiklik sunucu yeniden başlatılınca etkinleşir.",
-        ["tools.active"] = "Eklenti çalışıyor.",
         ["tools.enabled"] = "Eklenti açıldı; sunucu başlarken kurulacak.",
         ["tools.restartNeeded"] = "Eklenti sunucu yeniden başlatılınca etkinleşir.",
         ["tools.installed"] = "CoopKeep sunucu eklentisi kuruldu.",
@@ -225,19 +215,12 @@ public sealed partial class Loc
         ["tools.installFailed"] = "Eklenti kurulamadı: {0}",
 
         // ---- harita paylaşımı ----
-        ["share.title"] = "Haritayı paylaş",
-        ["share.sub"] = "Arkadaşların kendi CoopKeep'lerinden haritayı canlı izleyebilir (yalnızca görüntüleme). Oyun portu gibi bu portun da modemde açık olması gerekir.",
-        ["share.newCode"] = "Yeni kod",
-        ["share.copy"] = "Daveti kopyala",
-        ["mods.f.library"] = "Tüm modlar",
-        ["mods.f.libraryTip"] = "Topluluk listesindeki bütün Bannerlord modları; yüklü olmasalar da aranabilir ve bildirilebilir.",
         ["mod.notInstalled"] = "Yüklü değil",
         ["mod.community.unknown"] = "Bilinmiyor",
     };
 
     private static readonly Dictionary<string, string> EnglishV4 = new(StringComparer.Ordinal)
     {
-        ["nav.cheats"] = "Cheats",
 
         ["btn.give"] = "Give",
         ["btn.take"] = "Take",
@@ -247,7 +230,6 @@ public sealed partial class Loc
         ["btn.undo"] = "Undo",
 
         ["players.kickTip"] = "Kicks from the server. The player can join again.",
-        ["players.banTip"] = "Bans by Steam account and kicks if connected. No restart needed.",
         ["players.banned"] = "BANNED",
         ["players.last.kick"] = "{0} was kicked.",
         ["players.last.ban"] = "{0} was banned.",
@@ -257,7 +239,6 @@ public sealed partial class Loc
         ["players.onlineNow"] = "playing now",
         ["players.statLine"] = "{0} · {1} total",
         ["bans.title"] = "Banned",
-        ["bans.tip"] = "Coop's own ban list (steam-bans.json). The server reads it on every join; a banned Steam account is refused before its character loads.",
         ["bans.empty"] = "Nobody is banned.",
         ["bans.note"] = "Ban note (optional) — e.g. gold cheat",
         ["time.hm"] = "{0} h {1} min",
@@ -271,8 +252,6 @@ public sealed partial class Loc
         ["audit.ban"] = "banned",
         ["audit.unban"] = "unbanned",
 
-        ["cheat.sub"] = "Only you use these. To make up for damage done by a cheater.",
-        ["cheat.offline"] = "Cheats work while the server is running.",
         ["cheat.targets"] = "Who?",
         ["cheat.all"] = "Everyone",
         ["cheat.target"] = "Target",
@@ -357,7 +336,6 @@ public sealed partial class Loc
         ["map.whereIs"] = "Who's where? Search a lord or ruler…",
         ["map.priority"] = "Highlight",
         ["map.priorityHint"] = "Players you star ★ are drawn larger with a yellow ring.",
-        ["map.openCheats"] = "Open in Cheats",
         ["map.lordNoParty"] = "No party right now (in a settlement or captive).",
         ["map.near"] = "near {0}",
         ["map.alert.battle"] = "{0} entered a battle!",
@@ -407,7 +385,6 @@ public sealed partial class Loc
         ["items.takeHint"] = "The target player's inventory. Type how many to take.",
         ["items.inventoryEmpty"] = "Inventory is empty or couldn't be read (server add-on needed).",
         ["items.takeSelected"] = "Take selected",
-        ["items.needTools"] = "Giving the items themselves needs the CoopKeep server add-on (Coop has no such command). Until it's on you can give their value as gold.",
         ["items.enableTools"] = "Turn on add-on",
         ["itemgroup.Sword"] = "Swords",
         ["itemgroup.Dagger"] = "Daggers",
@@ -434,21 +411,12 @@ public sealed partial class Loc
         ["audit.itemsGiven"] = "+{0} items",
         ["audit.itemsTaken"] = "−{0} items",
 
-        ["tools.title"] = "CoopKeep server add-on",
-        ["tools.sub"] = "Lets you give and take items, and gives the full item list and town prices. Adds a small sub-module to the Coop module in your Coop install; turning it off restores the original. Takes effect when the server restarts.",
-        ["tools.active"] = "Add-on is running.",
         ["tools.enabled"] = "Add-on turned on; it's installed when the server starts.",
         ["tools.restartNeeded"] = "The add-on takes effect when the server restarts.",
         ["tools.installed"] = "CoopKeep server add-on installed.",
         ["tools.removed"] = "CoopKeep server add-on removed.",
         ["tools.installFailed"] = "Couldn't install the add-on: {0}",
 
-        ["share.title"] = "Share the map",
-        ["share.sub"] = "Friends can watch the live map from their own CoopKeep (view only). Like the game port, this port must be open on the router.",
-        ["share.newCode"] = "New code",
-        ["share.copy"] = "Copy invite",
-        ["mods.f.library"] = "All mods",
-        ["mods.f.libraryTip"] = "Every Bannerlord mod in the community list; search and report them even if not installed.",
         ["mod.notInstalled"] = "Not installed",
         ["mod.community.unknown"] = "Unknown",
     };

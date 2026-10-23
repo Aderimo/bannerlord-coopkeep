@@ -108,7 +108,6 @@ public sealed partial class Loc
 
         // ---- dünya ----
         ["set.battleSize"] = "Savaş boyutu",
-        ["set.battleSize.desc"] = "Bir savaşta iki tarafta aynı anda sahada olan toplam asker. Düşük değer zayıf bilgisayarlarda akıcılık sağlar.",
         ["set.maximumLootersMultiplier"] = "Haydut grubu sayısı",
         ["set.maximumLootersMultiplier.desc"] = "Haritada aynı anda bulunabilecek haydut grubu çarpanı. Çok yüksek değer performansı düşürür.",
         ["set.looterPartySizeMultiplier"] = "Haydut grubu büyüklüğü",
@@ -255,7 +254,6 @@ public sealed partial class Loc
         ["set.enablePlayerExecutions.desc"] = "Warning: a captured player can be killed permanently. Requires hero executions.",
 
         ["set.battleSize"] = "Battle size",
-        ["set.battleSize.desc"] = "Total troops on the field across both sides of a battle. Lower values help weaker PCs.",
         ["set.maximumLootersMultiplier"] = "Bandit party count",
         ["set.maximumLootersMultiplier.desc"] = "Multiplier for how many bandit parties can be on the map. Very high values hurt performance.",
         ["set.looterPartySizeMultiplier"] = "Bandit party size",

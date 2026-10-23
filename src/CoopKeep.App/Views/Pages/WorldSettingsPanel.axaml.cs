@@ -33,6 +33,28 @@ public partial class WorldSettingsPanel : UserControl
         set => SetValue(ShowRulesProperty, value);
     }
 
+    /// <summary>
+    /// Kurallar bir aç/kapa başlığının altında, kapalı gelsin mi (Dünyalar sayfası). Sihirbazda
+    /// kurallar ayrı bir adım olduğu için orada doğrudan gösterilir.
+    /// </summary>
+    public static readonly StyledProperty<bool> CollapseRulesProperty =
+        AvaloniaProperty.Register<WorldSettingsPanel, bool>(nameof(CollapseRules));
+
+    public static readonly StyledProperty<bool> ExpandRulesProperty =
+        AvaloniaProperty.Register<WorldSettingsPanel, bool>(nameof(ExpandRules));
+
+    public bool CollapseRules
+    {
+        get => GetValue(CollapseRulesProperty);
+        set => SetValue(CollapseRulesProperty, value);
+    }
+
+    public bool ExpandRules
+    {
+        get => GetValue(ExpandRulesProperty);
+        set => SetValue(ExpandRulesProperty, value);
+    }
+
     public bool ExpandDetails
     {
         get => GetValue(ExpandDetailsProperty);

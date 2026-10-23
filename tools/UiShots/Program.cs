@@ -17,6 +17,21 @@ AppBuilder.Configure<App>()
     .WithInterFont()
     .SetupWithoutStarting();
 
+// Tema: kullanıcının kayıtlı teması (CK_THEME=Night:Blue gibi verilirse o; kayda yazılmaz).
+var themeArg = Environment.GetEnvironmentVariable("CK_THEME");
+if (themeArg is { Length: > 0 })
+{
+    var parts = themeArg.Split(':');
+    CoopKeep.App.Theming.ThemeManager.Apply(parts[0],
+        CoopKeep.App.Theming.ThemeManager.ParseAccent(parts.Length > 1 ? parts[1] : "Gold"));
+}
+else
+{
+    var saved = CoopKeep.App.Settings.UiSettings.Load();
+    CoopKeep.App.Theming.ThemeManager.Apply(saved.ThemeBase,
+        CoopKeep.App.Theming.ThemeManager.ParseAccent(saved.ThemeAccent));
+}
+
 var vm = new MainViewModel();
 // Program kayıtlı dil tercihini yükler; istenen dil ondan sonra verilir.
 // Dil, programın kendi düğmesiyle (kodda hesaplanan metinler de yenilensin); düğme tercihi

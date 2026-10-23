@@ -65,6 +65,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         HighPriority = _ui.HighPriority;
         MemoryWarningGb = _ui.MemoryWarningGb;
         CheckUpdates = _ui.CheckUpdates;
+        _ui.AdvancedMode ??= _ui.ToolsExpanded; // eski kurulum: Araçlar açıktıysa gelişmiş görünüm
         ToolsExpanded = _ui.ToolsExpanded;
 
         _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -80,6 +81,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         WorldEditor.Changed += () => SaveWorldSettingsCommand.NotifyCanExecuteChanged();
 
+        BuildThemeOptions();
         WireSupervisor();
         StartConsoleFlush();
         Detect();
@@ -268,7 +270,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     // --- yönetici işlemleri ---
 
-
     public ObservableCollection<AdminAuditEntry> AuditLog { get; } = [];
 
     public bool HasAuditEntries => AuditLog.Count > 0;
@@ -298,8 +299,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _ => IsRunning ? "#FBBF24" : "#6B7280",
     }));
 
-    private static IBrush StepBrush(bool done, bool active) => new SolidColorBrush(Color.Parse(
-        done ? "#D4AA32" : active ? "#5A4A1C" : "#2A2F39"));
+    private static IBrush StepBrush(bool done, bool active) =>
+        Theming.ThemeManager.Brush(done ? "Accent" : active ? "AccentDim" : "BgRaised");
 
     public IBrush Step1Brush => StepBrush(Step1Done, Step1Active);
     public IBrush Step2Brush => StepBrush(Step2Done, Step2Active);
@@ -395,6 +396,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(L));
         _profileSheet?.ApplyNames();
         _cheatSheet?.ApplyNames();
+        BuildThemeOptions();
         if (CurrentPage == AppPage.Encyclopedia) OnEncyclopediaOpened();
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PrivacyLabel));
@@ -445,6 +447,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         // Coop'un bilinen tuzakları: açmadan önce söylenir (bkz. CoopPreflight).
         if (!await ConfirmPreflightAsync(SelectedCampaign.Name)) return;
 
+        var gameOpened = false;
         try
         {
             BusyMessage = L["msg.readyIn"];
@@ -460,14 +463,16 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             // anda yüklenince bilgisayar da zorlanıyordu (kullanıcı isteği, 2026-10-23).
             _joinWhenServing = joinWhenReady;
             if (joinWhenReady && !ModuleCompatibility.IsGameRunning(null))
-                LaunchGameForWorld(SelectedCampaign.Name, L["start.gameFirst"]);
+                gameOpened = LaunchGameForWorld(SelectedCampaign.Name, L["start.gameFirst"]);
             PrepareAndLaunch(SelectedCampaign.Name);
             CurrentPage = AppPage.Home;
         }
         catch (Exception ex)
         {
             AppendConsole("! " + ex.Message);
-            ShowToast(ex.Message, ToastKind.Error);
+            // Oyun önce açıldıysa kullanıcı neden sunucunun gelmediğini anlasın.
+            ShowToast(gameOpened ? string.Format(L["start.serverFailedGameOpen"], ex.Message) : ex.Message, ToastKind.Error);
+            _joinWhenServing = false;
             BusyMessage = "";
         }
     }
@@ -713,94 +718,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         return true;
     }
 
-
-    // --- kampanya dosya işlemleri ---------------------------------------
-    //
-    // Hepsi .sav + .json çiftini birlikte taşır ve yalnızca sunucu duruyorken
-    // çalışır: açık bir kampanyanın dosyalarını değiştirmek save bozulmasına yol açar.
-    // Dünyanın ayar profili de onunla birlikte taşınır.
-
-    [RelayCommand(CanExecute = nameof(CanModifyCampaign))]
-    private void RenameCampaign()
-    {
-        if (_saves is null || SelectedCampaign is null) return;
-
-        var source = SelectedCampaign.Name;
-        var target = CampaignNameInput.Trim();
-        if (!SaveSet.IsValidSaveName(target) || _saves.Exists(target)) return;
-
-        try
-        {
-            var wasActive = string.Equals(source, ActiveSaveName, StringComparison.OrdinalIgnoreCase);
-            _saves.Rename(source, target);
-            _profiles.Rename(source, target);
-
-            // Aktif kampanyanın adı değiştiyse yapılandırma da güncellenmeli,
-            // yoksa sunucu var olmayan bir save aramaya çalışır.
-            if (wasActive) _config?.EnsureSaveName(target);
-
-            CampaignNameInput = "";
-            ReloadConfig();
-            ReloadCampaigns();
-            SelectedCampaign = Campaigns.FirstOrDefault(c => c.Name == target) ?? SelectedCampaign;
-            ShowToast(string.Format(L["msg.renamed"], target));
-        }
-        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanModifyCampaign))]
-    private void DuplicateCampaign()
-    {
-        if (_saves is null || SelectedCampaign is null) return;
-
-        var target = CampaignNameInput.Trim();
-        if (!SaveSet.IsValidSaveName(target) || _saves.Exists(target)) return;
-
-        try
-        {
-            _saves.Duplicate(SelectedCampaign.Name, target);
-            _profiles.Duplicate(SelectedCampaign.Name, target);
-            CampaignNameInput = "";
-            ReloadCampaigns();
-            ShowToast(string.Format(L["msg.duplicated"], target));
-        }
-        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
-    }
-
-    /// <summary>Silmeyi başlatır — asıl silme onaydan sonra yapılır.</summary>
-    [RelayCommand(CanExecute = nameof(CanDeleteCampaign))]
-    private void RequestDelete() => PendingDelete = true;
-
-    [RelayCommand]
-    private void CancelDelete() => PendingDelete = false;
-
-    [RelayCommand(CanExecute = nameof(CanDeleteCampaign))]
-    private void ConfirmDelete()
-    {
-        if (_saves is null || SelectedCampaign is null) return;
-
-        try
-        {
-            var name = SelectedCampaign.Name;
-
-            // Dünyanın kendisi + Coop'un yedek kuşakları + bizim yedeklerimiz + ayar profili.
-            var files = _saves.Delete(name);
-            var backups = _backups?.DeleteAll(name) ?? 0;
-            _profiles.Delete(name);
-
-            PendingDelete = false;
-            ShowToast(string.Format(L["msg.deleted"], files, backups));
-
-            ReloadCampaigns();
-            ReloadBackups();
-        }
-        catch (Exception ex)
-        {
-            ShowToast(ex.Message, ToastKind.Error);
-            PendingDelete = false;
-        }
-    }
-
     [RelayCommand]
     private void OpenSavesFolder() =>
         OpenPath(System.IO.Path.Combine(DataDirectory, "Game Saves"));
@@ -884,191 +801,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             return "-";
         }
     }
-
-    // --- yedekleme -------------------------------------------------------
-
-    [RelayCommand(CanExecute = nameof(CanBackupNow))]
-    private void BackupNow()
-    {
-        if (_backups is null || SelectedCampaign is null) return;
-
-        try
-        {
-            _backups.Create(SelectedCampaign.Name, BackupReason.Manual);
-            LastBackupAt = DateTime.Now;
-            ShowToast(L["msg.backupTaken"]);
-            ReloadBackups();
-        }
-        catch (Exception ex) { ShowToast(ex.Message, ToastKind.Error); }
-    }
-
-    private bool CanBackupNow() => _backups is not null && SelectedCampaign is not null && !IsBusy;
-
-    [RelayCommand(CanExecute = nameof(CanRestore))]
-    private void RequestRestore() => PendingRestore = true;
-
-    [RelayCommand]
-    private void CancelRestore() => PendingRestore = false;
-
-    /// <summary>
-    /// Seçili yedeği geri yükler. Sunucu çalışırken yapılamaz.
-    /// </summary>
-    /// <remarks>
-    /// Geri yükleme, mevcut hâlin yedeğini almakla başlar — yanlış yedeği seçen
-    /// kullanıcının geri dönüş yolu olsun diye.
-    /// </remarks>
-    [RelayCommand(CanExecute = nameof(CanRestore))]
-    private void ConfirmRestore()
-    {
-        if (_backups is null || SelectedBackup is null) return;
-
-        try
-        {
-            _backups.Restore(SelectedBackup);
-            ShowToast(L["msg.restored"]);
-            PendingRestore = false;
-
-            ReloadBackups();
-            ReloadCampaigns();
-        }
-        catch (Exception ex)
-        {
-            ShowToast(ex.Message, ToastKind.Error);
-            PendingRestore = false;
-        }
-    }
-
-    private bool CanRestore() =>
-        _backups is not null && SelectedBackup is not null && !IsRunning && !IsBusy;
-
-    /// <summary>Yedekler sayfası tüm dünyaların yedeklerini mi gösteriyor?</summary>
-    [ObservableProperty] private bool _backupsShowAll;
-
-    public bool BackupsShowSelected { get => !BackupsShowAll; set => BackupsShowAll = !value; }
-
-    partial void OnBackupsShowAllChanged(bool value)
-    {
-        OnPropertyChanged(nameof(BackupsShowSelected));
-        ReloadBackups();
-    }
-
-    private void ReloadBackups()
-    {
-        Backups.Clear();
-
-        if (_backups is not null)
-        {
-            var list = BackupsShowAll ? _backups.ListAll()
-                : SelectedCampaign is not null ? _backups.List(SelectedCampaign.Name)
-                : [];
-            foreach (var b in list) Backups.Add(b);
-        }
-
-        OnPropertyChanged(nameof(HasBackups));
-        OnPropertyChanged(nameof(LastBackupText));
-        SelectedBackup = Backups.FirstOrDefault();
-    }
-
-    /// <summary>
-    /// Sunucunun dünyayı kaydettiğini bildiren satırı yakalar ve otomatik yedek alır.
-    /// </summary>
-    /// <remarks>
-    /// <b>Yalnızca doğrulanmış bir kayıttan sonra</b> yedek alıyoruz. Zamanlayıcıyla
-    /// rastgele bir anda yedek almak, sunucu dosyayı yazarken yarım bir kopya
-    /// üretebilirdi.
-    /// <para>Kaynak satırlar: <c>autosave: world saved to '...'</c>,
-    /// <c>operator save: ...</c>, <c>shutdown save: ...</c></para>
-    /// </remarks>
-    private void TryAutoBackup(string line)
-    {
-        if (!line.Contains("world saved to", StringComparison.Ordinal)) return;
-        LastSaveAt = DateTime.Now;
-
-        if (!AutoBackup) return;
-        if (_backups is null || ActiveSaveName is not { Length: > 0 } name) return;
-
-        // Kaynak satırlar: "autosave: …", "operator save: …", "shutdown save: …"
-        var reason = line.Contains("autosave", StringComparison.Ordinal) ? BackupReason.Autosave
-            : line.Contains("shutdown", StringComparison.Ordinal) ? BackupReason.Shutdown
-            : BackupReason.Manual;
-
-        try
-        {
-            _backups.Create(name, reason);
-            LastBackupAt = DateTime.Now;
-
-            if (SelectedCampaign?.Name == name) ReloadBackups();
-        }
-        catch (Exception ex)
-        {
-            AppendConsole("! " + ex.Message);
-        }
-    }
-
-    // --- gizlilik --------------------------------------------------------
-
-    [RelayCommand]
-    private void TogglePrivacy()
-    {
-        PrivacyMode = !PrivacyMode;
-
-        _ui.PrivacyMode = PrivacyMode;
-        _ui.Save();
-    }
-
-    /// <summary>Göz simgesinin rengi: gizliyken vurgulu (dikkat çeksin), açıkken sönük.</summary>
-    public IBrush PrivacyIconBrush => new SolidColorBrush(
-        Color.Parse(PrivacyMode ? "#D4AA32" : "#9AA2B1"));
-
-    public string PrivacyLabel => L[PrivacyMode ? "privacy.on" : "privacy.off"];
-
-    /// <summary>Steam adı — gizli moddayken maskelenir.</summary>
-    public string DisplayedHostName =>
-        PrivacyMode && SteamHostName.Length > 0 ? L["val.masked"] : SteamHostName;
-
-    /// <summary>Port — gizli moddayken maskelenir.</summary>
-    public string DisplayedPort => PrivacyMode ? "••••" : PortText;
-
-    /// <summary>Konsola uygulanan bulanıklık. Gizli modda okunamaz hâle getirir.</summary>
-    public IEffect? ConsoleEffect => PrivacyMode ? new BlurEffect { Radius = 9 } : null;
-
-    partial void OnPrivacyModeChanged(bool value)
-    {
-        OnPropertyChanged(nameof(PrivacyIconBrush));
-        OnPropertyChanged(nameof(PrivacyLabel));
-        OnPropertyChanged(nameof(DisplayedHostName));
-        OnPropertyChanged(nameof(DisplayedPort));
-        OnPropertyChanged(nameof(DisplayedLocalIp));
-        OnPropertyChanged(nameof(DisplayedEndpoint));
-        OnPropertyChanged(nameof(ConsoleEffect));
-    }
-
-    partial void OnSteamHostNameChanged(string value) => OnPropertyChanged(nameof(DisplayedHostName));
-
-    partial void OnEditSteamChanged(bool value)
-    {
-        OnPropertyChanged(nameof(HostNamePlaceholder));
-        MarkEditsDirty();
-    }
-
-    partial void OnPortTextChanged(string value)
-    {
-        OnPropertyChanged(nameof(DisplayedPort));
-        OnPropertyChanged(nameof(DisplayedEndpoint));
-    }
-
-    partial void OnLocalIpChanged(string value)
-    {
-        OnPropertyChanged(nameof(DisplayedLocalIp));
-        OnPropertyChanged(nameof(DisplayedEndpoint));
-    }
-
-    private bool CanModifyCampaign() =>
-        !IsRunning && !IsBusy && SelectedCampaign is not null
-        && SaveSet.IsValidSaveName(CampaignNameInput.Trim())
-        && _saves?.Exists(CampaignNameInput.Trim()) != true;
-
-    private bool CanDeleteCampaign() => !IsRunning && !IsBusy && SelectedCampaign is not null;
 
     // --- karşılama ekranı ------------------------------------------------
 
@@ -1166,198 +898,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         catch (Exception ex) { AppendConsole("! " + ex.Message); }
     }
 
-    // --- iç işleyiş ------------------------------------------------------
-
-    private void WireSupervisor()
-    {
-        // Satırlar kuyruğa girer, StartConsoleFlush'taki zamanlayıcı topluca işler.
-        _supervisor.LineReceived += _pendingLines.Enqueue;
-
-        _supervisor.PhaseChanged += phase => Dispatcher.UIThread.Post(() =>
-        {
-            FlushPendingLines();
-            Phase = phase;
-            if (phase == ServerPhase.Serving)
-            {
-                BusyMessage = "";
-                if (!IsCreatingWorld) ShowToast(L["msg.online"]);
-
-                // "Başlat ve oyna": oyun açıldıysa adres panoya; açılamadıysa şimdi açılır.
-                if (_joinWhenServing && !IsCreatingWorld)
-                {
-                    _joinWhenServing = false;
-                    _ = JoinOwnServerAsync();
-                }
-                // Yayına geçer geçmez sunucuya iş yığılmasın: kahramanlar diskteki save'den,
-                // sunucu sorguları sayfa açılınca. Eklenti yalnızca yoklanır.
-                ReloadHeroes();
-                if (CurrentPage is AppPage.Players or AppPage.Cheats) _ = RefreshHeroesAsync();
-                _ = DetectServerToolsAsync();
-            }
-
-            RaiseRunStateChanged();
-        });
-
-        _supervisor.PlayersChanged += players => Dispatcher.UIThread.Post(() =>
-        {
-            var joined = players.Where(p => _allPlayers.All(o => o.Id != p.Id)).ToList();
-
-            var left = _allPlayers.Where(o => players.All(p => p.Id != o.Id)).ToList();
-
-            _allPlayers.Clear();
-            _allPlayers.AddRange(players);
-            ApplyPlayerFilter();
-            UpdateHeroFlags();
-            RaiseHomeChanged();
-
-            foreach (var p in left) PlayerLeft(p.Name);
-
-            foreach (var p in joined) OnPlayerJoined(p);
-        });
-
-        _supervisor.Exited += info => Dispatcher.UIThread.Post(async () =>
-        {
-            FlushPendingLines();
-            AppendConsole("— " + DescribeExit(info.Kind));
-
-            Phase = ServerPhase.Unknown;
-            BusyMessage = "";
-            SteamHostName = "";
-
-            foreach (var p in _allPlayers) PlayerLeft(p.Name);
-            _allPlayers.Clear();
-            ApplyPlayerFilter();
-            UpdateHeroFlags();
-
-            RaiseRunStateChanged();
-            ReloadCampaigns();
-            ReloadBackups();
-
-            // Sözleşme değişmiş ya da onay silinmiş: yeniden sor.
-            if (info.Kind == ServerExitKind.EulaRequired)
-            {
-                _ui.AcceptedEulaFingerprint = null;
-                _ui.Save();
-                await RequireEulaAsync(StartAsync);
-                return;
-            }
-
-            // Geri sayımlı yeniden başlatma çöküşle bittiyse bayrak takılı kalmasın.
-            var restartRequested = _restartAfterExit;
-            _restartAfterExit = false;
-
-            if (restartRequested && !info.IsCrash)
-            {
-                await StartAsync();
-                return;
-            }
-
-            // Coop'un çıkış kodları: ne olduğunu ve ne yapılacağını söyle.
-            ExplainExit(info);
-
-            await HandleCrashAsync(info);
-        });
-    }
-
-    private bool IsCreatingWorld => WizardCreating;
-
-    /// <summary>
-    /// Açılışta basılan "Cannot load: X.dll" satırları zararsızdır: hemen ardından
-    /// coop assembly resolver devreye giriyor ve DLL'ler doğru dizinden yükleniyor.
-    /// Kullanıcıya hata gibi göstermek her açılışta boş yere panik yaratırdı.
-    /// </summary>
-    private static bool IsHarmlessStartupNoise(string line) =>
-        line.Contains("Cannot load:", StringComparison.Ordinal) ||
-        line.Contains("Could not load file or assembly", StringComparison.Ordinal) ||
-        line.Contains("Could not find the event index for", StringComparison.Ordinal) ||
-        line.Contains("Unable to find item to add dependency", StringComparison.Ordinal);
-
-    /// <summary>Sunucudan gelen bir satırı işler (UI thread'inde, sırayla).</summary>
-    private void HandleServerLine(string line)
-    {
-        TryCaptureSteamHostName(line);
-        TryAutoBackup(line);
-
-        if (IsHarmlessStartupNoise(line)) return;
-        if (line.Contains(DsEventParser.Marker, StringComparison.Ordinal)) return;
-        if (IsToolsDataLine(line)) return;
-        AppendConsole(line);
-    }
-
-    private void AppendConsole(string line)
-    {
-        Console.Add(line);
-        OnConsoleLineAdded(line);
-    }
-
-    /// <summary>Çöküş sonrası politikayı uygular: gerekiyorsa bekleyip yeniden başlatır.</summary>
-    private async Task HandleCrashAsync(ServerExitInfo info)
-    {
-        _crashPolicy.Enabled = AutoRestart;
-
-        var decision = _crashPolicy.Evaluate(info, DateTimeOffset.UtcNow);
-
-        switch (decision.Reason)
-        {
-            case CrashDecisionReason.NotACrash:
-                return;
-
-            case CrashDecisionReason.NotRecoverable:
-                AlertText = L["msg.noAutoRestart"] + " " + DescribeExit(info.Kind);
-                return;
-
-            case CrashDecisionReason.CrashLoop:
-                AlertText = L["msg.crashLoop"];
-                return;
-
-            case CrashDecisionReason.Disabled:
-                AlertText = L["msg.crashed"];
-                return;
-        }
-
-        if (!decision.ShouldRestart || _coop is null) return;
-
-        AlertText = L["msg.crashed"] + " " + L["msg.restartingIn"];
-        await Task.Delay(decision.Delay);
-
-        // Kullanıcı bu arada elle başlattıysa araya girme.
-        if (IsRunning) return;
-
-        // Çöken dünya yeniden açılır; kullanıcı bu arada listede başka dünya seçmiş olabilir.
-        var saveName = _lastLaunchedSave ?? SelectedCampaign?.Name;
-        if (saveName is null) return;
-
-        try
-        {
-            PrepareAndLaunch(saveName);
-            BusyMessage = L["msg.readyIn"];
-        }
-        catch (Exception ex)
-        {
-            AppendConsole("! " + ex.Message);
-            BusyMessage = "";
-        }
-    }
-
-    /// <summary>
-    /// Sunucunun Steam listesinde göründüğü adı log satırından yakalar.
-    /// </summary>
-    /// <remarks>
-    /// Kaynak satır:
-    /// <c>[DedicatedServer] Steam user session initialized (appid 261550, persona 'ad')</c>
-    /// </remarks>
-    private void TryCaptureSteamHostName(string line)
-    {
-        const string marker = "persona '";
-
-        var at = line.IndexOf(marker, StringComparison.Ordinal);
-        if (at < 0) return;
-
-        var start = at + marker.Length;
-        var end = line.IndexOf('\'', start);
-        if (end > start) SteamHostName = line[start..end];
-    }
-
     private void ApplyPlayerFilter()
     {
         var filter = PlayerFilter.Trim();
@@ -1450,7 +990,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(ModCheckText));
         RaiseRunStateChanged();
     }
-
 
     /// <summary>
     /// İstemcide seçili modülleri sunucunun yüklediklerine karşı denetler.

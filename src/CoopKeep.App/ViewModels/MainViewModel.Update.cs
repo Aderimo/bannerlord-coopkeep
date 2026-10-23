@@ -24,8 +24,13 @@ public partial class MainViewModel
     /// <summary>Kendini güncelleyebilir mi: exe adresi var ve program tek exe olarak çalışıyor.</summary>
     public bool CanSelfUpdate => _latestRelease?.ExeUrl is not null && CurrentExe is not null;
 
+    /// <summary>
+    /// Çalışan exe. Adı tarayıcının verdiği gibi olabilir ("CoopKeep (1).exe"); yalnızca .NET
+    /// ana programıyla (geliştirme) çalışırken kendini güncelleyemez.
+    /// </summary>
     private static string? CurrentExe =>
-        Environment.ProcessPath is { } p && Path.GetFileName(p).Equals(ReleaseInfo.ExeName, StringComparison.OrdinalIgnoreCase) ? p : null;
+        Environment.ProcessPath is { } p && p.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+        && !Path.GetFileName(p).Equals("dotnet.exe", StringComparison.OrdinalIgnoreCase) ? p : null;
 
     partial void OnUpdatingChanged(bool value) => InstallUpdateCommand.NotifyCanExecuteChanged();
 

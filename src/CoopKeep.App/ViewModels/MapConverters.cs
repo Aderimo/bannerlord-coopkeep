@@ -13,7 +13,7 @@ public static class MapConverters
     public static readonly IValueConverter OnlineOpacity =
         new FuncValueConverter<bool, double>(online => online ? 1.0 : 0.55);
 
-    private static readonly Avalonia.Media.IBrush AccentFill = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#D1A74A"));
+    private static Avalonia.Media.IBrush AccentFill => Theming.ThemeManager.Brush("Accent");
 
     /// <summary>Dolu odak noktası altın, boşu şeffaf.</summary>
     public static readonly IValueConverter BoolToAccent =

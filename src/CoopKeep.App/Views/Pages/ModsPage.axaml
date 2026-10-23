@@ -25,21 +25,9 @@
                 <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                     <WrapPanel>
                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding IsWorkshop}" Margin="0,0,6,0">
-                            <TextBlock FontSize="10.5" Foreground="{StaticResource TextDim}"
-                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.src.workshop]}" />
-                        </Border>
-                        <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding IsLocal}" Margin="0,0,6,0">
-                            <TextBlock FontSize="10.5" Foreground="{StaticResource TextDim}"
-                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.src.local]}" />
-                        </Border>
-                        <Border Classes="badge" Background="{StaticResource AccentSoft}" IsVisible="{Binding RoleIsNormal}" Margin="0,0,6,0"
-                                ToolTip.Tip="{Binding RoleTip}">
-                            <TextBlock FontSize="10.5" Foreground="{StaticResource Accent}" Text="{Binding RoleLabel}" />
-                        </Border>
                         <Border Classes="badge" Background="{StaticResource DangerSoft}" IsVisible="{Binding RoleIsIncompatible}" Margin="0,0,6,0"
                                 ToolTip.Tip="{Binding RoleTip}">
-                            <TextBlock FontSize="10.5" Foreground="#F5C2C2" Text="{Binding RoleLabel}" />
+                            <TextBlock FontSize="10.5" Foreground="{StaticResource DangerText}" Text="{Binding RoleLabel}" />
                         </Border>
                         <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding CommunityWorks}" Margin="0,0,6,0">
                             <TextBlock FontSize="10.5" Foreground="{StaticResource Success}"
@@ -47,10 +35,10 @@
                         </Border>
                     </WrapPanel>
                     <StackPanel Spacing="2" IsVisible="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShowModDetails}">
-                        <TextBlock Classes="dim" FontSize="12" TextWrapping="Wrap" MaxLines="2" Text="{Binding Description}" IsVisible="{Binding HasDescription}" />
-                        <TextBlock Classes="dim" FontSize="11.5" Foreground="{StaticResource TextFaint}">
-                            <Run Text="{Binding Id}" /><Run Text="  ·  " /><Run Text="{Binding Version}" />
-                        </TextBlock>
+                        <TextBlock Classes="dim" FontSize="12" MaxLines="1" TextTrimming="CharacterEllipsis" Text="{Binding Description}"
+                                   IsVisible="{Binding HasDescription}" ToolTip.Tip="{Binding Description}" />
+                        <!-- Rol · kaynak · sürüm (kimlik Bilgi penceresinde) -->
+                        <TextBlock Classes="dim" FontSize="11.5" Foreground="{StaticResource TextFaint}" Text="{Binding MetaLine}" ToolTip.Tip="{Binding RoleTip}" />
                     </StackPanel>
                     <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding Problem}" IsVisible="{Binding HasProblem}" TextWrapping="Wrap" />
                     <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding VersionWarning}" IsVisible="{Binding HasVersionWarning}" TextWrapping="Wrap" />
@@ -113,7 +101,7 @@
         </Setter>
     </Style>
     <Style Selector="RadioButton.tab:pointerover /template/ Border#bg">
-        <Setter Property="BorderBrush" Value="#6A5535" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderHover}" />
     </Style>
     <Style Selector="RadioButton.tab:checked /template/ Border#bg">
         <Setter Property="Background" Value="{StaticResource AccentSoft}" />
@@ -151,6 +139,13 @@
     </Style>
     <Style Selector="Border.modrow.dropTarget">
         <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+    </Style>
+    <!-- "i" simgesi: açıklama üzerine gelince -->
+    <Style Selector="Border.help">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Cursor" Value="Help" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.small">
         <Setter Property="Padding" Value="8,4" />
@@ -195,9 +190,11 @@
                 </StackPanel>
             </Grid>
 
-            <StackPanel Spacing="2">
-                <TextBlock Classes="dim" FontSize="12.5" Text="{Binding ModsSummaryText}" />
-                <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[mm.rule]}" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Classes="dim" FontSize="12.5" VerticalAlignment="Center" Text="{Binding ModsSummaryText}" />
+                <Border Classes="help" ToolTip.Tip="{Binding L[mm.rule]}">
+                    <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" />
+                </Border>
             </StackPanel>
 
             <!-- Kaydedilmemiş değişiklik: ne değişecek, oyun açık mı -->
@@ -215,7 +212,7 @@
             <Border Background="{StaticResource DangerSoft}" BorderBrush="{StaticResource Danger}" BorderThickness="1"
                     CornerRadius="10" Padding="14" IsVisible="{Binding PendingRemoveMod, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <Grid ColumnDefinitions="*,Auto,Auto">
-                    <TextBlock Classes="body" Foreground="#F5C2C2" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0">
+                    <TextBlock Classes="body" Foreground="{StaticResource DangerText}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0">
                         <Run Text="{Binding PendingRemoveMod.Name, FallbackValue=''}" FontWeight="SemiBold" />
                         <Run Text="{Binding L[mm.removeConfirm]}" />
                     </TextBlock>
@@ -250,8 +247,7 @@
 
             <!-- Sunucu dünyası: modlar hangi sunucuya kurulur -->
             <Border Classes="card" Padding="16,12">
-                <StackPanel Spacing="8">
-                    <Grid ColumnDefinitions="Auto,Auto,*">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*">
                         <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" Text="{Binding L[mm.world.label]}" />
                         <ComboBox Grid.Column="1" MinWidth="220" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding ModsWorld}">
                             <ComboBox.ItemTemplate>
@@ -260,14 +256,15 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <TextBlock Grid.Column="2" Classes="dim" Margin="14,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding ModsWorldText}" />
+                        <TextBlock Grid.Column="2" Classes="dim" Margin="14,0,0,0" VerticalAlignment="Center" Text="{Binding ModsWorldText}" />
+                        <Border Grid.Column="3" Classes="help" Margin="8,0,0,0" HorizontalAlignment="Left" ToolTip.Tip="{Binding L[mm.world.hint]}">
+                            <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" />
+                        </Border>
                     </Grid>
-                    <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[mm.world.hint]}" />
-                </StackPanel>
             </Border>
 
             <!-- Coop'un reddettikleri açıksa -->
-            <Border Background="{StaticResource DangerSoft}" BorderBrush="#6A2A2A" BorderThickness="1" CornerRadius="8" Padding="14,10"
+            <Border Background="{StaticResource DangerSoft}" BorderBrush="{StaticResource DangerBorder}" BorderThickness="1" CornerRadius="8" Padding="14,10"
                     IsVisible="{Binding HasIncompatibleOn}">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
@@ -437,9 +434,12 @@
                     </StackPanel>
                 </Border>
                 <!-- Modlar nereye kurulur? -->
-                <Border Classes="card">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="h2" Text="{Binding L[mm.manual.title]}" />
+                <Border Classes="card" Padding="4">
+                <Expander Classes="group">
+                    <Expander.Header>
+                        <TextBlock FontWeight="SemiBold" Text="{Binding L[mm.manual.title]}" />
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Margin="6,0,6,6">
                         <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Text="{Binding L[mm.manual.workshop]}" />
                         <TextBlock Classes="dim" FontSize="11" TextWrapping="Wrap" Text="{Binding WorkshopFolderText}" />
                         <Button HorizontalAlignment="Left" Command="{Binding OpenWorkshopFolderCommand}" Content="{Binding L[mm.manual.openWorkshop]}" />
@@ -451,6 +451,7 @@
                         </StackPanel>
                         <TextBlock Classes="hint" FontSize="11.5" TextWrapping="Wrap" Text="{Binding L[mm.manual.after]}" />
                     </StackPanel>
+                </Expander>
                 </Border>
             </StackPanel>
 
@@ -473,7 +474,7 @@
                         </StackPanel>
                     </Grid>
                     <!-- Steam silinen mod klasörlerini "kurulu" sanıyor: abone olunsa da indirmez -->
-                    <Border Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1" CornerRadius="8" Padding="14,12"
+                    <Border Background="{StaticResource WarningSoft}" BorderBrush="{StaticResource WarningBorder}" BorderThickness="1" CornerRadius="8" Padding="14,12"
                             IsVisible="{Binding WorkshopNeedsVerify}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding L[mm.verifyCard]}" />
@@ -481,7 +482,7 @@
                         </Grid>
                     </Border>
                     <!-- Davet: arkadaşın sunucusu -->
-                    <Border Background="{StaticResource SuccessSoft}" BorderBrush="#2F5A3A" BorderThickness="1" CornerRadius="8" Padding="14,12"
+                    <Border Background="{StaticResource SuccessSoft}" BorderBrush="{StaticResource SuccessBorder}" BorderThickness="1" CornerRadius="8" Padding="14,12"
                             IsVisible="{Binding HasSelectedInvite}">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Spacing="4">

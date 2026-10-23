@@ -27,3 +27,8 @@ mod/dist/
 # Oyun içi test betiğinin çalışma dosyaları
 tools/ingame-test/logs/
 tools/ingame-test/state.json
+
+# İç notlar: kendi modumuzun tasarımı ve yol haritası (ikinci güncelleme). Yalnızca yerelde.
+docs/design/
+docs/KENDI-MOD-NOTLARI.md
+docs/YOL-HARITASI.md

@@ -225,13 +225,36 @@ public static class ModPackFile
         if (!path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) return (LoadList(path), null);
 
         var temp = Path.Combine(Path.GetTempPath(), "coopkeep-pack-" + Guid.NewGuid().ToString("N"));
-        ModArchiveInstaller.ExtractSafely(path, temp);
-        var manifest = Path.Combine(temp, ManifestName);
-        if (!File.Exists(manifest)) throw new InvalidDataException("This zip is not a CoopKeep mod pack (no " + ManifestName + ").");
+        try
+        {
+            ModArchiveInstaller.ExtractSafely(path, temp);
+            var manifest = Path.Combine(temp, ManifestName);
+            if (!File.Exists(manifest)) throw new InvalidDataException("This zip is not a CoopKeep mod pack (no " + ManifestName + ").");
 
-        var pack = LoadList(manifest);
-        var modules = Path.Combine(temp, "Modules");
-        return (pack, Directory.Exists(modules) ? modules : null);
+            var pack = LoadList(manifest);
+            var modules = Path.Combine(temp, "Modules");
+            if (Directory.Exists(modules)) return (pack, modules); // çağıran taşıdıktan sonra TempRootOf ile siler
+            DeleteQuietly(temp);
+            return (pack, null);
+        }
+        catch
+        {
+            DeleteQuietly(temp);
+            throw;
+        }
+    }
+
+    /// <summary><see cref="Open"/>'ın döndürdüğü Modules klasörünün geçici kökü (iş bitince silinir).</summary>
+    public static string? TempRootOf(string? modulesFolder) =>
+        modulesFolder is not null && Path.GetFileName(Path.GetDirectoryName(modulesFolder) ?? "").StartsWith("coopkeep-pack-", StringComparison.Ordinal)
+            ? Path.GetDirectoryName(modulesFolder)
+            : null;
+
+    public static void DeleteQuietly(string? folder)
+    {
+        if (folder is null) return;
+        try { if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
     /// <summary>Kurulum yönergesi (paketin içindeki metin dosyası).</summary>

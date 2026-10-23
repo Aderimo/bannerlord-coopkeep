@@ -80,6 +80,18 @@ public sealed class UiSettings
     /// <summary>En son görülen Coop sürümü: değişince "Coop güncellendi" notu çıkar.</summary>
     public string? LastCoopVersion { get; set; }
 
+    /// <summary>Zemin teması (System, Classic, Night, Graphite, Light).</summary>
+    public string? ThemeBase { get; set; }
+
+    /// <summary>Vurgu rengi (Gold, Blue, Purple, Red, Green, Orange, Yellow, Pink, Teal).</summary>
+    public string? ThemeAccent { get; set; }
+
+    /// <summary>
+    /// Gelişmiş görünüm: yan menüde Araçlar (yönetici araçları, harita, yardım wiki, konsol).
+    /// Kayıtta yoksa eski "Araçlar açık" tercihine göre.
+    /// </summary>
+    public bool? AdvancedMode { get; set; }
+
     /// <summary>Modlar sayfasında kompakt satırlar.</summary>
     public bool CompactMods { get; set; }
 

@@ -8,8 +8,8 @@ public sealed partial class Loc
 {
     private static readonly Dictionary<string, string> TurkishEnc = new(StringComparer.Ordinal)
     {
-        ["nav.encyclopedia"] = "Ansiklopedi",
-        ["enc.sub"] = "Oyunun kendi ansiklopedisi: metinler ve sayılar oyunun dosyalarından. Sunucu açıksa canlı bilgiler eklenir.",
+        ["nav.encyclopedia"] = "Yardım wiki",
+        ["enc.sub"] = "Oyunun bilgileri: krallıklar, klanlar, lordlar, yerleşimler, askerler. Sunucu açıksa canlı bilgiler eklenir.",
         ["enc.search"] = "Ara…",
         ["enc.count"] = "{0} kayıt",
         ["enc.back"] = "Geri",
@@ -116,8 +116,8 @@ public sealed partial class Loc
 
     private static readonly Dictionary<string, string> EnglishEnc = new(StringComparer.Ordinal)
     {
-        ["nav.encyclopedia"] = "Encyclopedia",
-        ["enc.sub"] = "The game's own encyclopedia: texts and numbers come from the game files. Live info is added while the server runs.",
+        ["nav.encyclopedia"] = "Help wiki",
+        ["enc.sub"] = "Game info: kingdoms, clans, lords, settlements, troops. Live info is added while the server runs.",
         ["enc.search"] = "Search…",
         ["enc.count"] = "{0} entries",
         ["enc.back"] = "Back",

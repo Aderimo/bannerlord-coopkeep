@@ -40,11 +40,17 @@ public sealed record ReleaseInfo(string Tag, string? ExeUrl, long ExeSize)
     /// Kendini değiştirme betiği: CoopKeep kapanınca yeni exe eskisinin yerine konur ve açılır.
     /// Çalışan exe Windows'ta üzerine yazılamadığı için değiştirme kapandıktan sonra yapılır.
     /// </summary>
-    public static string UpdaterScript(int processId, string newExe, string currentExe) =>
-        "@echo off\r\n" +
-        ":wait\r\n" +
-        $"tasklist /FI \"PID eq {processId}\" | find \"{processId}\" >nul && (timeout /t 1 /nobreak >nul & goto wait)\r\n" +
-        $"move /y \"{newExe}\" \"{currentExe}\" >nul\r\n" +
-        $"start \"\" \"{currentExe}\"\r\n" +
-        "del \"%~f0\"\r\n";
+    public static string UpdaterScript(int processId, string newExe, string currentExe)
+    {
+        // cmd betiğinde % değişken başlatır: yoldaki % iki kez yazılır.
+        newExe = newExe.Replace("%", "%%");
+        currentExe = currentExe.Replace("%", "%%");
+        return
+            "@echo off\r\n" +
+            ":wait\r\n" +
+            $"tasklist /FI \"PID eq {processId}\" | find \"{processId}\" >nul && (timeout /t 1 /nobreak >nul & goto wait)\r\n" +
+            $"move /y \"{newExe}\" \"{currentExe}\" >nul\r\n" +
+            $"start \"\" \"{currentExe}\"\r\n" +
+            "del \"%~f0\"\r\n";
+    }
 }

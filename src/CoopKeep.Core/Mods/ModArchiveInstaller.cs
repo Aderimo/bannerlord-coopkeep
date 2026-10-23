@@ -19,15 +19,30 @@ namespace CoopKeep.Core.Mods;
 /// </remarks>
 public static class ModArchiveInstaller
 {
+    /// <summary>
+    /// Hiçbir zip ya da paketten kurulmayan kimlikler: Coop, CoopKeep ve oyunun kendi modülleri.
+    /// Oyun, Modules klasöründeki modu Atölye'dekine tercih ettiği için böyle bir klasör gerçek
+    /// Coop'un (ya da oyunun) yerine geçebilirdi.
+    /// </summary>
+    public static bool IsProtected(string moduleId) =>
+        moduleId.Equals("Coop", StringComparison.OrdinalIgnoreCase)
+        || moduleId.Equals("CoopNightly", StringComparison.OrdinalIgnoreCase)
+        || moduleId.Equals(LoadOrder.CoopKeepId, StringComparison.OrdinalIgnoreCase)
+        || LoadOrder.Official.Contains(moduleId, StringComparer.OrdinalIgnoreCase)
+        || moduleId.Equals(ModPlanner.ServerModule, StringComparison.OrdinalIgnoreCase);
+
     /// <summary>Zip'teki modları kurar.</summary>
+    /// <param name="workshopIds">Atölye'den zaten kurulu kimlikler: aynı kimlikli kopya onların önüne geçmesin diye kurulmaz.</param>
+    /// <param name="skipped">Kurulmayanlar (korunan ya da Atölye'de zaten olan kimlikler).</param>
     /// <returns>Kurulan modlar (Id, klasör).</returns>
-    public static IReadOnlyList<InstalledModule> InstallZip(string zipPath, string gameModulesDirectory, string backupDirectory)
+    public static IReadOnlyList<InstalledModule> InstallZip(string zipPath, string gameModulesDirectory, string backupDirectory,
+        IReadOnlySet<string>? workshopIds = null, List<string>? skipped = null)
     {
         var temp = Path.Combine(Path.GetTempPath(), "coopkeep-mod-" + Guid.NewGuid().ToString("N"));
         try
         {
             ExtractSafely(zipPath, temp);
-            return InstallFolder(temp, gameModulesDirectory, backupDirectory);
+            return InstallFolder(temp, gameModulesDirectory, backupDirectory, workshopIds, skipped);
         }
         finally
         {
@@ -36,7 +51,9 @@ public static class ModArchiveInstaller
     }
 
     /// <summary>Klasördeki (ya da alt klasörlerindeki) modları kurar.</summary>
-    public static IReadOnlyList<InstalledModule> InstallFolder(string sourceFolder, string gameModulesDirectory, string backupDirectory)
+    /// <inheritdoc cref="InstallZip" path="/param[@name='workshopIds']"/>
+    public static IReadOnlyList<InstalledModule> InstallFolder(string sourceFolder, string gameModulesDirectory, string backupDirectory,
+        IReadOnlySet<string>? workshopIds = null, List<string>? skipped = null)
     {
         var modules = FindModuleFolders(sourceFolder);
         if (modules.Count == 0) throw new InvalidDataException("No Bannerlord module (SubModule.xml) was found in the archive.");
@@ -49,6 +66,14 @@ public static class ModArchiveInstaller
             var module = ModuleScanner.TryRead(folder, ModuleSource.GameFolder)
                          ?? throw new InvalidDataException("Unreadable SubModule.xml in " + Path.GetFileName(folder));
             if (module.IsOfficial) continue; // oyunun kendi modüllerine dokunulmaz
+
+            // Coop/CoopKeep/oyunun modülü kılığındaki klasör ya da Atölye'de zaten olan bir mod:
+            // Modules'e kurulursa oyun onu tercih eder ve gerçeğinin yerine geçer.
+            if (IsProtected(module.Id) || workshopIds?.Contains(module.Id) == true)
+            {
+                skipped?.Add(module.Id);
+                continue;
+            }
 
             var name = SafeFolderName(module.Id);
             var target = Path.Combine(gameModulesDirectory, name);

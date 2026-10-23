@@ -296,29 +296,20 @@
         </Border>
 
         <!-- Uyarılar -->
-        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="{StaticResource WarningBorder}" BorderThickness="1"
                 CornerRadius="4" Padding="14,10" IsVisible="{Binding HasAlert}">
             <Grid ColumnDefinitions="Auto,*">
                 <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Top" />
                 <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="body" Text="{Binding AlertText}" />
             </Grid>
         </Border>
-        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="{StaticResource WarningBorder}" BorderThickness="1"
                 CornerRadius="4" Padding="14,10" IsVisible="{Binding HasMemoryWarning}">
             <Grid ColumnDefinitions="Auto,*">
                 <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Top" />
                 <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="body" Text="{Binding MemoryWarning}" />
             </Grid>
         </Border>
-        <!-- Güvenlik duvarı izni yok -->
-        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
-                CornerRadius="4" Padding="14,10" IsVisible="{Binding CoopFirewallMissing}">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0" Text="{Binding L[coop.firewall.text]}" />
-                <Button Grid.Column="1" Classes="primary" Command="{Binding AddCoopFirewallRuleCommand}" Content="{Binding L[coop.firewall.add]}" />
-            </Grid>
-        </Border>
-
         <!-- Kurulum tamam ama düzeltilecek bir şey var (DLC açık, engellenmiş dosyalar, güvenlik duvarı) -->
         <Border Classes="card enter d2" IsVisible="{Binding ShowSetupProblems}">
             <StackPanel Spacing="6">
@@ -337,7 +328,7 @@
             </Grid>
         </Border>
 
-        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="{StaticResource WarningBorder}" BorderThickness="1"
                 CornerRadius="4" Padding="14,10" IsVisible="{Binding ShowModuleBanner}">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <Path Data="{StaticResource IconPuzzle}" Stroke="{StaticResource Warning}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
@@ -359,7 +350,7 @@
                         <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[lbl.hostName]}" />
                         <Panel>
                             <TextBlock FontWeight="SemiBold" FontSize="18" Foreground="{StaticResource Accent}"
-                                       FontFamily="{StaticResource HeadingFont}" Text="{Binding DisplayedHostName}"
+                                       FontFamily="{DynamicResource HeadingFont}" Text="{Binding DisplayedHostName}"
                                        IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             <TextBlock FontSize="12.5" Foreground="{StaticResource TextDim}" Text="{Binding HostNamePlaceholder}"
                                        IsVisible="{Binding SteamHostName, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
@@ -411,13 +402,9 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <StackPanel Spacing="8" IsVisible="{Binding !HasPlayers}">
+                    <StackPanel Spacing="4" IsVisible="{Binding !HasPlayers}">
                         <TextBlock Classes="dim" Text="{Binding L[msg.noPlayers]}" />
                         <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[empty.players]}" />
-                        <WrapPanel>
-                            <Button Margin="0,0,8,0" Command="{Binding CreateInviteFileCommand}" Content="{Binding L[invite.file.btn]}" />
-                            <Button Command="{Binding CopyConnectInfoCommand}" Content="{Binding L[invite.copy]}" />
-                        </WrapPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -433,7 +420,8 @@
                 <!-- Şifreyi Coop kendi menüsünde sorar; burada yalnızca adres. -->
                 <Grid ColumnDefinitions="*,12,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
                     <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[coop.address]}" />
-                    <TextBox Grid.Row="1" Text="{Binding CoopJoinAddress}" Watermark="203.0.113.5:4200" />
+                    <TextBox Grid.Row="1" Text="{Binding CoopJoinAddress}" Watermark="203.0.113.5:4200"
+                             PasswordChar="•" RevealPassword="{Binding !PrivacyMode}" />
                     <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
                         <Button Command="{Binding BrowseCoopCommand}" Content="{Binding L[coop.browse]}" />
                         <Button Classes="primary" Command="{Binding JoinCoopCommand}" Content="{Binding L[coop.join.start]}" />

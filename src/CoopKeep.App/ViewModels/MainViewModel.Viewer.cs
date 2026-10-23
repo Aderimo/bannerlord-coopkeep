@@ -226,6 +226,7 @@ public partial class MainViewModel
     {
         // İzleyicide yalnızca harita ve ansiklopedi var; ikisi de "Araçlar" altında.
         if (value) ToolsExpanded = true;
+        OnPropertyChanged(nameof(ShowTools));
         RaiseRunStateChanged();
     }
 }

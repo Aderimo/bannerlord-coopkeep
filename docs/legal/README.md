@@ -20,7 +20,7 @@ Daha önceki sözlü izinde sahibi şunu da istemişti: birebir aynısı yapılm
 
 1. Onların kaynağı yalnızca bir sorunu nasıl çözdüklerini anlamak için okunur.
 2. Dosya, sınıf ya da fonksiyon kopyalanmaz. Satır satır yeniden yazılmaz, yapıları aynen taşınmaz.
-3. Okuduktan sonra varılan tasarım kararı, kendi cümlelerimizle `docs/design/` altına yazılır. Kod bu nottan yazılır, onların kodundan değil.
+3. Okuduktan sonra varılan tasarım kararı, kendi cümlelerimizle kendi tasarım notlarımıza yazılır. Kod bu nottan yazılır, onların kodundan değil.
 4. Kamuya açık metinlerde (Atölye sayfası, README, uygulama) diğer ürün adı karşılaştırma için kullanılmaz.
 
 ## Kullandığımız açık kaynak kütüphaneler

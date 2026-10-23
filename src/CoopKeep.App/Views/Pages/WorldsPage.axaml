@@ -96,7 +96,7 @@
 
             <!-- Oyun ayarları: zorluk ve kurallar -->
             <Border Classes="card enter d1">
-                <pages:WorldSettingsPanel DataContext="{Binding WorldEditor}" PresetGroup="worldsPreset" />
+                <pages:WorldSettingsPanel DataContext="{Binding WorldEditor}" PresetGroup="worldsPreset" CollapseRules="True" />
             </Border>
 
             <!-- Dünyanın modları -->
@@ -182,7 +182,7 @@
                     <Border Classes="enter" IsVisible="{Binding PendingDelete}" Background="{StaticResource DangerSoft}"
                             BorderBrush="{StaticResource Danger}" BorderThickness="1" CornerRadius="10" Padding="14">
                         <Grid ColumnDefinitions="*,Auto,Auto">
-                            <TextBlock Classes="body" Foreground="#F5C2C2" VerticalAlignment="Center"
+                            <TextBlock Classes="body" Foreground="{StaticResource DangerText}" VerticalAlignment="Center"
                                        Text="{Binding L[msg.deleteWarning]}" Margin="0,0,12,0" />
                             <Button Grid.Column="1" Margin="0,0,8,0" Command="{Binding CancelDeleteCommand}"
                                     Content="{Binding L[btn.cancel]}" />

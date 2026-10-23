@@ -4,6 +4,26 @@
              x:Class="CoopKeep.App.Views.Pages.SettingsPage"
              x:DataType="vm:MainViewModel">
 
+  <UserControl.Styles>
+        <!-- Vurgu rengi yuvarlağı: seçiliyken çevresinde halka -->
+        <Style Selector="RadioButton.swatch">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="ring" Width="36" Height="36" CornerRadius="18" BorderThickness="2" BorderBrush="Transparent"
+                            Background="Transparent" Cursor="Hand">
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton.swatch:pointerover /template/ Border#ring">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}" />
+        </Style>
+        <Style Selector="RadioButton.swatch:checked /template/ Border#ring">
+            <Setter Property="BorderBrush" Value="{StaticResource TextMain}" />
+        </Style>
+  </UserControl.Styles>
+
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="36,28,36,40" Spacing="18" MaxWidth="820">
 
@@ -22,6 +42,56 @@
                     <Button Command="{Binding OpenReleasePageCommand}" Content="{Binding L[update.download]}" />
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- ============ GÖRÜNÜM ============ -->
+        <Border Classes="card enter">
+            <StackPanel Spacing="14">
+                <StackPanel Spacing="2">
+                    <TextBlock Classes="h2" Text="{Binding L[theme.title]}" />
+                    <TextBlock Classes="hint" Text="{Binding L[theme.hint]}" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding ThemeBases}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="5" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ThemeOption">
+                            <RadioButton Classes="choice" GroupName="themeBase" Margin="0,0,10,0" IsChecked="{Binding IsSelected}">
+                                <StackPanel Spacing="8">
+                                    <Border CornerRadius="6" Height="34" ClipToBounds="True" Background="{Binding Preview}"
+                                            BorderThickness="1" BorderBrush="{StaticResource BorderDim}">
+                                        <Grid ColumnDefinitions="*,*,10" Margin="6">
+                                            <Border CornerRadius="3" Background="{Binding Preview2}" Margin="0,0,4,0" />
+                                            <Border Grid.Column="1" CornerRadius="3" Background="{Binding Preview2}" Margin="0,0,4,0" />
+                                            <Border Grid.Column="2" CornerRadius="3" Background="{Binding Preview3}" />
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock FontWeight="SemiBold" FontSize="13.5" Text="{Binding L[theme.accentTitle]}" />
+                <ItemsControl ItemsSource="{Binding ThemeAccents}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ThemeOption">
+                            <RadioButton Classes="swatch" GroupName="themeAccent" Margin="0,0,10,8" IsChecked="{Binding IsSelected}"
+                                         ToolTip.Tip="{Binding Name}">
+                                <Ellipse Width="26" Height="26" Fill="{Binding Preview}" />
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Height="1" Background="{StaticResource BorderDim}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock FontWeight="SemiBold" FontSize="13.5" Text="{Binding L[settings.advanced]}" />
+                        <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[settings.advancedHint]}" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding AdvancedMode}" OnContent="" OffContent="" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
         </Border>
 
         <!-- ============ SUNUCU ============ -->

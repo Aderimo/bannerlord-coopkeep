@@ -118,7 +118,6 @@ public sealed partial class Loc
         ["profile.emptyArmy"] = "Orduda asker yok.",
         ["profile.kick"] = "At",
         ["profile.ban"] = "Banla",
-        ["profile.cheats"] = "Hilelerde aç",
         ["profile.items"] = "Eşya ver/al",
         ["profile.map"] = "Haritada göster",
 
@@ -135,7 +134,6 @@ public sealed partial class Loc
         ["admin.note"] = "Not (isteğe bağlı) — örn. hileci yüzünden kaybedilen askerler",
         ["cheat.pickTarget"] = "Soldan bir oyuncu seç (ya da birkaçını işaretle). Bilgiler ve işlemler seçtiğin oyuncu için açılır. Işınlama artık Harita'da.",
         ["bans.byName"] = "ad ile",
-        ["bans.byNameTip"] = "Steam kimliği bilinmiyordu; bu adla bağlanan kişi otomatik atılır.",
     };
 
     private static readonly Dictionary<string, string> EnglishV5 = new(StringComparer.Ordinal)
@@ -232,7 +230,6 @@ public sealed partial class Loc
         ["profile.emptyArmy"] = "No troops in the army.",
         ["profile.kick"] = "Kick",
         ["profile.ban"] = "Ban",
-        ["profile.cheats"] = "Open in Cheats",
         ["profile.items"] = "Give/take items",
         ["profile.map"] = "Show on map",
 
@@ -247,6 +244,5 @@ public sealed partial class Loc
         ["admin.note"] = "Note (optional) — e.g. troops lost to a cheater",
         ["cheat.pickTarget"] = "Pick a player on the left (or tick several). Info and actions open for the player you pick. Teleporting is now on the Map.",
         ["bans.byName"] = "by name",
-        ["bans.byNameTip"] = "Steam ID was unknown; anyone joining with this name is kicked automatically.",
     };
 }

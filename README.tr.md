@@ -173,7 +173,7 @@ Bir oyuncuyu, birkaçını ya da herkesi seç:
 <img src="docs/screenshots/tr/11-map.png" alt="Canlı harita" width="760">
 <img src="docs/screenshots/tr/12-map-teleport.png" alt="Haritadan ışınlama" width="760">
 
-### Ansiklopedi
+### Yardım wiki
 - Krallıklar, klanlar, lordlar, yerleşimler, askerler (terfi ağaçlarıyla) ve eşyalar
 - Metinler oyunun kendi ansiklopedisinden, oyunun kendi Türkçe çevirisiyle gelir
 - Oyun verilerinden hesaplanan **rehberler:** her kademede en güçlü askerler, en zengin
@@ -181,7 +181,7 @@ Bir oyuncuyu, birkaçını ya da herkesi seç:
 - Sunucu açıkken canlı bilgiler: güncel sahip, refah, lordun yeri
 
 <table><tr>
-<td><img src="docs/screenshots/tr/13-encyclopedia.png" alt="Ansiklopedi"></td>
+<td><img src="docs/screenshots/tr/13-encyclopedia.png" alt="Yardım wiki"></td>
 <td><img src="docs/screenshots/tr/14-guides.png" alt="Rehberler"></td>
 </tr></table>
 
@@ -195,6 +195,12 @@ Bir oyuncuyu, birkaçını ya da herkesi seç:
 - Bilinen modlar için topluluk sonuçları; moda tıklayınca açıklaması açılır
 
 <img src="docs/screenshots/tr/15-mods.png" alt="Modlar" width="760">
+
+### Görünüm
+- Ayarlar → Görünüm'de **temalar**: Sistemle aynı, Klasik, Gece, Antrasit ya da Açık; dokuz
+  vurgu rengiyle
+- **Gelişmiş görünüm** yan menüde yönetici araçlarını, haritayı, yardım wiki'yi ve konsolu
+  gösterir; kapalıyken menüde yalnızca sunucu açıp oynamak için gerekenler kalır
 
 ### Kurulum denetimi ve rehber
 - Ana sayfa oyun sürümünü, Coop'u ve sunucu paketini, DLC'leri, Windows'un engellediği
@@ -298,7 +304,7 @@ Yapılandırma dosyası **yorumları, anahtar sırası ve tanınmayan anahtarlar
 ## Geliştirme
 
 ```bash
-dotnet test                                    # 376 test
+dotnet test                                    # 384 test
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # tek dosyalık exe üretir
 ```
@@ -306,10 +312,10 @@ powershell -File publish.ps1                   # tek dosyalık exe üretir
 | Proje | Görevi |
 |---|---|
 | `src/CoopKeep.Core` | Süreç yönetimi, protokol, yedekler, oyun verileri, ansiklopedi (**arayüzden bağımsız**) |
-| `src/CoopKeep.App` | Avalonia arayüzü (Türkçe/İngilizce, koyu tema) |
+| `src/CoopKeep.App` | Avalonia arayüzü (Türkçe/İngilizce, temalar) |
 | `src/CoopKeep.Cli` | Komut satırı aracı |
 | `src/CoopKeep.ServerTools` | İsteğe bağlı sunucu eklentisi (sunucunun oyun DLL'leriyle derlenir) |
-| `tests/CoopKeep.Core.Tests` | 376 test |
+| `tests/CoopKeep.Core.Tests` | 384 test |
 
 Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.
 

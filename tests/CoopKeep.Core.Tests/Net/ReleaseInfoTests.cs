@@ -45,6 +45,22 @@ public class ReleaseInfoTests
     }
 
     [Fact]
+    public void UpdaterScript_EscapesPercentInPaths()
+    {
+        var script = ReleaseInfo.UpdaterScript(1, @"C:\100%\CoopKeep.new.exe", @"C:\100%\CoopKeep (1).exe");
+
+        Assert.Contains(@"move /y ""C:\100%%\CoopKeep.new.exe"" ""C:\100%%\CoopKeep (1).exe""", script);
+    }
+
+    [Fact]
+    public void PackTempRoot_IsOnlyOurTempFolder()
+    {
+        Assert.Equal(@"C:\t\coopkeep-pack-abc", CoopKeep.Core.Mods.ModPackFile.TempRootOf(@"C:\t\coopkeep-pack-abc\Modules"));
+        Assert.Null(CoopKeep.Core.Mods.ModPackFile.TempRootOf(@"C:\Users\x\Modules"));
+        Assert.Null(CoopKeep.Core.Mods.ModPackFile.TempRootOf(null));
+    }
+
+    [Fact]
     public void UpdaterScript_WaitsMovesAndRestarts()
     {
         var script = ReleaseInfo.UpdaterScript(1234, @"C:\x\CoopKeep.new.exe", @"C:\x\CoopKeep.exe");

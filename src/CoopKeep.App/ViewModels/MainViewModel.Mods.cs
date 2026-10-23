@@ -126,11 +126,9 @@ public partial class MainViewModel
         ? string.Format(L["mods.headline.problem"], ProblemModuleCount)
         : L["mods.headline.ok"];
 
-    public Avalonia.Media.IBrush ModsCardBorder => new Avalonia.Media.SolidColorBrush(
-        Avalonia.Media.Color.Parse(ModuleProblem ? "#6A2A2A" : "#3D3121"));
+    public Avalonia.Media.IBrush ModsCardBorder => Theming.ThemeManager.Brush(ModuleProblem ? "DangerBorder" : "BorderDim");
 
-    public Avalonia.Media.IBrush ModsIconBackground => new Avalonia.Media.SolidColorBrush(
-        Avalonia.Media.Color.Parse(ModuleProblem ? "#331C1E" : "#15291D"));
+    public Avalonia.Media.IBrush ModsIconBackground => Theming.ThemeManager.Brush(ModuleProblem ? "DangerSoft" : "SuccessSoft");
 
     partial void OnModuleProblemChanged(bool value)
     {

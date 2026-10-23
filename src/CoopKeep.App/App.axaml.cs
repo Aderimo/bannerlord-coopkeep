@@ -28,6 +28,8 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var ui = Settings.UiSettings.Load();
+            Theming.ThemeManager.Apply(ui.ThemeBase, Theming.ThemeManager.ParseAccent(ui.ThemeAccent));
             var vm = new MainViewModel();
             var window = new MainWindow { DataContext = vm };
             desktop.MainWindow = window;

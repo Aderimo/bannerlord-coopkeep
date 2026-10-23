@@ -34,6 +34,22 @@
         <SolidColorBrush x:Key="Danger"     Color="#E06262" />
         <SolidColorBrush x:Key="DangerSoft" Color="#331C1E" />
         <SolidColorBrush x:Key="ConsoleBg"  Color="#0E0B08" />
+        <!-- Tema motorunun yazdığı ek renkler (Theming/ThemeManager): görünümlerde sabit renk yerine bunlar. -->
+        <SolidColorBrush x:Key="BorderHover"   Color="#5A4830" />
+        <SolidColorBrush x:Key="NavHover"      Color="#241C13" />
+        <SolidColorBrush x:Key="NavSelected"   Color="#2E2417" />
+        <SolidColorBrush x:Key="BgDisabled"    Color="#1D1710" />
+        <SolidColorBrush x:Key="BorderDisabled" Color="#2B231A" />
+        <SolidColorBrush x:Key="TextDisabled"  Color="#6B5F4C" />
+        <SolidColorBrush x:Key="AccentSoftHover" Color="#332B18" />
+        <SolidColorBrush x:Key="AccentBorder"  Color="#F3D58C" />
+        <SolidColorBrush x:Key="AccentBorderHover" Color="#FFE3A0" />
+        <SolidColorBrush x:Key="AccentDisabled" Color="#3A3320" />
+        <SolidColorBrush x:Key="SuccessBorder" Color="#2F5A3A" />
+        <SolidColorBrush x:Key="WarningBorder" Color="#6A5420" />
+        <SolidColorBrush x:Key="DangerBorder"  Color="#6A2A2A" />
+        <SolidColorBrush x:Key="DangerText"    Color="#F5C2C2" />
+        <SolidColorBrush x:Key="DangerHover"   Color="#EC7676" />
 
         <LinearGradientBrush x:Key="HeroGradient" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#3A2B16" Offset="0" />
@@ -112,6 +128,7 @@
             <!-- Kaydırıcı, onay kutusu vb. Fluent kontrolleri de altın vurguyu kullansın. -->
             <FluentTheme.Palettes>
                 <ColorPaletteResources x:Key="Dark" Accent="#D1A74A" AltHigh="#14100B" RegionColor="#14100B" />
+                <ColorPaletteResources x:Key="Light" Accent="#A8791C" AltHigh="#F4F5F7" RegionColor="#F4F5F7" />
             </FluentTheme.Palettes>
         </FluentTheme>
 
@@ -126,19 +143,19 @@
         <Style Selector="TextBlock.display">
             <Setter Property="FontSize" Value="28" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontFamily" Value="{StaticResource HeadingFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource HeadingFont}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
         <Style Selector="TextBlock.h1">
             <Setter Property="FontSize" Value="22" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontFamily" Value="{StaticResource HeadingFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource HeadingFont}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
         <Style Selector="TextBlock.h2">
             <Setter Property="FontSize" Value="16" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontFamily" Value="{StaticResource HeadingFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource HeadingFont}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
         <Style Selector="TextBlock.eyebrow">
@@ -183,7 +200,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="20" />
-            <Setter Property="BoxShadow" Value="{StaticResource CardShadow}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
         </Style>
 
         <Style Selector="Border.inset">
@@ -270,16 +287,16 @@
             <Setter Property="Stroke" Value="{StaticResource OnAccent}" />
         </Style>
         <Style Selector="Button.danger Path.icon">
-            <Setter Property="Stroke" Value="#F0A5A5" />
+            <Setter Property="Stroke" Value="{StaticResource DangerText}" />
         </Style>
         <Style Selector="Button.danger:pointerover Path.icon">
             <Setter Property="Stroke" Value="#FFFFFF" />
         </Style>
         <Style Selector="Button:disabled Path.icon">
-            <Setter Property="Stroke" Value="#6B5F4C" />
+            <Setter Property="Stroke" Value="{StaticResource TextDisabled}" />
         </Style>
         <Style Selector="Button.primary:disabled Path.icon">
-            <Setter Property="Stroke" Value="#7A7158" />
+            <Setter Property="Stroke" Value="{StaticResource TextDisabled}" />
         </Style>
         <Style Selector="RadioButton.nav Path.icon">
             <Setter Property="Stroke" Value="{StaticResource TextDim}" />
@@ -343,45 +360,45 @@
         </Style>
         <Style Selector="Button:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BgHover}" />
-            <Setter Property="BorderBrush" Value="#5A4830" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}" />
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
         <Style Selector="Button:pressed">
             <Setter Property="RenderTransform" Value="scale(0.97)" />
         </Style>
         <Style Selector="Button:disabled /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1D1710" />
-            <Setter Property="BorderBrush" Value="#2B231A" />
-            <Setter Property="Foreground" Value="#6B5F4C" />
+            <Setter Property="Background" Value="{StaticResource BgDisabled}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDisabled}" />
+            <Setter Property="Foreground" Value="{StaticResource TextDisabled}" />
         </Style>
 
         <!-- Birincil: sayfadaki tek ana eylem -->
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{StaticResource GoldButton}" />
             <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
-            <Setter Property="BorderBrush" Value="#F3D58C" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBorder}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource GoldButtonHover}" />
-            <Setter Property="BorderBrush" Value="#FFE3A0" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBorderHover}" />
             <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
         </Style>
         <Style Selector="Button.primary:disabled /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3A3320" />
-            <Setter Property="BorderBrush" Value="#3A3320" />
-            <Setter Property="Foreground" Value="#7A7158" />
+            <Setter Property="Background" Value="{StaticResource AccentDisabled}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDisabled}" />
+            <Setter Property="Foreground" Value="{StaticResource TextDisabled}" />
         </Style>
 
         <Style Selector="Button.big">
             <Setter Property="Padding" Value="28,13" />
             <Setter Property="FontSize" Value="15.5" />
             <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="FontFamily" Value="{StaticResource HeadingFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource HeadingFont}" />
         </Style>
 
         <Style Selector="Button.danger">
-            <Setter Property="Foreground" Value="#F0A5A5" />
+            <Setter Property="Foreground" Value="{StaticResource DangerText}" />
         </Style>
         <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource Danger}" />
@@ -395,7 +412,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.dangerSolid:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#EC7676" />
+            <Setter Property="Background" Value="{StaticResource DangerHover}" />
             <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
 
@@ -438,13 +455,13 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="RadioButton.nav:pointerover /template/ Border#bg">
-            <Setter Property="Background" Value="#241C13" />
+            <Setter Property="Background" Value="{StaticResource NavHover}" />
         </Style>
         <Style Selector="RadioButton.nav:pointerover">
             <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         </Style>
         <Style Selector="RadioButton.nav:checked /template/ Border#bg">
-            <Setter Property="Background" Value="#2E2417" />
+            <Setter Property="Background" Value="{StaticResource NavSelected}" />
         </Style>
         <Style Selector="RadioButton.nav:checked /template/ Border#bar">
             <Setter Property="Opacity" Value="1" />
@@ -472,7 +489,7 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="RadioButton.choice:pointerover /template/ Border#bg">
-            <Setter Property="BorderBrush" Value="#6A5535" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}" />
         </Style>
         <Style Selector="RadioButton.choice:checked /template/ Border#bg">
             <Setter Property="Background" Value="{StaticResource AccentSoft}" />
@@ -486,8 +503,8 @@
             <Setter Property="Padding" Value="14,9" />
         </Style>
         <Style Selector="RadioButton.scope:pointerover /template/ Border#bg">
-            <Setter Property="Background" Value="#1C1610" />
-            <Setter Property="BorderBrush" Value="#4A3C28" />
+            <Setter Property="Background" Value="{StaticResource NavHover}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}" />
         </Style>
         <Style Selector="RadioButton.scope:checked /template/ Border#bg">
             <Setter Property="Background" Value="{StaticResource AccentSoft}" />
@@ -641,13 +658,13 @@
             </Setter>
         </Style>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2A2117" />
+            <Setter Property="Background" Value="{StaticResource NavHover}" />
         </Style>
         <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource AccentSoft}" />
         </Style>
         <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#332B18" />
+            <Setter Property="Background" Value="{StaticResource AccentSoftHover}" />
         </Style>
 
         <Style Selector="ProgressBar">

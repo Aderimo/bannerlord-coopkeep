@@ -69,7 +69,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         // Düğme, geçilecek dili gösterir — tıklayınca ne olacağını söyler.
         ["lang.label"] = "EN",
 
-        ["app.subtitle"] = "Bannerlord Coop Sunucu Yöneticisi",
 
         ["status.unknown"] = "Bilinmiyor",
         ["status.stopped"] = "Kapalı",
@@ -80,21 +79,11 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["status.stopping"] = "Kapatılıyor",
         ["status.shutdown"] = "Kapandı",
 
-        ["btn.start"] = "Başlat",
-        ["btn.stop"] = "Durdur",
-        ["btn.save"] = "Kaydet",
         ["btn.announce"] = "Duyuru",
-        ["btn.new"] = "Yeni sunucu",
         ["btn.refresh"] = "Yenile",
         ["btn.kick"] = "At",
         ["btn.apply"] = "Kaydet",
 
-        ["sec.campaigns"] = "Sunucularım",
-        ["sec.players"] = "Oyuncular",
-        ["sec.console"] = "Sunucu konsolu",
-        ["sec.server"] = "Sunucu",
-        ["sec.settings"] = "Ayarlar",
-        ["sec.backups"] = "Yedekler",
 
         ["col.players"] = "oyuncu",
 
@@ -107,8 +96,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.autosaveHint"] = "Sunucu kaç dakikada bir dünyayı kaydetsin. 0 = otomatik kayıt kapalı.",
 
         ["lbl.steam"] = "Steam keşfi",
-        ["lbl.active"] = "Açık sunucu",
-        ["lbl.hostName"] = "Steam'de görünen adın",
         ["lbl.madeBy"] = "Geliştiren",
 
         ["val.on"] = "Açık",
@@ -120,20 +107,16 @@ public sealed partial class Loc : INotifyPropertyChanged
 
         ["msg.noCampaigns"] = "Henüz bir dünyan yok. Aşağıdaki \"Yeni dünya\" ile başla.",
         ["msg.noPlayers"] = "Bağlı oyuncu yok.",
-        ["msg.creating"] = "Sunucu dünyası kuruluyor, yaklaşık bir dakika sürüyor...",
         ["msg.announcePlaceholder"] = "Oyunculara gönderilecek mesaj",
         ["msg.readyIn"] = "Dünya yüklemesi yaklaşık 30-60 saniye sürer.",
-        ["msg.hostNameHint"] = "Arkadaşların sunucu tarayıcısında bu adı arar — sunucu adını değil.",
         ["msg.hostNameUnknown"] = "Sunucu başlayınca görünecek",
         ["msg.searchPlayers"] = "Oyuncu ara",
         ["msg.settingsNeedRestart"] = "Değişiklikler sunucu yeniden başlatılınca geçerli olur.",
         ["msg.settingsSaved"] = "Ayarlar kaydedildi.",
         ["msg.invalidPort"] = "Port 1 ile 65535 arasında bir sayı olmalı.",
         ["msg.invalidAutosave"] = "Otomatik kayıt dakikası 0 veya daha büyük bir sayı olmalı.",
-        ["msg.steamHint"] = "Kapalıysa sunucu Steam listesinde görünmez; yalnızca IP ile bağlanılır.",
 
         // Sunucu dünyası işlemleri
-        ["lbl.campaignName"] = "Sunucu adı",
         ["btn.rename"] = "Yeniden adlandır",
         ["btn.duplicate"] = "Kopyala",
         ["btn.delete"] = "Sil",
@@ -144,27 +127,15 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.deleted"] = "{0} dünya dosyası ve {1} yedek silindi.",
 
         // Kaynak kullanımı
-        ["lbl.cpu"] = "İşlemci",
-        ["lbl.ram"] = "Bellek",
         ["msg.ramHint"] = "Bannerlord sunucusunun bellek sınırı ayarı yoktur; buradaki değer yalnızca anlık kullanımı gösterir.",
 
         // Bağlantı bilgisi
-        ["sec.connect"] = "Arkadaşlarına gönder",
-        ["btn.copy"] = "Kopyala",
         ["msg.copied"] = "Kopyalandı.",
-        ["msg.connectHint"] = "Steam listesinde bu adı ararlar. Doğrudan bağlanacaklarsa IP ve portu ver.",
-        ["lbl.localIp"] = "Yerel IP",
 
         // Modül uyumluluğu
-        ["sec.modules"] = "Modül uyumu",
-        ["msg.modulesOk"] = "Modüller sunucuyla uyumlu.",
-        ["msg.modulesExtra"] = "Sunucunun beklemediği modüller seçili: {0}. Bağlantı reddedilebilir — oyun başlatıcısından kapatmayı deneyin.",
-        ["msg.coopDisabled"] = "Coop modülü oyun başlatıcısında seçili değil. Sunucuya bağlanamazsınız.",
         ["msg.modulesUnknown"] = "Modül listesi okunamadı.",
 
         // Yönetici işlemleri
-        ["sec.admin"] = "Yönetici işlemleri",
-        ["lbl.selectedPlayer"] = "Seçili oyuncu",
         ["btn.heal"] = "Tam can ver",
         ["msg.goldInvalid"] = "Altın miktarı bir sayı olmalı.",
 
@@ -172,14 +143,10 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.alreadyRunning"] = "Bu bilgisayarda zaten çalışan bir Coop sunucusu var. CoopKeep ona bağlanamaz; önce Görev Yöneticisi'nden kapatın veya kendi penceresinden durdurun.",
         ["msg.closingServer"] = "Sunucu güvenle kapatılıyor, dünya kaydediliyor...",
         ["sec.auditLog"] = "Yönetici kayıtları",
-        ["msg.auditEmpty"] = "Henüz yönetici işlemi yapılmadı.",
         ["audit.heal"] = "tam can verildi",
         ["audit.gold"] = "altını {0} olarak ayarlandı",
 
         // Gizlilik
-        ["btn.privacy"] = "Gizle",
-        ["msg.privacyOn"] = "Gizli — yayın için güvenli",
-        ["msg.privacyHint"] = "IP, port ve Steam adın gizlendi. Göstermek için göze bas.",
         ["msg.consoleHidden"] = "Konsol gizli. Göstermek için üstteki göz simgesine bas.",
         ["val.masked"] = "••••••••",
 
@@ -204,15 +171,6 @@ public sealed partial class Loc : INotifyPropertyChanged
 
         // Karşılama
         ["tut.title"] = "CoopKeep'e hoş geldin",
-        ["tut.step1title"] = "1 · Sunucu seç veya yarat",
-        ["tut.step1"] = "Soldaki listeden bir sunucu seç. Hiç yoksa alttaki kutuya bir ad yazıp \"Yeni sunucu\"ya bas — oyuna girmene gerek yok, dünyayı sunucu kurar.",
-        ["tut.step2title"] = "2 · Başlat",
-        ["tut.step2"] = "\"Başlat\"a bas ve yaklaşık bir dakika bekle. Durum \"Yayında\" olduğunda sunucun hazırdır.",
-        ["tut.step3title"] = "3 · Arkadaşların nasıl girer",
-        ["tut.step3"] = "Oyunu açıp Coop menüsünden Steam sunucu listesine bakarlar. Aradıkları isim SENİN STEAM ADIN, sunucu adı değil — sunucu panelinde yazıyor.",
-        ["tut.step4title"] = "4 · Yayın yapıyorsan",
-        ["tut.step4"] = "Üstteki göz simgesi IP, port ve Steam adını gizler. Konsol da bulanıklaşır, böylece yayında özel bilgin görünmez.",
-        ["tut.dontShow"] = "Bir daha gösterme",
         ["tut.close"] = "Başlayalım",
     };
 
@@ -220,7 +178,6 @@ public sealed partial class Loc : INotifyPropertyChanged
     {
         ["lang.label"] = "TR",
 
-        ["app.subtitle"] = "Bannerlord Coop Server Manager",
 
         ["status.unknown"] = "Unknown",
         ["status.stopped"] = "Stopped",
@@ -231,21 +188,11 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["status.stopping"] = "Stopping",
         ["status.shutdown"] = "Shut down",
 
-        ["btn.start"] = "Start",
-        ["btn.stop"] = "Stop",
-        ["btn.save"] = "Save",
         ["btn.announce"] = "Announce",
-        ["btn.new"] = "New server",
         ["btn.refresh"] = "Refresh",
         ["btn.kick"] = "Kick",
         ["btn.apply"] = "Save",
 
-        ["sec.campaigns"] = "My servers",
-        ["sec.players"] = "Players",
-        ["sec.console"] = "Server console",
-        ["sec.server"] = "Server",
-        ["sec.settings"] = "Settings",
-        ["sec.backups"] = "Backups",
 
         ["col.players"] = "players",
 
@@ -254,8 +201,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["lbl.autosave"] = "Autosave (minutes)",
         ["msg.autosaveHint"] = "How often the server saves the world. 0 disables autosaving.",
         ["lbl.steam"] = "Steam discovery",
-        ["lbl.active"] = "Running server",
-        ["lbl.hostName"] = "Your name on Steam",
         ["lbl.madeBy"] = "Made by",
 
         ["val.on"] = "On",
@@ -267,20 +212,16 @@ public sealed partial class Loc : INotifyPropertyChanged
 
         ["msg.noCampaigns"] = "No worlds yet. Start with \"New world\" below.",
         ["msg.noPlayers"] = "No players connected.",
-        ["msg.creating"] = "Building the server world, this takes about a minute...",
         ["msg.announcePlaceholder"] = "Message to broadcast to players",
         ["msg.readyIn"] = "Loading the world takes about 30-60 seconds.",
-        ["msg.hostNameHint"] = "Your friends search for this name in the server browser — not the server name.",
         ["msg.hostNameUnknown"] = "Appears once the server starts",
         ["msg.searchPlayers"] = "Search players",
         ["msg.settingsNeedRestart"] = "Changes take effect after the server restarts.",
         ["msg.settingsSaved"] = "Settings saved.",
         ["msg.invalidPort"] = "The port must be a number between 1 and 65535.",
         ["msg.invalidAutosave"] = "Autosave minutes must be a number of 0 or more.",
-        ["msg.steamHint"] = "When off, the server is hidden from the Steam list; join by IP only.",
 
         // Server world actions
-        ["lbl.campaignName"] = "Server name",
         ["btn.rename"] = "Rename",
         ["btn.duplicate"] = "Duplicate",
         ["btn.delete"] = "Delete",
@@ -291,27 +232,15 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.deleted"] = "Deleted {0} world files and {1} backups.",
 
         // Resource usage
-        ["lbl.cpu"] = "CPU",
-        ["lbl.ram"] = "Memory",
         ["msg.ramHint"] = "The Bannerlord server has no memory limit setting; this only shows current usage.",
 
         // Connection info
-        ["sec.connect"] = "Send to your friends",
-        ["btn.copy"] = "Copy",
         ["msg.copied"] = "Copied.",
-        ["msg.connectHint"] = "They search for this name in the Steam list. For a direct join, give them the IP and port.",
-        ["lbl.localIp"] = "Local IP",
 
         // Module compatibility
-        ["sec.modules"] = "Module check",
-        ["msg.modulesOk"] = "Modules match the server.",
-        ["msg.modulesExtra"] = "Modules the server does not expect are enabled: {0}. The connection may be refused — try disabling them in the game launcher.",
-        ["msg.coopDisabled"] = "The Coop module is not enabled in the game launcher. You will not be able to connect.",
         ["msg.modulesUnknown"] = "Could not read the module list.",
 
         // Admin actions
-        ["sec.admin"] = "Admin actions",
-        ["lbl.selectedPlayer"] = "Selected player",
         ["btn.heal"] = "Full health",
         ["msg.goldInvalid"] = "The gold amount must be a number.",
 
@@ -319,14 +248,10 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.alreadyRunning"] = "A Coop server is already running on this machine. CoopKeep cannot attach to it; close it from Task Manager or stop it from its own window first.",
         ["msg.closingServer"] = "Stopping the server safely, saving the world...",
         ["sec.auditLog"] = "Admin log",
-        ["msg.auditEmpty"] = "No admin actions yet.",
         ["audit.heal"] = "given full health",
         ["audit.gold"] = "gold set to {0}",
 
         // Privacy
-        ["btn.privacy"] = "Hide",
-        ["msg.privacyOn"] = "Hidden — safe to stream",
-        ["msg.privacyHint"] = "IP, port and your Steam name are hidden. Press the eye to reveal.",
         ["msg.consoleHidden"] = "Console hidden. Press the eye icon above to reveal.",
         ["val.masked"] = "••••••••",
 
@@ -351,15 +276,6 @@ public sealed partial class Loc : INotifyPropertyChanged
 
         // Onboarding
         ["tut.title"] = "Welcome to CoopKeep",
-        ["tut.step1title"] = "1 · Pick or create a server",
-        ["tut.step1"] = "Choose a server on the left. If you have none, type a name in the box below and press \"New server\" — you never have to enter the game, the server builds the world.",
-        ["tut.step2title"] = "2 · Start",
-        ["tut.step2"] = "Press \"Start\" and wait about a minute. Once the status reads \"Online\", your server is up.",
-        ["tut.step3title"] = "3 · How your friends join",
-        ["tut.step3"] = "They open the game and browse the Steam server list in the Coop menu. The name they search for is YOUR STEAM NAME, not the server name — it is shown in the server panel.",
-        ["tut.step4title"] = "4 · If you stream",
-        ["tut.step4"] = "The eye icon at the top hides your IP, port and Steam name, and blurs the console — so nothing private shows up on stream.",
-        ["tut.dontShow"] = "Don't show again",
         ["tut.close"] = "Let's go",
     };
 }
