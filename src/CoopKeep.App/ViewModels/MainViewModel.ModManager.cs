@@ -67,6 +67,17 @@ public sealed partial class ManagedMod(InstalledModule? module, string id, bool 
     /// <summary>Adın altındaki soluk satır: rol · kaynak · sürüm.</summary>
     [ObservableProperty] private string _metaLine = "";
 
+    /// <summary>
+    /// Aynı mod Atölye'de iki ayrı sayfadan kurulu ve oyun ikisini de görüyor (hangisini
+    /// yükleyeceği belli değil); yoksa boş.
+    /// </summary>
+    public string DuplicateWarning { get; init; } = "";
+
+    /// <summary>Kopyaların Atölye sayfaları (birinin aboneliğinden çıkmak için).</summary>
+    public IReadOnlyList<DuplicateCopy> DuplicateCopies { get; init; } = [];
+
+    public bool HasDuplicates => DuplicateWarning.Length > 0;
+
     /// <summary>Topluluk "Coop ile çalışıyor" dedi mi?</summary>
     [ObservableProperty] private bool _communityWorks;
 
@@ -122,6 +133,12 @@ public sealed partial class ManagedMod(InstalledModule? module, string id, bool 
     }
 
     partial void OnRoleLabelChanged(string value) => OnPropertyChanged(nameof(RoleIsNormal));
+}
+
+/// <summary>Aynı modun bir Atölye kopyası: düğmede sürümü, tıklayınca sayfası.</summary>
+public sealed record DuplicateCopy(string WorkshopId, string Version, string Note = "")
+{
+    public string Label => (Version.Length > 0 ? Version : WorkshopId) + Note;
 }
 
 /// <summary>Mod bul sekmesinde bir sonuç kartı.</summary>
@@ -242,8 +259,10 @@ public partial class MainViewModel
     /// <summary>Modları yeniden tarar (satırları yeniden kurmadan): yeni inen ya da abone olunan modlar görülsün.</summary>
     private void RescanModules()
     {
-        _installedModules = ModuleScanner.Scan(GameModulesDir, WorkshopDirs).ToList();
         var subscriptions = WorkshopSubscriptions.Load(WorkshopDirs);
+        var copies = ModuleScanner.ScanCopies(GameModulesDir, WorkshopDirs);
+        _installedModules = ModuleScanner.Pick(copies, subscriptions.IsAvailable).ToList();
+        _duplicateModules = ModuleScanner.Duplicates(copies, subscriptions.IsAvailable);
         _unsubscribed = _installedModules
             .Where(m => m.Source == ModuleSource.Workshop && m.WorkshopId is { } w && !subscriptions.IsAvailable(w))
             .Select(m => m.Id)
@@ -253,6 +272,10 @@ public partial class MainViewModel
     }
 
     private string _modFoldersStamp = "";
+
+    /// <summary>Oyunun iki Atölye kopyasını birden gördüğü modlar (kimlik → kopyalar).</summary>
+    private IReadOnlyDictionary<string, IReadOnlyList<InstalledModule>> _duplicateModules =
+        new Dictionary<string, IReadOnlyList<InstalledModule>>();
 
     /// <summary>Mod klasörlerinin ve Steam abonelik kaydının kısa izi: değişmediyse tarama gerekmez.</summary>
     private string ModFoldersStamp()
@@ -404,7 +427,7 @@ public partial class MainViewModel
     public string IncompatibleOnText => string.Format(L["mm.incompatible.on"],
         string.Join(", ", IncompatibleMods.Where(m => m.IsSelected).Select(m => m.Name)));
 
-    public bool HasModProblems => ManagedMods.Any(m => m.IsSelected && m.HasProblem);
+    public bool HasModProblems => ManagedMods.Any(m => m.IsSelected && (m.HasProblem || m.HasDuplicates));
 
     /// <summary>Oyun açıkken başlatıcıya yazılmaz (kapanırken üstüne yazardı).</summary>
     public bool GameRunningForMods => ModuleCompatibility.IsGameRunning(_supervisor.ProcessId);
@@ -452,7 +475,18 @@ public partial class MainViewModel
 
     private ManagedMod CreateRow(InstalledModule module, string id, bool selected)
     {
-        var row = new ManagedMod(module, id, selected, OnManagedModChanged) { TurnedOn = EnableDependencies };
+        var dup = _duplicateModules.TryGetValue(id, out var copies) ? copies : [];
+        var row = new ManagedMod(module, id, selected, OnManagedModChanged)
+        {
+            TurnedOn = EnableDependencies,
+            DuplicateWarning = dup.Count > 1
+                ? string.Format(L["mm.duplicate"], string.Join(", ", dup.Select(c => $"{c.Version} ({c.WorkshopId})")))
+                : "",
+            // Bilinen kütüphanelerin resmî sayfası işaretlenir (arkadaşlar "Abone ol" ile onu alır).
+            DuplicateCopies = dup.Where(c => c.WorkshopId is not null)
+                .Select(c => new DuplicateCopy(c.WorkshopId!, c.Version ?? "", c.WorkshopId == KnownMods.WorkshopId(id) ? L["mm.duplicate.official"] : ""))
+                .ToList(),
+        };
         var community = _community.Find(id);
         var role = CoopModRoles.Classify(module, community?.Status ?? CommunityStatus.Unknown);
         row.Role = role;
@@ -605,7 +639,7 @@ public partial class MainViewModel
             {
                 ModFilter.On => m.IsSelected,
                 ModFilter.Off => !m.IsSelected,
-                ModFilter.Problems => m.HasProblem || m.HasVersionWarning,
+                ModFilter.Problems => m.HasProblem || m.HasVersionWarning || m.HasDuplicates,
                 _ => true,
             };
             if (keep) VisibleManagedMods.Add(m);
@@ -870,7 +904,7 @@ public partial class MainViewModel
         try
         {
             var skipped = new List<string>();
-            var installed = ModArchiveInstaller.InstallZip(path, modules, RemovedModsDir, WorkshopModuleIds(), skipped);
+            var installed = ModArchiveInstaller.InstallZip(path, modules, RemovedModsDir, WorkshopModuleVersions(), skipped);
             ReportSkipped(skipped);
             LoadManagedMods();
             foreach (var m in installed)

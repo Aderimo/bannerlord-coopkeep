@@ -72,7 +72,7 @@ public partial class MainViewModel
     {
         PackItems.Clear();
         foreach (var s in ModPackFile.Compare(pack.Pack, GameModules))
-            PackItems.Add(new PackItemRow(s, _unsubscribed.Contains(s.Entry.Id) ? L["mm.state.notSubscribed"] : L["mm.state." + s.State]));
+            PackItems.Add(new PackItemRow(s, PackStateText(s)));
 
         // Paketteki bir modun ihtiyaç duyduğu ama pakette de bilgisayarda da olmayan mod
         // (ör. Better Time → MCM): "hazır" sanılmasın, abone olunabilsin.
@@ -167,7 +167,7 @@ public partial class MainViewModel
                 foreach (var s in bundledMissing)
                 {
                     var folder = Path.Combine(files, s.Entry.Id);
-                    if (Directory.Exists(folder)) installedFromPack += ModArchiveInstaller.InstallFolder(folder, modules, RemovedModsDir, WorkshopModuleIds(), skippedFromPack).Count;
+                    if (Directory.Exists(folder)) installedFromPack += ModArchiveInstaller.InstallFolder(folder, modules, RemovedModsDir, WorkshopModuleVersions(), skippedFromPack).Count;
                 }
             }
 
@@ -221,9 +221,31 @@ public partial class MainViewModel
             File.Copy(file, Path.Combine(target, Path.GetRelativePath(source, file)), overwrite: true);
     }
 
-    /// <summary>Atölye'den kurulu modların kimlikleri (paketten gelen kopya bunların önüne geçmesin).</summary>
-    private IReadOnlySet<string> WorkshopModuleIds() =>
-        _installedModules.Where(m => m.Source == ModuleSource.Workshop).Select(m => m.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Atölye'den kurulu modlar ve sürümleri (aynı sürümün kopyası Modules'e kurulmasın).</summary>
+    private IReadOnlyDictionary<string, string?> WorkshopModuleVersions() =>
+        _installedModules.Where(m => m.Source == ModuleSource.Workshop)
+            .ToDictionary(m => m.Id, m => m.Version, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Aynı modun kopyalarından birinin Atölye sayfası (aboneliğinden çıkmak için).</summary>
+    [RelayCommand]
+    private void OpenWorkshopCopy(DuplicateCopy? copy)
+    {
+        if (copy is not null) OpenPath("steam://url/CommunityFilePage/" + copy.WorkshopId);
+    }
+
+    /// <summary>
+    /// Paketteki satırın durumu. Sürüm farklıysa ve bu bilgisayardaki kopya başka bir Atölye
+    /// sayfasından geliyorsa bu söylenir: aynı mod Atölye'de birden çok sayfada olabiliyor.
+    /// </summary>
+    private string PackStateText(ModPackItemStatus s)
+    {
+        if (_unsubscribed.Contains(s.Entry.Id)) return L["mm.state.notSubscribed"];
+        if (s.State == ModPackItemState.WrongVersion && s.Entry.WorkshopId is { Length: > 0 } wanted &&
+            _installedModules.FirstOrDefault(m => m.Id.Equals(s.Entry.Id, StringComparison.OrdinalIgnoreCase)) is { } mine &&
+            mine.WorkshopId != wanted)
+            return string.Format(L["mm.state.otherItem"], mine.Version ?? "?");
+        return L["mm.state." + s.State];
+    }
 
     private void ReportSkipped(IReadOnlyCollection<string> skipped)
     {

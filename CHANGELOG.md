@@ -8,6 +8,25 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v1.0.2 — 2026-10-23
+
+### Fixed · Düzeltilenler
+
+- The same library can be on the Steam Workshop twice: the official Harmony, ButterLib,
+  UIExtenderEx and Mod Configuration Menu v5 pages and a second "ModReady" set with the same
+  module ids but other versions. Subscribed to both, the game can't tell which to load and your
+  version won't match your friend's. CoopKeep now marks these mods, shows both versions with
+  their pages (the official one is marked), and uses the copy your Steam account actually sees.
+  *Aynı kütüphane Atölye'de iki sayfada olabiliyor (resmî sayfalar ve aynı kimlikli, sürümü
+  farklı "ModReady" seti). İkisine de aboneysen oyun hangisini açacağını bilemez, arkadaşınla
+  sürüm tutmaz. CoopKeep bunları işaretler, iki sürümü sayfalarıyla gösterir (resmî olan
+  işaretli) ve Steam hesabının gerçekten gördüğü kopyayı kullanır.*
+- A mod you download by hand (zip) is installed even if the Workshop has another version of it;
+  only an identical copy is skipped. v1.0.1 skipped it, so "Refresh" never showed it.
+  *Elle indirilen mod, Atölye'de başka sürümü olsa da kurulur; yalnızca birebir aynısı atlanır.*
+- In a pack, a mod installed from a different Workshop page says so and offers the pack's page.
+  *Pakette, başka bir Atölye sayfasından kurulu mod bunu söyler ve paketteki sayfayı önerir.*
+
 ## v1.0.1 — 2026-10-23
 
 ### Added · Eklenenler

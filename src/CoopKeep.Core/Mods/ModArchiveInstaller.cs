@@ -32,17 +32,21 @@ public static class ModArchiveInstaller
         || moduleId.Equals(ModPlanner.ServerModule, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Zip'teki modları kurar.</summary>
-    /// <param name="workshopIds">Atölye'den zaten kurulu kimlikler: aynı kimlikli kopya onların önüne geçmesin diye kurulmaz.</param>
-    /// <param name="skipped">Kurulmayanlar (korunan ya da Atölye'de zaten olan kimlikler).</param>
+    /// <param name="workshopVersions">
+    /// Atölye'den kurulu modlar (kimlik → sürüm). Aynı sürüm zaten Atölye'deyse kopyası kurulmaz
+    /// (Modules'e girerse Atölye güncellemelerinin önüne geçerdi). Sürüm farklıysa kurulur:
+    /// kullanıcı Atölye'dekinden başka bir sürümü (ör. arkadaşının sürümünü) elle indirmiştir.
+    /// </param>
+    /// <param name="skipped">Kurulmayanlar (korunan ya da Atölye'de aynı sürümü olan kimlikler).</param>
     /// <returns>Kurulan modlar (Id, klasör).</returns>
     public static IReadOnlyList<InstalledModule> InstallZip(string zipPath, string gameModulesDirectory, string backupDirectory,
-        IReadOnlySet<string>? workshopIds = null, List<string>? skipped = null)
+        IReadOnlyDictionary<string, string?>? workshopVersions = null, List<string>? skipped = null)
     {
         var temp = Path.Combine(Path.GetTempPath(), "coopkeep-mod-" + Guid.NewGuid().ToString("N"));
         try
         {
             ExtractSafely(zipPath, temp);
-            return InstallFolder(temp, gameModulesDirectory, backupDirectory, workshopIds, skipped);
+            return InstallFolder(temp, gameModulesDirectory, backupDirectory, workshopVersions, skipped);
         }
         finally
         {
@@ -51,9 +55,9 @@ public static class ModArchiveInstaller
     }
 
     /// <summary>Klasördeki (ya da alt klasörlerindeki) modları kurar.</summary>
-    /// <inheritdoc cref="InstallZip" path="/param[@name='workshopIds']"/>
+    /// <inheritdoc cref="InstallZip" path="/param[@name='workshopVersions']"/>
     public static IReadOnlyList<InstalledModule> InstallFolder(string sourceFolder, string gameModulesDirectory, string backupDirectory,
-        IReadOnlySet<string>? workshopIds = null, List<string>? skipped = null)
+        IReadOnlyDictionary<string, string?>? workshopVersions = null, List<string>? skipped = null)
     {
         var modules = FindModuleFolders(sourceFolder);
         if (modules.Count == 0) throw new InvalidDataException("No Bannerlord module (SubModule.xml) was found in the archive.");
@@ -67,9 +71,9 @@ public static class ModArchiveInstaller
                          ?? throw new InvalidDataException("Unreadable SubModule.xml in " + Path.GetFileName(folder));
             if (module.IsOfficial) continue; // oyunun kendi modüllerine dokunulmaz
 
-            // Coop/CoopKeep/oyunun modülü kılığındaki klasör ya da Atölye'de zaten olan bir mod:
-            // Modules'e kurulursa oyun onu tercih eder ve gerçeğinin yerine geçer.
-            if (IsProtected(module.Id) || workshopIds?.Contains(module.Id) == true)
+            // Coop/CoopKeep/oyunun modülü kılığındaki klasör ya da Atölye'de aynı sürümüyle olan
+            // bir mod: Modules'e kurulursa oyun onu tercih eder ve gerçeğinin yerine geçer.
+            if (IsProtected(module.Id) || SameAsWorkshop(module, workshopVersions))
             {
                 skipped?.Add(module.Id);
                 continue;
@@ -90,6 +94,10 @@ public static class ModArchiveInstaller
 
         return result;
     }
+
+    private static bool SameAsWorkshop(InstalledModule module, IReadOnlyDictionary<string, string?>? workshopVersions) =>
+        workshopVersions is not null && workshopVersions.TryGetValue(module.Id, out var version) &&
+        string.Equals(version, module.Version, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Oyunun Modules klasöründeki bir modu kaldırır (yedek klasörüne taşır).</summary>
     public static string Remove(InstalledModule module, string backupDirectory)

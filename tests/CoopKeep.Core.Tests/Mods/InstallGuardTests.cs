@@ -30,11 +30,26 @@ public sealed class InstallGuardTests : IDisposable
         var skipped = new List<string>();
 
         var installed = ModArchiveInstaller.InstallFolder(Path.Combine(_dir, "paket"), modules, Path.Combine(_dir, "yedek"),
-            new HashSet<string>(["Bannerlord.Harmony"], StringComparer.OrdinalIgnoreCase), skipped);
+            new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) { ["Bannerlord.Harmony"] = "v1.0.0" }, skipped);
 
         Assert.Equal(["MyMod"], installed.Select(m => m.Id));
         Assert.Equal(["Bannerlord.Harmony", "Coop"], skipped.Order());
         Assert.False(Directory.Exists(Path.Combine(modules, "Coop")));
+    }
+
+    [Fact]
+    public void Other_version_of_a_workshop_mod_is_installed_by_hand()
+    {
+        // Atölye'de v5.11.99.0 var; kullanıcı arkadaşının sürümünü (v1.0.0) elle indirdi.
+        Module("Bannerlord.MBOptionScreen");
+        var modules = Path.Combine(_dir, "oyun", "Modules");
+        var skipped = new List<string>();
+
+        var installed = ModArchiveInstaller.InstallFolder(Path.Combine(_dir, "paket"), modules, Path.Combine(_dir, "yedek"),
+            new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) { ["Bannerlord.MBOptionScreen"] = "v5.11.99.0" }, skipped);
+
+        Assert.Equal(["Bannerlord.MBOptionScreen"], installed.Select(m => m.Id));
+        Assert.Empty(skipped);
     }
 
     [Theory]

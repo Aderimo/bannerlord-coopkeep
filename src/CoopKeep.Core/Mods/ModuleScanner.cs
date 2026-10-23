@@ -6,8 +6,16 @@ namespace CoopKeep.Core.Mods;
 /// Bilgisayardaki Bannerlord modlarını bulur: oyunun <c>Modules</c> klasörü ve Steam Atölye.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Her modun <c>SubModule.xml</c>'i okunur. Aynı kimlik iki yerde varsa oyunun kendi
 /// klasöründeki tercih edilir: oyunun başlatıcısı da önce oraya bakıyor.
+/// </para>
+/// <para>
+/// Aynı mod Atölye'de birden çok sayfada olabiliyor (ör. Mod Configuration Menu v5'in
+/// resmî sayfası ve bir yeniden yüklemesi, ikisi de <c>Bannerlord.MBOptionScreen</c> ama
+/// sürümleri farklı). Oyun yalnızca açık Steam hesabının abone olduğu öğeleri görür; ikisine
+/// de aboneyse hangisini yükleyeceği belli değildir ve arkadaşla sürüm tutmayabilir.
+/// </para>
 /// </remarks>
 public static class ModuleScanner
 {
@@ -20,25 +28,58 @@ public static class ModuleScanner
     /// <summary>Steam istemcisi derlemeleri (.NET Framework).</summary>
     public const string ClientBin = "Win64_Shipping_Client";
 
-    public static IReadOnlyList<InstalledModule> Scan(string? gameModulesDirectory, IEnumerable<string>? workshopDirectories)
+    /// <param name="workshopAvailable">Atölye öğesi açık hesapta abone mi (oyun onu görür mü)?</param>
+    public static IReadOnlyList<InstalledModule> Scan(string? gameModulesDirectory, IEnumerable<string>? workshopDirectories,
+        Func<string, bool>? workshopAvailable = null) =>
+        Pick(ScanCopies(gameModulesDirectory, workshopDirectories), workshopAvailable);
+
+    /// <summary>Bütün kopyalar: aynı kimlik birden çok klasörde olabilir (önce oyunun klasörü).</summary>
+    public static IReadOnlyList<InstalledModule> ScanCopies(string? gameModulesDirectory, IEnumerable<string>? workshopDirectories)
     {
-        var found = new Dictionary<string, InstalledModule>(StringComparer.OrdinalIgnoreCase);
+        var found = new List<InstalledModule>();
 
         if (gameModulesDirectory is not null && Directory.Exists(gameModulesDirectory))
         {
             foreach (var dir in SafeDirectories(gameModulesDirectory))
-                if (TryRead(dir, ModuleSource.GameFolder) is { } m) found.TryAdd(m.Id, m);
+                if (TryRead(dir, ModuleSource.GameFolder) is { } m) found.Add(m);
         }
 
         foreach (var root in workshopDirectories ?? [])
         {
             if (!Directory.Exists(root)) continue;
             foreach (var dir in SafeDirectories(root))
-                if (TryRead(dir, ModuleSource.Workshop) is { } m) found.TryAdd(m.Id, m);
+                if (TryRead(dir, ModuleSource.Workshop) is { } m) found.Add(m);
         }
 
-        return found.Values.OrderBy(m => m.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+        return found;
     }
+
+    /// <summary>
+    /// Her kimlik için oyunun kullanacağı kopya: oyunun klasöründeki, yoksa açık hesabın abone
+    /// olduğu Atölye öğesi, o da yoksa ilk bulunan.
+    /// </summary>
+    public static IReadOnlyList<InstalledModule> Pick(IReadOnlyList<InstalledModule> copies, Func<string, bool>? workshopAvailable = null) =>
+        copies.GroupBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.FirstOrDefault(m => m.Source == ModuleSource.GameFolder)
+                         ?? g.FirstOrDefault(m => Visible(m, workshopAvailable))
+                         ?? g.First())
+            .OrderBy(m => m.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+    /// <summary>
+    /// Oyunun ikisini birden gördüğü Atölye kopyaları (oyunun klasöründe kopyası olmayan
+    /// kimlikler için): hangisinin yükleneceği belli değil.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<InstalledModule>> Duplicates(IReadOnlyList<InstalledModule> copies,
+        Func<string, bool>? workshopAvailable = null) =>
+        copies.GroupBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.All(m => m.Source == ModuleSource.Workshop))
+            .Select(g => (g.Key, Visible: g.Where(m => Visible(m, workshopAvailable)).ToList()))
+            .Where(x => x.Visible.Count > 1)
+            .ToDictionary(x => x.Key, x => (IReadOnlyList<InstalledModule>)x.Visible, StringComparer.OrdinalIgnoreCase);
+
+    private static bool Visible(InstalledModule m, Func<string, bool>? workshopAvailable) =>
+        m.Source != ModuleSource.Workshop || m.WorkshopId is not { } w || workshopAvailable?.Invoke(w) != false;
 
     private static IEnumerable<string> SafeDirectories(string root)
     {

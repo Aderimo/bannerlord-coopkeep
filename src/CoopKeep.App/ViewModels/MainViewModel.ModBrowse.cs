@@ -180,7 +180,7 @@ public partial class MainViewModel
             }
 
             var skipped = new List<string>();
-            var installed = ModArchiveInstaller.InstallZip(zip, modules, RemovedModsDir, WorkshopModuleIds(), skipped);
+            var installed = ModArchiveInstaller.InstallZip(zip, modules, RemovedModsDir, WorkshopModuleVersions(), skipped);
             ReportSkipped(skipped);
             LoadManagedMods();
             card.Installed = true;
