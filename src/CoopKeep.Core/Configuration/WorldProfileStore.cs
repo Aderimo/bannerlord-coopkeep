@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using CoopKeep.Core.Mods;
 
 namespace CoopKeep.Core.Configuration;
 
@@ -34,6 +36,47 @@ public sealed class WorldProfileStore(string directory)
     }
 
     public bool Exists(string saveName) => File.Exists(PathFor(saveName));
+
+    /// <summary>Dünyanın mod listesi: ayarlardan ayrı dosya, eski profillerin biçimi değişmesin.</summary>
+    private string ModsPathFor(string saveName) =>
+        System.IO.Path.Combine(Directory, System.IO.Path.GetFileName(PathFor(saveName))[..^".settings.json".Length] + ".mods.json");
+
+    private static readonly JsonSerializerOptions ModsJson = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    /// <summary>Dünyaya eklenmiş modlar, seçim sırasıyla; mod yoksa boş liste.</summary>
+    public IReadOnlyList<WorldMod> LoadMods(string saveName)
+    {
+        var path = ModsPathFor(saveName);
+        if (!File.Exists(path)) return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<WorldMod>>(File.ReadAllText(path), ModsJson) ?? [];
+        }
+        catch (Exception e) when (e is IOException or JsonException)
+        {
+            return [];
+        }
+    }
+
+    public void SaveMods(string saveName, IReadOnlyList<WorldMod> mods)
+    {
+        var path = ModsPathFor(saveName);
+        if (mods.Count == 0)
+        {
+            if (File.Exists(path)) File.Delete(path);
+            return;
+        }
+
+        System.IO.Directory.CreateDirectory(Directory);
+        var temp = path + ".tmp";
+        File.WriteAllText(temp, JsonSerializer.Serialize(mods, ModsJson));
+        File.Move(temp, path, overwrite: true);
+    }
 
     /// <summary>Dünyanın kayıtlı ayarları; profil yoksa <see langword="null"/>.</summary>
     public Dictionary<string, object>? Load(string saveName)
@@ -82,17 +125,23 @@ public sealed class WorldProfileStore(string directory)
     {
         var source = PathFor(from);
         if (File.Exists(source)) File.Move(source, PathFor(to), overwrite: true);
+        var mods = ModsPathFor(from);
+        if (File.Exists(mods)) File.Move(mods, ModsPathFor(to), overwrite: true);
     }
 
     public void Duplicate(string from, string to)
     {
         var source = PathFor(from);
         if (File.Exists(source)) File.Copy(source, PathFor(to), overwrite: true);
+        var mods = ModsPathFor(from);
+        if (File.Exists(mods)) File.Copy(mods, ModsPathFor(to), overwrite: true);
     }
 
     public void Delete(string saveName)
     {
         var path = PathFor(saveName);
         if (File.Exists(path)) File.Delete(path);
+        var mods = ModsPathFor(saveName);
+        if (File.Exists(mods)) File.Delete(mods);
     }
 }

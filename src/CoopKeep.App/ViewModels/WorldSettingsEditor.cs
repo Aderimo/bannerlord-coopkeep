@@ -15,16 +15,25 @@ namespace CoopKeep.App.ViewModels;
 /// </summary>
 /// <remarks>
 /// Hem yeni dünya sihirbazında hem de mevcut bir dünyanın ayarlar sayfasında aynı sınıf
-/// kullanılır; böylece iki yer asla farklı davranmaz.
+/// kullanılır; böylece iki yer asla farklı davranmaz. Hangi ayarların gösterileceğini
+/// verilen liste belirler (varsayılan: Coop'un ayar dosyası).
 /// </remarks>
 public partial class WorldSettingsEditor : ObservableObject
 {
-    private readonly Dictionary<string, object> _values = ModSettingsCatalog.Defaults();
+    private readonly SettingsCatalog _catalog;
+    private readonly Dictionary<string, object> _values;
     private bool _suppressPreset;
 
-    public WorldSettingsEditor()
+    public WorldSettingsEditor() : this(new SettingsCatalog(ModSettingsCatalog.All))
     {
-        foreach (var d in ModSettingsCatalog.All)
+    }
+
+    public WorldSettingsEditor(SettingsCatalog catalog)
+    {
+        _catalog = catalog;
+        _values = catalog.Defaults();
+
+        foreach (var d in catalog.All)
         {
             var item = new WorldSettingItem(d, this);
             Items.Add(item);
@@ -52,6 +61,11 @@ public partial class WorldSettingsEditor : ObservableObject
     public ObservableCollection<WorldSettingItem> MultiplayerItems { get; } = [];
     public ObservableCollection<WorldSettingItem> CheatItems { get; } = [];
 
+    public bool HasLifeItems => LifeItems.Count > 0;
+    public bool HasWorldItems => WorldItems.Count > 0;
+    public bool HasMultiplayerItems => MultiplayerItems.Count > 0;
+    public bool HasCheatItems => CheatItems.Count > 0;
+
     /// <summary>Değerler kullanıcı tarafından değiştirildi mi? (kaydedilmemiş değişiklik)</summary>
     [ObservableProperty] private bool _isDirty;
 
@@ -62,8 +76,8 @@ public partial class WorldSettingsEditor : ObservableObject
 
     public void Load(IReadOnlyDictionary<string, object> values)
     {
-        foreach (var d in ModSettingsCatalog.All)
-            _values[d.Id] = values.TryGetValue(d.Id, out var v) ? ModSettingsCatalog.Normalize(d, v) : d.Default;
+        foreach (var d in _catalog.All)
+            _values[d.Id] = values.TryGetValue(d.Id, out var v) ? _catalog.Normalize(d, v) : d.Default;
 
         foreach (var item in Items) item.Refresh();
         RefreshPreset();
@@ -74,8 +88,8 @@ public partial class WorldSettingsEditor : ObservableObject
 
     internal void Set(string id, object value)
     {
-        var d = ModSettingsCatalog.Find(id)!;
-        var normalized = ModSettingsCatalog.Normalize(d, value);
+        var d = _catalog.Find(id)!;
+        var normalized = _catalog.Normalize(d, value);
         if (Equals(_values[id], normalized)) return;
 
         _values[id] = normalized;
@@ -117,14 +131,14 @@ public partial class WorldSettingsEditor : ObservableObject
     [RelayCommand]
     private void ResetDefaults()
     {
-        foreach (var d in ModSettingsCatalog.All) Set(d.Id, d.Default);
+        foreach (var d in _catalog.All) Set(d.Id, d.Default);
         foreach (var item in Items) item.Refresh();
         RefreshPreset();
     }
 
     private void RefreshPreset()
     {
-        Preset = ModSettingsCatalog.DetectPreset(_values);
+        Preset = _catalog.DetectPreset(_values);
         OnPropertyChanged(nameof(PresetVeryEasy));
         OnPropertyChanged(nameof(PresetEasy));
         OnPropertyChanged(nameof(PresetRealistic));
@@ -134,7 +148,7 @@ public partial class WorldSettingsEditor : ObservableObject
         OnPropertyChanged(nameof(SummaryParts));
     }
 
-    /// <summary>Kısa özet: "Normal · 1000 asker · hileler kapalı".</summary>
+    /// <summary>Kısa özet: "Kolay · başlangıç 1000 altın · savaşta ölüm kapalı".</summary>
     public string PresetText => L["preset." + (Preset ?? "Custom")];
 
     /// <summary>Ana sayfadaki rozetler için özet parçaları.</summary>
@@ -145,9 +159,11 @@ public partial class WorldSettingsEditor : ObservableObject
         get
         {
             var parts = new List<string> { PresetText };
-            parts.Add(string.Format(L["sum.battleSize"], _values["modOptions.battleSize"]));
-            parts.Add(L[(string)_values["difficulty.battleDeath"] == "Realistic" ? "sum.deathOn" : "sum.deathOff"]);
-            parts.Add(L[(bool)_values["modOptions.clientsCanUseCheats"] ? "sum.cheatsOn" : "sum.cheatLock"]);
+            if (_values.TryGetValue("rules.startingGold", out var gold)) parts.Add(string.Format(L["sum.gold"], gold));
+            if (_values.TryGetValue("modOptions.battleSize", out var size)) parts.Add(string.Format(L["sum.battleSize"], size));
+            if (_values.TryGetValue("difficulty.battleDeath", out var death)) parts.Add(L[(string)death == "Realistic" ? "sum.deathOn" : "sum.deathOff"]);
+            if (_values.TryGetValue("rules.protectResources", out var protect)) parts.Add(L[protect is true ? "sum.protectOn" : "sum.protectOff"]);
+            if (_values.TryGetValue("modOptions.clientsCanUseCheats", out var cheats)) parts.Add(L[cheats is true ? "sum.cheatsOn" : "sum.cheatLock"]);
             return string.Join("  ·  ", parts);
         }
     }

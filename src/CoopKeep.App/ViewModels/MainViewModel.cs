@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoopKeep.App.Localization;
 using CoopKeep.Core.Configuration;
+using CoopKeep.Core.Mods;
 using CoopKeep.Core.Installation;
 using CoopKeep.Core.Protocol;
 using CoopKeep.Core.Saves;
@@ -22,10 +23,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>Konsolun sınırsız büyümesini engelleyen üst sınır.</summary>
     private const int MaxConsoleLines = 2000;
 
+    /// <summary>Coop'un özel sunucusu (<c>BannerlordCoopServer.exe</c>).</summary>
     private readonly ServerSupervisor _supervisor = new();
     private readonly DispatcherTimer _uptimeTimer;
     private readonly Settings.UiSettings _ui = Settings.UiSettings.Load();
 
+    /// <summary>Coop modu ve özel sunucusu (Steam Atölyesi'nden).</summary>
     private CoopInstallation? _coop;
     private BannerlordInstallation? _game;
     private SaveRepository? _saves;
@@ -41,6 +44,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// Yalnızca kullanıcının kendi seçimi yapılandırmayı değiştirir.
     /// </remarks>
     private bool _suppressSelectionWrite;
+
+    /// <summary>En son başlatılan dünya; çöküş sonrası bu açılır.</summary>
+    private string? _lastLaunchedSave;
 
     private BackupService? _backups;
     private ServerResourceMonitor? _resources;
@@ -59,7 +65,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         HighPriority = _ui.HighPriority;
         MemoryWarningGb = _ui.MemoryWarningGb;
         CheckUpdates = _ui.CheckUpdates;
-        _serverToolsEnabled = _ui.ServerTools;
+        ToolsExpanded = _ui.ToolsExpanded;
 
         _uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _uptimeTimer.Tick += (_, _) =>
@@ -75,6 +81,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         WorldEditor.Changed += () => SaveWorldSettingsCommand.NotifyCanExecuteChanged();
 
         WireSupervisor();
+        StartConsoleFlush();
         Detect();
         InitViewerSettings();
         CheckForForeignServer();
@@ -119,6 +126,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         OnPropertyChanged(nameof(HasForeignServer));
         StartCommand.NotifyCanExecuteChanged();
+        StartPlayingCommand.NotifyCanExecuteChanged();
     }
 
     public Loc L => Loc.Current;
@@ -242,8 +250,13 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             lines.Add(string.Format(L["invite.text.mod"], ModVersion));
             if (SteamHostName.Length > 0) lines.Add(string.Format(L["invite.text.steam"], SteamHostName));
             lines.Add(string.Format(L["invite.text.ip"], LocalIp, PortText.Replace(" *", "")));
+            if (HasPublicAddress) lines.Add(string.Format(L["invite.text.public"], PublicAddress));
             if (EditPassword.Length > 0) lines.Add(string.Format(L["invite.text.password"], EditPassword));
-            lines.Add(L["invite.text.mods"]);
+
+            // Modlu dünyada arkadaşlar aynı modları kurmalı (Coop farkı reddediyor).
+            var world = IsRunning ? ActiveSaveName : SelectedCampaign?.Name;
+            var mods = world is { Length: > 0 } ? WorldModIds(world).ToList() : [];
+            lines.Add(mods.Count > 0 ? string.Format(L["invite.text.modded"], string.Join(", ", mods)) : L["invite.text.mods"]);
             return string.Join(Environment.NewLine, lines);
         }
     }
@@ -302,19 +315,31 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// Sunucunun bellek <i>sınırı</i> ayarlanamıyor — Bannerlord dedicated server'ında
     /// böyle bir seçenek yok. Bu yüzden yalnızca ölçüp gösteriyoruz.
     /// </remarks>
-    private void SampleResources()
+    private async void SampleResources()
     {
         if (_resources is null || !IsRunning)
         {
-            if (CpuText != "-") { CpuText = "-"; RamText = "-"; _resources?.Reset(); }
+            if (CpuText != "-" && !_sampling) { CpuText = "-"; RamText = "-"; _resources?.Reset(); }
             return;
         }
+
+        // Ölçüm tüm süreçleri dolaşıyor; UI thread'inde her 2 saniyede bir takılma yapıyordu.
+        if (_sampling) return;
+        _sampling = true;
 
         // Kapalıyken Normal'e döndürülür; açıkken "normalin üstü" (Yüksek değil: oyunun ve sistemin önüne geçmesin).
         _resources.DesiredPriority = HighPriority
             ? System.Diagnostics.ProcessPriorityClass.AboveNormal
             : System.Diagnostics.ProcessPriorityClass.Normal;
-        var sample = _resources.Sample(_supervisor.ProcessId);
+
+        var monitor = _resources;
+        var pid = _supervisor.ProcessId;
+        ServerResources sample;
+        try { sample = await Task.Run(() => monitor.Sample(pid)); }
+        catch (Exception) { return; }
+        finally { _sampling = false; }
+
+        if (!IsRunning) return;
 
         CpuText = sample.ProcessCount == 0 ? "-" : $"{sample.CpuPercent:0}%";
         RamText = sample.ProcessCount == 0 ? "-" : $"{sample.MemoryGigabytes:0.0} GB";
@@ -323,6 +348,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             ? string.Format(L["msg.memoryHigh"], sample.MemoryGigabytes.ToString("0.0"), MemoryWarningGb)
             : "";
     }
+
+    private bool _sampling;
 
     public string Uptime
     {
@@ -379,6 +406,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         RaiseWizardChanged();
         ReloadConfig();
         CheckModules();
+
+        // Kodda hesaplanan yeni metinler: kurulum denetimi, Coop durumu, mod etiketleri.
+        RefreshSetupChecks();
+        OnCoopPageOpened();
+        if (!ModsDirty && ManagedMods.Count > 0) LoadManagedMods();
     }
 
     [RelayCommand]
@@ -388,34 +420,48 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         CheckForForeignServer();
     }
 
+    /// <summary>Sunucuyu başlatır (oyun açılmaz; sunucu kendi penceresiz programında çalışır).</summary>
     [RelayCommand(CanExecute = nameof(CanStart))]
-    private async Task StartAsync()
+    private Task StartAsync() => StartWorldAsync(joinWhenReady: false);
+
+    /// <summary>Sunucuyu başlatır; açılınca oyunu Coop ve dünyanın modlarıyla açar.</summary>
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private Task StartPlayingAsync() => StartWorldAsync(joinWhenReady: true);
+
+    /// <summary>Sunucu yayına geçince oyun açılsın mı ("Başlat ve oyna").</summary>
+    private bool _joinWhenServing;
+
+    private async Task StartWorldAsync(bool joinWhenReady)
     {
         if (_coop is null || _config is null || SelectedCampaign is null) return;
 
         // İlk başlatmada sunucunun lisans sözleşmesi gösterilir; onaydan sonra devam edilir.
         if (!EulaAccepted)
         {
-            await RequireEulaAsync(StartAsync);
+            await RequireEulaAsync(() => StartWorldAsync(joinWhenReady));
             return;
         }
+
+        // Coop'un bilinen tuzakları: açmadan önce söylenir (bkz. CoopPreflight).
+        if (!await ConfirmPreflightAsync(SelectedCampaign.Name)) return;
 
         try
         {
             BusyMessage = L["msg.readyIn"];
             AlertText = "";
 
-            // Ekrandaki ayarları başlatmadan ÖNCE uygula: ekranda ne yazıyorsa sunucu
-            // onunla açılır. SIRA ÖNEMLİ: önce yapılandırma var olmalı, sonra ayarlar yazılır;
-            // ters sırada ilk kurulumda kullanıcının yazdığı şifre kayboluyordu.
-            _config.EnsureSaveName(SelectedCampaign.Name);
-            ApplyEditedSettings();
+            // Elle başlatma yeni bir sayfa açar: önceki çöküşler otomatik yeniden
+            // başlatma sayacına sayılmasın.
+            _crashPolicy.Reset();
+            _restartAfterExit = false;
 
-            // Dünyanın kendi oyun ayarları (zorluk, kurallar) — sunucu her açılışta okur.
-            ApplyWorldProfile(SelectedCampaign.Name);
-
-            ReloadConfig();
-            LaunchServer();
+            // "Başlat ve oyna": önce oyun açılır, sunucu arkada hazırlanır. Tersi sırada oyuncu
+            // sunucuyu (30-60 sn) bekleyip sonra oyunun açılmasını da bekliyordu; ikisi aynı
+            // anda yüklenince bilgisayar da zorlanıyordu (kullanıcı isteği, 2026-10-23).
+            _joinWhenServing = joinWhenReady;
+            if (joinWhenReady && !ModuleCompatibility.IsGameRunning(null))
+                LaunchGameForWorld(SelectedCampaign.Name, L["start.gameFirst"]);
+            PrepareAndLaunch(SelectedCampaign.Name);
             CurrentPage = AppPage.Home;
         }
         catch (Exception ex)
@@ -426,22 +472,91 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Ayarları diske ve sunucunun okuduğu dosyalara yazıp sunucuyu başlatır.
+    /// </summary>
+    /// <remarks>
+    /// Hem elle başlatma hem çöküş sonrası yeniden başlatma buradan geçer. Eskiden çöküş
+    /// sonrası yol ayarları uygulamadan açıyordu; çalışırken kaydedilen ayarlar
+    /// ("yeniden başlatınca geçerli") o yolda hiç uygulanmıyordu.
+    /// </remarks>
+    private void PrepareAndLaunch(string saveName)
+    {
+        if (_config is null) return;
+
+        // Ekrandaki ayarları başlatmadan ÖNCE uygula: ekranda ne yazıyorsa sunucu
+        // onunla açılır. SIRA ÖNEMLİ: önce yapılandırma var olmalı, sonra ayarlar yazılır;
+        // ters sırada ilk kurulumda kullanıcının yazdığı şifre kayboluyordu.
+        _config.EnsureSaveName(saveName);
+        ApplyEditedSettings();
+
+        // Dünyanın kendi oyun ayarları (zorluk, kurallar) — Coop'un ayar dosyasına yazılır.
+        // Kaydedilmemiş düzenleme önce kaydedilir; yoksa yeniden başlatınca kayboluyordu.
+        SaveWorldEditorFor(saveName);
+        ApplyWorldProfile(saveName);
+
+        ReloadConfig(force: true);
+        _lastLaunchedSave = saveName;
+        LaunchServer();
+    }
+
+    /// <summary>
+    /// Coop'un sunucusunu açar. Modsuz dünyada Coop'un kendi başlatıcısıyla; modlu dünyada
+    /// modlar sunucunun modül klasörüne kurulur ve motor o modlarla başlatılır.
+    /// </summary>
+    /// <remarks>
+    /// Modlu açılış Coop'un hiçbir denetimini atlamaz (sözleşme ve Coop modülünün parmak izi
+    /// motorun içinde de denetleniyor). Coop'un kendi klasörüne dokunulmaz; modlar CoopKeep'in
+    /// kurduğu ayrı klasörlere kopyalanır (bkz. <see cref="ServerModDeployer"/>).
+    /// </remarks>
     private void LaunchServer()
     {
-        if (_coop is null) return;
+        if (_coop is null || _config is null) return;
 
         Console.Clear();
         ClearConsoleSummary();
         EnsureServerTools();
+
+        var cfg = _config.Read();
+        var engineModules = DeployWorldMods(cfg.SaveName ?? "");
+
         _supervisor.Start(new ServerLaunchOptions
         {
             ExecutablePath = _coop.DedicatedServerExe,
             DataDirectory = DataDirectory,
             SteamBanFile = System.IO.Path.Combine(DataDirectory, Core.Server.SteamBanList.FileName),
             AcceptEula = EulaAccepted,
+            EngineModules = engineModules,
         });
 
         RaiseRunStateChanged();
+    }
+
+    /// <summary>
+    /// Modlu dünyada modları sunucuya kurar ve motorun modül listesini döner; modsuz dünyada
+    /// önceden kurulmuş modları kaldırır ve <c>null</c> döner (Coop'un kendi başlatıcısı).
+    /// </summary>
+    private IReadOnlyList<string>? DeployWorldMods(string worldName)
+    {
+        if (DedicatedServerDir is not { } ds) return null;
+        var deployer = new ServerModDeployer(System.IO.Path.Combine(ds, "engine", "Modules"));
+        var mods = worldName.Length > 0 ? ModsForWorld(worldName) : [];
+
+        if (mods.Count == 0)
+        {
+            if (deployer.Deployed.Count > 0) deployer.RemoveAll();
+            return null;
+        }
+
+        var plan = ModPlanner.Plan(mods, FreshGameModules(), _coop?.ModuleId ?? "Coop");
+        if (!plan.CanLaunch)
+            throw new InvalidOperationException(string.Format(L["mods.server.missing"],
+                DescribeMissing(plan.MissingMods.Concat(plan.MissingDependencies.Select(d => d.Dependency)))));
+
+        var result = deployer.Deploy(plan.Mods);
+        if (result.Installed.Count > 0) AppendConsole("— " + string.Format(L["mods.server.installed"], string.Join(", ", result.Installed)));
+        if (result.Removed.Count > 0) AppendConsole("— " + string.Format(L["mods.server.removed"], string.Join(", ", result.Removed)));
+        return plan.ModuleOrder;
     }
 
     private bool CanStart() =>
@@ -533,7 +648,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         var ready = new TaskCompletionSource();
         void OnPhase(ServerPhase p) { if (p == ServerPhase.Serving) ready.TrySetResult(); }
         void OnExit(ServerExitInfo i) => ready.TrySetException(
-            new InvalidOperationException(ServerExit.Describe(i.Kind)));
+            new InvalidOperationException(DescribeExit(i.Kind)));
 
         try
         {
@@ -577,16 +692,16 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    /// <summary>Yeni dünyayı oyunun <c>default_new_game.sav</c> şablonundan kopyalar.</summary>
+    /// <summary>Yeni dünyayı Coop sunucusunun boş dünya şablonundan (<c>default_new_game.sav</c>) kopyalar.</summary>
     private bool CreateWorldFromTemplate(string name)
     {
         if (_coop is null || _config is null || _saves is null) return false;
 
-        var serverDir = Path.GetDirectoryName(_coop.DedicatedServerExe)!;
+        var serverDir = System.IO.Path.GetDirectoryName(_coop.DedicatedServerExe)!;
         var created = _saves.CreateFromTemplate(name,
         [
-            Path.Combine(serverDir, "server-data", "Game Saves", SaveRepository.TemplateFileName),
-            Path.Combine(serverDir, "engine", "bin", "Win64_Shipping_Server", SaveRepository.TemplateFileName),
+            System.IO.Path.Combine(serverDir, "server-data", "Game Saves", SaveRepository.TemplateFileName),
+            System.IO.Path.Combine(serverDir, "engine", "bin", "Win64_Shipping_Server", SaveRepository.TemplateFileName),
         ]);
         if (created is null) return false;
 
@@ -597,6 +712,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         SelectedCampaign = Campaigns.FirstOrDefault(c => c.Name == name) ?? SelectedCampaign;
         return true;
     }
+
 
     // --- kampanya dosya işlemleri ---------------------------------------
     //
@@ -694,7 +810,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>Coop modunun Workshop sayfası — kurulum eksikse ilk adım.</summary>
     [RelayCommand]
-    private void OpenWorkshopPage() => OpenPath("steam://url/CommunityFilePage/3770450698");
+    /// <summary>
+    /// CoopKeep modunun indirme sayfası. Atölye sayfası yayınlanınca oraya çevrilecek; o
+    /// zamana kadar sürümlerin yayınlandığı yer.
+    /// </summary>
+    private void OpenWorkshopPage() => OpenPath("https://github.com/Aderimo/bannerlord-coopkeep/releases");
 
     private void OpenPath(string target)
     {
@@ -710,6 +830,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     public string AuthorUrl => "https://gitgit.me/aderimo";
     public string AuthorName => "aderimo";
+    public string AuthorLinkText => "gitgit.me/aderimo";
 
     /// <summary>Uygulama sürümü — <c>Directory.Build.props</c> içindeki tek kaynaktan gelir.</summary>
     public static string AppVersion
@@ -924,7 +1045,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     partial void OnSteamHostNameChanged(string value) => OnPropertyChanged(nameof(DisplayedHostName));
 
-    partial void OnEditSteamChanged(bool value) => OnPropertyChanged(nameof(HostNamePlaceholder));
+    partial void OnEditSteamChanged(bool value)
+    {
+        OnPropertyChanged(nameof(HostNamePlaceholder));
+        MarkEditsDirty();
+    }
 
     partial void OnPortTextChanged(string value)
     {
@@ -1018,14 +1143,19 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         if (_config is null || !_config.Exists) return;
 
-        var port = int.TryParse(EditPort, out var p) ? p : ServerConfig.DefaultPort;
-        var autosave = int.TryParse(EditAutosave, out var a) ? a : ServerConfig.DefaultAutosaveMinutes;
-
+        // Geçersiz değer sessizce varsayılana çevrilmesin: kullanıcı yazdığının
+        // uygulandığını sanıp sonra "ayarlar sıfırlandı" diyordu.
+        if (!int.TryParse(EditPort, out var port) || port is < 1 or > 65535)
+            throw new InvalidOperationException(L["msg.invalidPort"]);
+        if (!int.TryParse(EditAutosave, out var autosave) || autosave < 0)
+            throw new InvalidOperationException(L["msg.invalidAutosave"]);
         _config.Update(w => w
             .Password(EditPassword)
             .Port(port)
             .AutosaveMinutes(autosave)
             .Steam(EditSteam));
+
+        _editsDirty = false;
     }
 
     private bool CanApplySettings() => _config is not null && _config.Exists && !IsRunning && !IsBusy;
@@ -1040,24 +1170,24 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     private void WireSupervisor()
     {
-        _supervisor.LineReceived += line => Dispatcher.UIThread.Post(() =>
-        {
-            TryCaptureSteamHostName(line);
-            TryAutoBackup(line);
-
-            if (IsHarmlessStartupNoise(line)) return;
-            if (line.Contains(DsEventParser.Marker, StringComparison.Ordinal)) return;
-            if (IsToolsDataLine(line)) return;
-            AppendConsole(line);
-        });
+        // Satırlar kuyruğa girer, StartConsoleFlush'taki zamanlayıcı topluca işler.
+        _supervisor.LineReceived += _pendingLines.Enqueue;
 
         _supervisor.PhaseChanged += phase => Dispatcher.UIThread.Post(() =>
         {
+            FlushPendingLines();
             Phase = phase;
             if (phase == ServerPhase.Serving)
             {
                 BusyMessage = "";
                 if (!IsCreatingWorld) ShowToast(L["msg.online"]);
+
+                // "Başlat ve oyna": oyun açıldıysa adres panoya; açılamadıysa şimdi açılır.
+                if (_joinWhenServing && !IsCreatingWorld)
+                {
+                    _joinWhenServing = false;
+                    _ = JoinOwnServerAsync();
+                }
                 // Yayına geçer geçmez sunucuya iş yığılmasın: kahramanlar diskteki save'den,
                 // sunucu sorguları sayfa açılınca. Eklenti yalnızca yoklanır.
                 ReloadHeroes();
@@ -1087,7 +1217,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         _supervisor.Exited += info => Dispatcher.UIThread.Post(async () =>
         {
-            AppendConsole("— " + ServerExit.Describe(info.Kind));
+            FlushPendingLines();
+            AppendConsole("— " + DescribeExit(info.Kind));
 
             Phase = ServerPhase.Unknown;
             BusyMessage = "";
@@ -1111,12 +1242,18 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
                 return;
             }
 
-            if (_restartAfterExit && !info.IsCrash)
+            // Geri sayımlı yeniden başlatma çöküşle bittiyse bayrak takılı kalmasın.
+            var restartRequested = _restartAfterExit;
+            _restartAfterExit = false;
+
+            if (restartRequested && !info.IsCrash)
             {
-                _restartAfterExit = false;
                 await StartAsync();
                 return;
             }
+
+            // Coop'un çıkış kodları: ne olduğunu ve ne yapılacağını söyle.
+            ExplainExit(info);
 
             await HandleCrashAsync(info);
         });
@@ -1135,10 +1272,21 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         line.Contains("Could not find the event index for", StringComparison.Ordinal) ||
         line.Contains("Unable to find item to add dependency", StringComparison.Ordinal);
 
+    /// <summary>Sunucudan gelen bir satırı işler (UI thread'inde, sırayla).</summary>
+    private void HandleServerLine(string line)
+    {
+        TryCaptureSteamHostName(line);
+        TryAutoBackup(line);
+
+        if (IsHarmlessStartupNoise(line)) return;
+        if (line.Contains(DsEventParser.Marker, StringComparison.Ordinal)) return;
+        if (IsToolsDataLine(line)) return;
+        AppendConsole(line);
+    }
+
     private void AppendConsole(string line)
     {
         Console.Add(line);
-        while (Console.Count > MaxConsoleLines) Console.RemoveAt(0);
         OnConsoleLineAdded(line);
     }
 
@@ -1155,7 +1303,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
                 return;
 
             case CrashDecisionReason.NotRecoverable:
-                AlertText = L["msg.noAutoRestart"] + " " + ServerExit.Describe(info.Kind);
+                AlertText = L["msg.noAutoRestart"] + " " + DescribeExit(info.Kind);
                 return;
 
             case CrashDecisionReason.CrashLoop:
@@ -1175,9 +1323,13 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         // Kullanıcı bu arada elle başlattıysa araya girme.
         if (IsRunning) return;
 
+        // Çöken dünya yeniden açılır; kullanıcı bu arada listede başka dünya seçmiş olabilir.
+        var saveName = _lastLaunchedSave ?? SelectedCampaign?.Name;
+        if (saveName is null) return;
+
         try
         {
-            LaunchServer();
+            PrepareAndLaunch(saveName);
             BusyMessage = L["msg.readyIn"];
         }
         catch (Exception ex)
@@ -1224,17 +1376,43 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(HasPlayers));
         OnPropertyChanged(nameof(FilterHidesAll));
         OnPropertyChanged(nameof(OnlinePlayerCount));
+        RaiseJourneyChanged();
         KickCommand.NotifyCanExecuteChanged();
     }
+
+    /// <summary>Coop güncellendiyse ana sayfada gösterilen not; yoksa boş.</summary>
+    [ObservableProperty] private string _coopUpdatedNotice = "";
+
+    public bool HasCoopUpdatedNotice => CoopUpdatedNotice.Length > 0;
+
+    partial void OnCoopUpdatedNoticeChanged(string value) => OnPropertyChanged(nameof(HasCoopUpdatedNotice));
+
+    /// <summary>
+    /// Coop Atölye'de güncellenince söyler: Coop sürüm farkında bağlantıyı reddediyor, herkesin
+    /// (ve sunucu paketinin) aynı sürümde olması gerekiyor.
+    /// </summary>
+    private void NoticeCoopUpdate()
+    {
+        if (_coop?.ModVersion is not { Length: > 0 } now) return;
+        if (_ui.LastCoopVersion is { Length: > 0 } before && !string.Equals(before, now, StringComparison.OrdinalIgnoreCase))
+            CoopUpdatedNotice = string.Format(L["msg.coopUpdated"], before, now);
+        if (_ui.LastCoopVersion == now) return;
+        _ui.LastCoopVersion = now;
+        _ui.Save();
+    }
+
+    [RelayCommand]
+    private void DismissCoopUpdated() => CoopUpdatedNotice = "";
 
     private void Detect()
     {
         _game = GameLocator.FindBannerlord();
-        _coop = GameLocator.FindCoop();
+        _coop = GameLocator.FindCoop(_game?.InstallDirectory);
 
         GameVersion = _game?.GameVersion ?? "-";
         ModVersion = _coop?.ModVersion ?? "-";
         InstallationFound = _game is not null && _coop is not null;
+        NoticeCoopUpdate();
 
         VersionsMatch = _game?.GameVersion is { } gv
                         && _coop?.RequiredGameVersion is { } rv
@@ -1264,6 +1442,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         ReloadConfig();
         ReloadCampaigns();
         ReloadBackups();
+        RefreshSetupChecks();
 
         OnPropertyChanged(nameof(GameFound));
         OnPropertyChanged(nameof(CoopFound));
@@ -1271,6 +1450,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(ModCheckText));
         RaiseRunStateChanged();
     }
+
 
     /// <summary>
     /// İstemcide seçili modülleri sunucunun yüklediklerine karşı denetler.
@@ -1291,34 +1471,59 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             return;
         }
 
-        if (!result.CoopEnabled)
-        {
-            ModuleNotice = L["msg.coopDisabled"];
-            ModuleProblem = true;
-            return;
-        }
+        // Coop'un kapalı olması ve reddettikleri kurulum denetiminde söyleniyor. Burada yalnızca
+        // başlatıcıdaki modlarla dünyanın modları arasındaki fark: oyunu başlatıcıdan açan biri
+        // farklı modlarla girer ve Coop reddeder. ("Oyuna gir" her zaman doğru modlarla açar.)
+        var world = IsRunning ? ActiveSaveName : SelectedCampaign?.Name;
+        var worldMods = world is { Length: > 0 } ? WorldModIds(world).ToList() : [];
+        var userOn = result.All
+            .Where(m => m.IsSelected && !ModuleCompatibility.ServerModules.Contains(m.Id) && m.Status != ModuleStatus.Blocked &&
+                        !m.Id.StartsWith("Coop", StringComparison.OrdinalIgnoreCase))
+            .Select(m => m.Id)
+            .ToList();
+        var extra = userOn.Where(id => !worldMods.Contains(id, StringComparer.OrdinalIgnoreCase)).ToList();
+        var missing = worldMods.Where(id => !userOn.Contains(id, StringComparer.OrdinalIgnoreCase)).ToList();
 
-        if (result.ExtraModules.Count > 0)
-        {
-            ModuleNotice = string.Format(L["msg.modulesExtra"], string.Join(", ", result.ExtraModules));
-            ModuleProblem = true;
-            return;
-        }
-
-        ModuleNotice = L["msg.modulesOk"];
-        ModuleProblem = false;
+        var parts = new List<string>();
+        if (extra.Count > 0) parts.Add(string.Format(L["msg.modsExtraForWorld"], string.Join(", ", extra.Select(NameFor))));
+        if (missing.Count > 0) parts.Add(string.Format(L["msg.modsMissingForWorld"], string.Join(", ", missing.Select(NameFor))));
+        ModuleProblem = parts.Count > 0;
+        ModuleNotice = ModuleProblem ? string.Join(" ", parts) + " " + L["msg.modsPlayHint"] : L["msg.modulesOk"];
     }
 
-    private void ReloadConfig()
+    /// <summary>Ana sayfadaki mod uyarısı yalnızca bir dünya seçiliyken ya da sunucu açıkken.</summary>
+    public bool ShowModuleBanner => ModuleProblem && (HomeReady || HomeOnline);
+
+    /// <summary>Ayarlar sayfasında henüz uygulanmamış düzenleme var mı?</summary>
+    private bool _editsDirty;
+    private bool _loadingEdits;
+
+    partial void OnEditPasswordChanged(string value) => MarkEditsDirty();
+    partial void OnEditPortChanged(string value) => MarkEditsDirty();
+    partial void OnEditAutosaveChanged(string value) => MarkEditsDirty();
+
+    private void MarkEditsDirty()
     {
+        if (!_loadingEdits) _editsDirty = true;
+    }
+
+    /// <summary>Ekrandaki değerleri dosyadan tazeler.</summary>
+    /// <param name="force">
+    /// false iken kullanıcının henüz uygulamadığı düzenlemeler korunur: dil değişimi ya da
+    /// dünya seçimi gibi yan etkiler yazılanı silmesin.
+    /// </param>
+    private void ReloadConfig(bool force = false)
+    {
+        if (force) _editsDirty = false;
+
         if (_config is null || !_config.Exists)
         {
             PortText = ServerConfig.DefaultPort.ToString();
             PasswordText = L["val.noPassword"];
             AutosaveText = "-";
             SteamText = "-";
-            EditPort = ServerConfig.DefaultPort.ToString();
-            EditAutosave = ServerConfig.DefaultAutosaveMinutes.ToString();
+            if (!_editsDirty)
+                LoadEdits(EditPassword, ServerConfig.DefaultPort, ServerConfig.DefaultAutosaveMinutes, EditSteam);
             return;
         }
 
@@ -1332,10 +1537,24 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         SteamText = cfg.Steam ? L["val.on"] : L["val.off"];
 
         // Düzenleme alanlarını dosyadaki güncel değerlerle doldur.
-        EditPassword = cfg.Password;
-        EditPort = cfg.Port.ToString();
-        EditAutosave = cfg.AutosaveMinutes.ToString();
-        EditSteam = cfg.Steam;
+        if (!_editsDirty) LoadEdits(cfg.Password, cfg.Port, cfg.AutosaveMinutes, cfg.Steam);
+    }
+
+    private void LoadEdits(string password, int port, int autosave, bool steam)
+    {
+        _loadingEdits = true;
+        try
+        {
+            EditPassword = password;
+            EditPort = port.ToString();
+            EditAutosave = autosave.ToString();
+            EditSteam = steam;
+
+        }
+        finally
+        {
+            _loadingEdits = false;
+        }
     }
 
     private void ReloadCampaigns()
@@ -1343,6 +1562,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         if (_saves is null) return;
 
         var previous = SelectedCampaign?.Name;
+        var previousModsWorld = ModsWorld?.Name;
 
         Campaigns.Clear();
         foreach (var s in _saves.DiscoverCampaigns()) Campaigns.Add(s);
@@ -1362,6 +1582,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             _suppressSelectionWrite = false;
         }
 
+        // Modlar sayfasındaki sunucu dünyası liste yenilenince boşa düşmesin.
+        ModsWorld = Campaigns.FirstOrDefault(c => c.Name == previousModsWorld) ?? SelectedCampaign;
+
         RaiseHomeChanged();
     }
 
@@ -1369,6 +1592,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         OnPropertyChanged(nameof(IsRunning));
         OnPropertyChanged(nameof(IsServing));
+        OnPropertyChanged(nameof(ShowJoinOwn));
         OnPropertyChanged(nameof(IsBusy));
         OnPropertyChanged(nameof(Uptime));
         OnPropertyChanged(nameof(Step1Brush));
@@ -1377,7 +1601,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         RaiseHomeChanged();
 
         StartCommand.NotifyCanExecuteChanged();
+        StartPlayingCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
+        JoinOwnServerCommand.NotifyCanExecuteChanged();
         SaveNowCommand.NotifyCanExecuteChanged();
         SaveAndBackupCommand.NotifyCanExecuteChanged();
         AnnounceCommand.NotifyCanExecuteChanged();
@@ -1392,6 +1618,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         RequestRestoreCommand.NotifyCanExecuteChanged();
         ConfirmRestoreCommand.NotifyCanExecuteChanged();
         BackupNowCommand.NotifyCanExecuteChanged();
+        SendConsoleInputCommand.NotifyCanExecuteChanged();
         NotifyAdminCommands();
     }
 
@@ -1415,6 +1642,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     partial void OnSelectedCampaignChanged(SaveSet? value)
     {
         PendingDelete = false;
+        CheckModules(); // ana sayfa mod uyarısı seçili dünyaya göre
 
         if (value is not null && !IsRunning && !_suppressSelectionWrite && _config is not null)
         {
@@ -1426,10 +1654,14 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             catch (Exception ex) { AppendConsole("! " + ex.Message); }
         }
 
-        LoadWorldEditor();
+        // Aynı dünya yeniden seçildiyse (sunucu kapanınca liste tazelenir, kaydın boyutu
+        // değiştiği için seçim "değişmiş" görünür) kaydedilmemiş düzenlemeyi silme.
+        var sameWorld = string.Equals(value?.Name, _editorWorldName, StringComparison.OrdinalIgnoreCase);
+        if (!(sameWorld && WorldEditor.IsDirty)) LoadWorldEditor();
         if (!IsRunning) ReloadHeroes();
 
         StartCommand.NotifyCanExecuteChanged();
+        StartPlayingCommand.NotifyCanExecuteChanged();
         RenameCampaignCommand.NotifyCanExecuteChanged();
         DuplicateCampaignCommand.NotifyCanExecuteChanged();
         RequestDeleteCommand.NotifyCanExecuteChanged();

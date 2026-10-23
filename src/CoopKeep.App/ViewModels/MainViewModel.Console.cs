@@ -50,11 +50,7 @@ public partial class MainViewModel
     /// <summary>Yeni satırı süzgece göre görünüme ekler ve tanıdıksa özetler.</summary>
     private void OnConsoleLineAdded(string line)
     {
-        if (PassesConsoleFilter(line))
-        {
-            ConsoleView.Add(line);
-            while (ConsoleView.Count > MaxConsoleLines) ConsoleView.RemoveAt(0);
-        }
+        if (PassesConsoleFilter(line)) ConsoleView.Add(line);
 
         if (KnownLogLines.Match(line) is not { } known) return;
 
@@ -76,6 +72,88 @@ public partial class MainViewModel
         SeenLogLines.Clear();
         ConsoleView.Clear();
         OnPropertyChanged(nameof(HasSeenLogLines));
+    }
+
+    // --- elle komut ----------------------------------------------------
+
+    /// <summary>Konsol kutusuna yazılan komut.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendConsoleInputCommand))]
+    private string _consoleInput = "";
+
+    private readonly System.Collections.Generic.List<string> _consoleHistory = [];
+
+    /// <summary>
+    /// Yazılan satırı sunucuya gönderir. Oyuncular takılan oyunları kurtarmak için konsol
+    /// istedi; sunucunun kendi komut listesi <c>help</c> ile görülür.
+    /// </summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand(CanExecute = nameof(CanSendConsoleInput))]
+    private async System.Threading.Tasks.Task SendConsoleInputAsync()
+    {
+        var line = ConsoleInput.Trim();
+        if (!Core.Server.ServerCommand.IsValidConsoleLine(line)) return;
+
+        AppendConsole("> " + line);
+        _consoleHistory.Remove(line);
+        _consoleHistory.Add(line);
+        ConsoleInput = "";
+
+        try { await _supervisor.SendConsoleLineAsync(line); }
+        catch (Exception ex) { AppendConsole("! " + ex.Message); }
+    }
+
+    private bool CanSendConsoleInput() => IsRunning && !string.IsNullOrWhiteSpace(ConsoleInput);
+
+    /// <summary>Yukarı ok: önceki komutu geri getirir.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void PreviousConsoleInput()
+    {
+        if (_consoleHistory.Count == 0) return;
+        var i = _consoleHistory.IndexOf(ConsoleInput);
+        ConsoleInput = _consoleHistory[i <= 0 ? _consoleHistory.Count - 1 : i - 1];
+    }
+
+    // --- toplu ekleme ----------------------------------------------------
+
+    /// <summary>
+    /// Sunucu açılışta saniyede yüzlerce satır basıyor. Her satır için ayrı UI işi
+    /// arayüzü takıltıyordu; satırlar kuyruğa alınıp kısa aralıklarla topluca işlenir.
+    /// </summary>
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _pendingLines = new();
+
+    private Avalonia.Threading.DispatcherTimer? _consoleFlushTimer;
+
+    private void StartConsoleFlush()
+    {
+        _consoleFlushTimer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        _consoleFlushTimer.Tick += (_, _) => FlushPendingLines();
+        _consoleFlushTimer.Start();
+    }
+
+    /// <summary>Kuyruktaki satırları sırayla işler. Olaylardan önce çağrılır ki sıra bozulmasın.</summary>
+    private void FlushPendingLines()
+    {
+        while (_pendingLines.TryDequeue(out var line)) HandleServerLine(line);
+        TrimConsole();
+    }
+
+    /// <summary>
+    /// Sınırı biraz aşınca topluca kırpar: satır başına <c>RemoveAt(0)</c> her seferinde
+    /// tüm listeyi kaydırıyordu.
+    /// </summary>
+    private void TrimConsole()
+    {
+        const int slack = 200;
+        TrimFront(Console, MaxConsoleLines, slack);
+        TrimFront(ConsoleView, MaxConsoleLines, slack);
+
+        static void TrimFront(ObservableCollection<string> list, int max, int slack)
+        {
+            if (list.Count <= max + slack) return;
+            var keep = list.Skip(list.Count - max).ToList();
+            list.Clear();
+            foreach (var l in keep) list.Add(l);
+        }
     }
 
     partial void OnConsoleSearchChanged(string value) => RebuildConsoleView();

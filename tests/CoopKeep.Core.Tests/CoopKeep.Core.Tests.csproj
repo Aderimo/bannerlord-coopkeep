@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CoopKeep.Core\CoopKeep.Core.csproj" />
+    <!-- Program ile modun aynı oyuncu kimliğini hesapladığı test edilir. -->
   </ItemGroup>
 
 </Project>

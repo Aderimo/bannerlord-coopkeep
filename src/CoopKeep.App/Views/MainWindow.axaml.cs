@@ -30,6 +30,8 @@ public partial class MainWindow : Window
         Loc.Current.PropertyChanged += OnLanguageChanged;
         Closing += OnClosingAsync;
         Closed += (_, _) => Loc.Current.PropertyChanged -= OnLanguageChanged;
+        // Steam'den abone olup ya da modu elle kurup geri gelince liste tazelensin.
+        Activated += (_, _) => _vm?.OnWindowActivated();
     }
 
     private void Attach(MainViewModel? vm)
@@ -59,6 +61,11 @@ public partial class MainWindow : Window
     /// <summary>Sayfayı geçiş animasyonuyla gösterir.</summary>
     private void ShowPage(AppPage page)
     {
+        // Harita en ağır sayfa (binlerce işaret): çıkınca bırakılır, dönünce yeniden kurulur.
+        // Yakınlaştırma ve konum MapView'da durduğu için kaybolmaz.
+        if (page != AppPage.Map && _pages.Remove(AppPage.Map, out var map) && ReferenceEquals(PageHost.Content, map))
+            PageHost.Content = null;
+
         if (!_pages.TryGetValue(page, out var control))
         {
             control = page switch
@@ -71,6 +78,7 @@ public partial class MainWindow : Window
                 AppPage.Backups => new BackupsPage(),
                 AppPage.Mods => new ModsPage(),
                 AppPage.Settings => new SettingsPage(),
+                AppPage.Guide => new GuidePage(),
                 AppPage.Console => new ConsolePage(),
                 _ => new HomePage(),
             };

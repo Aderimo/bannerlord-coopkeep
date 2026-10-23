@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bizim modun yönetim kanalı ve oyuncu kimliği (program sunucuyu bununla yönetir). -->
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Gameloop.Vdf" Version="0.6.2" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>

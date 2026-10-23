@@ -16,8 +16,11 @@
                 IsVisible="{Binding HasUpdate}">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Classes="body" VerticalAlignment="Center" Text="{Binding UpdateText}" />
-                <Button Grid.Column="1" Classes="primary" Command="{Binding OpenReleasePageCommand}"
-                        Content="{Binding L[update.download]}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="primary" Command="{Binding InstallUpdateCommand}" IsVisible="{Binding CanSelfUpdate}"
+                            Content="{Binding L[update.install]}" ToolTip.Tip="{Binding L[update.installTip]}" />
+                    <Button Command="{Binding OpenReleasePageCommand}" Content="{Binding L[update.download]}" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -36,11 +39,6 @@
                              VerticalAlignment="Center" />
                 </Grid>
 
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.steamHint]}"><TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
-                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" IsEnabled="{Binding !IsRunning}"
-                                  VerticalAlignment="Center" />
-                </Grid>
 
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.autosaveHint]}"><TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
@@ -54,6 +52,11 @@
                              VerticalAlignment="Center" />
                 </Grid>
 
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.steamHint]}"><TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" IsEnabled="{Binding !IsRunning}" VerticalAlignment="Center" />
+                </Grid>
+
                 <Button HorizontalAlignment="Right" Classes="primary" Command="{Binding ApplySettingsCommand}"
                         Content="{Binding L[btn.saveSettings]}" />
             </StackPanel>
@@ -63,6 +66,10 @@
         <Border Classes="card enter d2">
             <StackPanel Spacing="16">
                 <TextBlock Classes="h2" Text="{Binding L[settings.automation]}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.joinAlertHint]}"><TextBlock Text="{Binding L[settings.joinAlert]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding JoinAlert}" VerticalAlignment="Center" />
+                </Grid>
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.autoRestartHint]}"><TextBlock Text="{Binding L[lbl.autoRestart]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                     <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoRestart}" VerticalAlignment="Center" />
@@ -94,45 +101,9 @@
             </StackPanel>
         </Border>
 
-        <!-- ============ SUNUCU EKLENTİSİ ============ -->
-        <Border Classes="card enter d3">
-            <StackPanel Spacing="10">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Classes="h2" Text="{Binding L[tools.title]}" />
-                        <TextBlock Classes="hint" Text="{Binding L[tools.sub]}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ServerToolsEnabled}" VerticalAlignment="Center" />
-                </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding ServerToolsAvailable}">
-                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2" Width="13" Height="13" Stretch="Uniform" />
-                    <TextBlock FontSize="12" Foreground="{StaticResource Success}" Text="{Binding L[tools.active]}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
+        <!-- ============ SUNUCU EKLENTİSİ (eski Coop sunucusu) ============ -->
 
-        <!-- ============ HARİTA PAYLAŞIMI ============ -->
-        <Border Classes="card enter d3">
-            <StackPanel Spacing="10">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3" Margin="0,0,20,0">
-                        <TextBlock Classes="h2" Text="{Binding L[share.title]}" />
-                        <TextBlock Classes="hint" Text="{Binding L[share.sub]}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShareMap}" VerticalAlignment="Center" />
-                </Grid>
-                <Grid ColumnDefinitions="Auto,Auto,16,Auto,*,Auto,6,Auto">
-                    <TextBlock Classes="dim" VerticalAlignment="Center" Margin="0,0,8,0" Text="Port" />
-                    <TextBox Grid.Column="1" Classes="bar" VerticalAlignment="Center" Text="{Binding SharePortText}" IsEnabled="{Binding !ShareMap}" />
-                    <TextBlock Grid.Column="3" Classes="value" VerticalAlignment="Center" Text="{Binding ShareAddressText}" />
-                    <Button Grid.Column="5" Command="{Binding NewShareCodeCommand}" Content="{Binding L[share.newCode]}" />
-                    <Button Grid.Column="7" Command="{Binding CopyShareInviteCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><Path Classes="icon" Data="{StaticResource IconCopy}" Width="13" /><TextBlock Text="{Binding L[share.copy]}" /></StackPanel>
-                    </Button>
-                </Grid>
-                <TextBlock FontSize="12" Foreground="{StaticResource Accent}" Text="{Binding ShareStatus}" />
-            </StackPanel>
-        </Border>
+        <!-- ============ HARİTA PAYLAŞIMI (eski Coop sunucusunun canlı verisiyle) ============ -->
 
         <!-- ============ KURULUM ============ -->
         <Border Classes="card enter d3">
@@ -141,12 +112,31 @@
                 <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto">
                     <TextBlock Classes="dim" Text="Bannerlord" />
                     <TextBlock Grid.Column="1" Classes="value" Text="{Binding GameVersion}" />
-                    <TextBlock Grid.Row="1" Classes="dim" Margin="0,6,0,0" Text="Coop" />
+                    <TextBlock Grid.Row="1" Classes="dim" Margin="0,6,0,0" Text="{Binding L[settings.install.mod]}" />
                     <TextBlock Grid.Row="1" Grid.Column="1" Classes="value" Margin="0,6,0,0" Text="{Binding ModVersion}" />
-                    <TextBlock Grid.Row="2" Classes="dim" Margin="0,6,0,0" Text="CoopKeep" />
+                    <TextBlock Grid.Row="2" Classes="dim" Margin="0,6,0,0" Text="{Binding L[settings.install.app]}" />
                     <TextBlock Grid.Row="2" Grid.Column="1" Classes="value" Margin="0,6,0,0" Text="{Binding AppVersion}" />
                 </Grid>
             </StackPanel>
+        </Border>
+
+        <!-- ============ GELİŞTİRİCİ VE İLETİŞİM ============ -->
+        <Border Classes="card enter d3" Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Width="42" Height="42" CornerRadius="21" Background="{StaticResource BgRaised}" VerticalAlignment="Center">
+                    <Path Data="{StaticResource IconHeart}" Stroke="{StaticResource Accent}" StrokeThickness="1.8" Width="18" Height="18" Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="h2" Text="{Binding L[about.title]}" />
+                    <TextBlock Classes="body" TextWrapping="Wrap" Text="{Binding L[about.body]}" />
+                </StackPanel>
+                <Button Grid.Column="2" Classes="primary" VerticalAlignment="Center" Command="{Binding OpenAuthorPageCommand}" ToolTip.Tip="{Binding AuthorUrl}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Data="{StaticResource IconGlobe}" Stroke="{StaticResource OnAccent}" StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform" />
+                        <TextBlock Text="{Binding AuthorLinkText}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
         </Border>
 
         <!-- ============ YARDIM ============ -->
@@ -167,6 +157,31 @@
                     <Button Margin="0,0,8,0" Command="{Binding OpenLogsFolderCommand}" Content="{Binding L[btn.openLogs]}" />
                     <Button Command="{Binding OpenSavesFolderCommand}" Content="{Binding L[btn.openFolder]}" />
                 </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Coop modu: durum, oyunu açma, sunucu araçları, Nexus anahtarı -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="h2" Text="{Binding L[settings.mod]}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding CoopStatusText}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Command="{Binding OpenCoopFolderCommand}" Content="{Binding L[coop.openFolder]}" />
+                        <Button Command="{Binding LaunchCoopCommand}" Content="{Binding L[coop.launchPlain]}" />
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[tools.hint]}"><TextBlock Text="{Binding L[tools.title]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ServerToolsEnabled}" VerticalAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[mm.nexusKeyHint]}"><TextBlock Text="{Binding L[mm.nexusKey]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <TextBox Width="220" Text="{Binding NexusApiKey}" PasswordChar="•" />
+                        <Button Command="{Binding CheckNexusKeyCommand}" Content="{Binding L[mm.nexusCheck]}" />
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </Border>
     </StackPanel>

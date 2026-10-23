@@ -5,7 +5,54 @@
              x:Class="CoopKeep.App.Views.Pages.HomePage"
              x:DataType="vm:MainViewModel">
 
+  <UserControl.Resources>
+    <!-- Kurulum / açılış denetimi satırı: simge, metin, düzeltme düğmesi -->
+    <DataTemplate x:Key="CheckRowTemplate" x:DataType="vm:CheckRow">
+        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
+            <Panel Width="14" Height="14" Margin="0,2,10,0" VerticalAlignment="Top">
+                <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding IsOk}" />
+                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Stretch="Uniform" IsVisible="{Binding IsInfo}" />
+                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource Accent}" StrokeThickness="2" Stretch="Uniform" IsVisible="{Binding IsWarning}" />
+                <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding IsError}" />
+            </Panel>
+            <TextBlock Grid.Column="1" Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Text}" />
+            <Button Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" IsVisible="{Binding HasFix}"
+                    Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).RunCheckFixCommand}"
+                    CommandParameter="{Binding Fix}" Content="{Binding FixLabel}" />
+        </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+
   <UserControl.Styles>
+    <Style Selector="Border.jstep">
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDim}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Border.jstep.active">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.jstep.done">
+        <Setter Property="Background" Value="{StaticResource Success}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Success}" />
+    </Style>
+    <Style Selector="TextBlock.jlabel">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+    </Style>
+    <Style Selector="TextBlock.jlabel.active">
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.jline">
+        <Setter Property="Background" Value="{StaticResource BorderDim}" />
+    </Style>
+    <Style Selector="Border.jline.done">
+        <Setter Property="Background" Value="{StaticResource Success}" />
+    </Style>
+
     <!-- Durum şeridindeki küçük bilgi hücresi -->
     <Style Selector="StackPanel.fact > TextBlock.k">
         <Setter Property="FontSize" Value="11.5" />
@@ -26,27 +73,57 @@
             <TextBlock Classes="dim" FontSize="13.5" Text="{Binding HeroSubtitle}" TextWrapping="Wrap" />
         </StackPanel>
 
+        <!-- Yolculuk: Kurulum → Dünya → Sunucu → Arkadaşlar -->
+        <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" Classes="enter" Margin="0,4,0,4">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <Panel Width="22" Height="22">
+                    <Border Classes="jstep" Classes.done="{Binding JourneySetupDone}" Classes.active="{Binding JourneySetupActive}" />
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4" Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding JourneySetupDone}" />
+                    <TextBlock Text="1" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !JourneySetupDone}" />
+                </Panel>
+                <TextBlock Classes="jlabel" Classes.active="{Binding JourneySetupActive}" VerticalAlignment="Center" Text="{Binding L[journey.setup]}" />
+            </StackPanel>
+            <Border Grid.Column="1" Height="2" Margin="10,0" VerticalAlignment="Center" Classes="jline" Classes.done="{Binding JourneySetupDone}" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Panel Width="22" Height="22">
+                    <Border Classes="jstep" Classes.done="{Binding JourneyWorldDone}" Classes.active="{Binding JourneyWorldActive}" />
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4" Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding JourneyWorldDone}" />
+                    <TextBlock Text="2" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !JourneyWorldDone}" />
+                </Panel>
+                <TextBlock Classes="jlabel" Classes.active="{Binding JourneyWorldActive}" VerticalAlignment="Center" Text="{Binding L[journey.world]}" />
+            </StackPanel>
+            <Border Grid.Column="3" Height="2" Margin="10,0" VerticalAlignment="Center" Classes="jline" Classes.done="{Binding JourneyWorldDone}" />
+            <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
+                <Panel Width="22" Height="22">
+                    <Border Classes="jstep" Classes.done="{Binding JourneyServerDone}" Classes.active="{Binding JourneyServerActive}" />
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4" Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding JourneyServerDone}" />
+                    <TextBlock Text="3" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !JourneyServerDone}" />
+                </Panel>
+                <TextBlock Classes="jlabel" Classes.active="{Binding JourneyServerActive}" VerticalAlignment="Center" Text="{Binding L[journey.server]}" />
+            </StackPanel>
+            <Border Grid.Column="5" Height="2" Margin="10,0" VerticalAlignment="Center" Classes="jline" Classes.done="{Binding JourneyServerDone}" />
+            <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="8">
+                <Panel Width="22" Height="22">
+                    <Border Classes="jstep" Classes.done="{Binding JourneyFriendsDone}" Classes.active="{Binding JourneyFriendsActive}" />
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource OnAccent}" StrokeThickness="2.4" Width="10" Height="10" Stretch="Uniform" IsVisible="{Binding JourneyFriendsDone}" />
+                    <TextBlock Text="4" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !JourneyFriendsDone}" />
+                </Panel>
+                <TextBlock Classes="jlabel" Classes.active="{Binding JourneyFriendsActive}" VerticalAlignment="Center" Text="{Binding L[journey.friends]}" />
+            </StackPanel>
+        </Grid>
+
         <!-- ============ ANA KART ============ -->
         <Border Classes="card enter d1" Background="{StaticResource HeroGradient}" Padding="26,22">
             <Panel>
 
-                <!-- Kurulum eksik -->
-                <StackPanel Spacing="12" IsVisible="{Binding HomeSetup}">
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-                        <Panel Width="14" Height="14" Margin="0,2,10,0" VerticalAlignment="Top">
-                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding GameFound}" />
-                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding !GameFound}" />
-                        </Panel>
-                        <TextBlock Grid.Column="1" Classes="body" Text="{Binding GameCheckText}" />
-                        <Panel Grid.Row="1" Width="14" Height="14" Margin="0,10,10,0" VerticalAlignment="Top">
-                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding CoopFound}" />
-                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding !CoopFound}" />
-                        </Panel>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Classes="body" Margin="0,8,0,0" Text="{Binding ModCheckText}" />
-                    </Grid>
+                <!-- Kurulum eksik: adım adım denetim, her eksikte tek düğmeli düzeltme -->
+                <StackPanel Spacing="10" IsVisible="{Binding HomeSetup}">
+                    <TextBlock Classes="h1" Text="{Binding L[home.setup.head]}" />
+                    <ItemsControl ItemsSource="{Binding SetupChecks}" ItemTemplate="{StaticResource CheckRowTemplate}" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Classes="primary" Command="{Binding OpenWorkshopPageCommand}" Content="{Binding L[home.setup.workshop]}" />
                         <Button Command="{Binding RefreshCommand}" Content="{Binding L[home.setup.recheck]}" />
+                        <Button Classes="ghost" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Guide}"
+                                Content="{Binding L[home.setup.guide]}" />
                     </StackPanel>
                 </StackPanel>
 
@@ -85,12 +162,20 @@
                             </Button>
                         </StackPanel>
                     </StackPanel>
-                    <Button Grid.Column="1" Classes="primary big" Command="{Binding StartCommand}" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Path Data="{StaticResource IconPlay}" Fill="{StaticResource OnAccent}" Width="14" Height="14" Stretch="Uniform" />
-                            <TextBlock Text="{Binding L[btn.startServer]}" />
-                        </StackPanel>
-                    </Button>
+                    <!-- Önce sunucu (Coop'un sunucusu ayrı ve penceresiz çalışır); açılınca "Oyuna gir". -->
+                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                        <Button Classes="primary big" Command="{Binding StartCommand}" ToolTip.Tip="{Binding L[btn.startServer.tip]}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Data="{StaticResource IconPlay}" Fill="{StaticResource OnAccent}" Width="14" Height="14" Stretch="Uniform" />
+                                <TextBlock Text="{Binding L[btn.startServer]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="ghost" Padding="0" HorizontalAlignment="Center" Command="{Binding StartPlayingCommand}"
+                                ToolTip.Tip="{Binding L[btn.startAndPlay.tip]}">
+                            <TextBlock FontSize="12.5" Foreground="{StaticResource TextDim}" Text="{Binding L[btn.startAndPlay]}" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
 
                 <!-- Açılıyor -->
@@ -148,6 +233,13 @@
                         </ItemsControl>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center" MinWidth="190">
+                        <Button Classes="primary" Command="{Binding JoinOwnServerCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                ToolTip.Tip="{Binding L[home.joinOwnTip]}" IsVisible="{Binding ShowJoinOwn}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconPlay}" Width="12" />
+                                <TextBlock Text="{Binding L[home.joinOwn]}" />
+                            </StackPanel>
+                        </Button>
                         <Button Command="{Binding SaveAndBackupCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                 ToolTip.Tip="{Binding L[home.saveTip]}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -218,12 +310,43 @@
                 <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="body" Text="{Binding MemoryWarning}" />
             </Grid>
         </Border>
-        <Border Classes="enter d2" Background="{StaticResource DangerSoft}" BorderBrush="#6A2A2A" BorderThickness="1"
-                CornerRadius="4" Padding="14,10" IsVisible="{Binding ModuleProblem}">
+        <!-- Güvenlik duvarı izni yok -->
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
+                CornerRadius="4" Padding="14,10" IsVisible="{Binding CoopFirewallMissing}">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0" Text="{Binding L[coop.firewall.text]}" />
+                <Button Grid.Column="1" Classes="primary" Command="{Binding AddCoopFirewallRuleCommand}" Content="{Binding L[coop.firewall.add]}" />
+            </Grid>
+        </Border>
+
+        <!-- Kurulum tamam ama düzeltilecek bir şey var (DLC açık, engellenmiş dosyalar, güvenlik duvarı) -->
+        <Border Classes="card enter d2" IsVisible="{Binding ShowSetupProblems}">
+            <StackPanel Spacing="6">
+                <TextBlock Classes="h2" Text="{Binding L[home.problems.head]}" />
+                <ItemsControl ItemsSource="{Binding SetupChecks}" ItemTemplate="{StaticResource CheckRowTemplate}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Coop güncellendi: arkadaşlar da güncellemeli -->
+        <Border Classes="enter d2" Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}" BorderThickness="1"
+                CornerRadius="4" Padding="14,10" IsVisible="{Binding HasCoopUpdatedNotice}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Path Data="{StaticResource IconPuzzle}" Stroke="{StaticResource Danger}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Margin="10,0" Classes="body" VerticalAlignment="Center" Text="{Binding L[home.mods.head]}" ToolTip.Tip="{Binding ModuleNotice}" />
-                <Button Grid.Column="2" Padding="10,5" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Mods}" Content="{Binding L[home.mods.fix]}" />
+                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource Accent}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Margin="10,0" Classes="body" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding CoopUpdatedNotice}" />
+                <Button Grid.Column="2" Padding="10,5" Command="{Binding DismissCoopUpdatedCommand}" Content="{Binding L[btn.ok]}" />
+            </Grid>
+        </Border>
+
+        <Border Classes="enter d2" Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1"
+                CornerRadius="4" Padding="14,10" IsVisible="{Binding ShowModuleBanner}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Path Data="{StaticResource IconPuzzle}" Stroke="{StaticResource Warning}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Margin="10,0" Classes="body" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding ModuleNotice}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="primary" Padding="10,5" Command="{Binding MatchLauncherToWorldCommand}" Content="{Binding L[home.mods.match]}"
+                            ToolTip.Tip="{Binding L[home.mods.matchTip]}" />
+                    <Button Padding="10,5" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Mods}" Content="{Binding L[home.mods.fix]}" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -250,20 +373,19 @@
                         <TextBlock Grid.Row="2" Classes="dim" Text="{Binding L[lbl.directIp]}" Margin="0,0,14,0" />
                         <TextBlock Grid.Row="2" Grid.Column="1" Classes="value" Text="{Binding DisplayedEndpoint}" />
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Classes="primary" Command="{Binding CopyConnectInfoCommand}">
+                    <WrapPanel>
+                        <Button Classes="primary" Margin="0,0,8,8" Command="{Binding CopyConnectInfoCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Path Classes="icon" Data="{StaticResource IconCopy}" />
                                 <TextBlock Text="{Binding L[invite.copy]}" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding OpenSteamFriendsCommand}" ToolTip.Tip="{Binding L[invite.steamFriendsTip]}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Path Classes="icon" Data="{StaticResource IconUsers}" />
-                                <TextBlock Text="{Binding L[invite.steamFriends]}" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                        <Button Margin="0,0,8,8" Command="{Binding CreateInviteFileCommand}" ToolTip.Tip="{Binding L[invite.file.tip]}"
+                                Content="{Binding L[invite.file.btn]}" />
+                        <Button Margin="0,0,8,8" Command="{Binding OpenPortCommand}" ToolTip.Tip="{Binding L[upnp.tip]}"
+                                Content="{Binding L[upnp.btn]}" />
+                    </WrapPanel>
+                    <CheckBox IsChecked="{Binding InviteIncludePassword}" Content="{Binding L[invite.file.password]}" FontSize="12" />
                 </StackPanel>
             </Border>
 
@@ -289,10 +411,36 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock Classes="dim" Text="{Binding L[msg.noPlayers]}" IsVisible="{Binding !HasPlayers}" />
+                    <StackPanel Spacing="8" IsVisible="{Binding !HasPlayers}">
+                        <TextBlock Classes="dim" Text="{Binding L[msg.noPlayers]}" />
+                        <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[empty.players]}" />
+                        <WrapPanel>
+                            <Button Margin="0,0,8,0" Command="{Binding CreateInviteFileCommand}" Content="{Binding L[invite.file.btn]}" />
+                            <Button Command="{Binding CopyConnectInfoCommand}" Content="{Binding L[invite.copy]}" />
+                        </WrapPanel>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
+
+        <!-- ============ ARKADAŞININ SUNUCUSUNA KATIL ============ -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="12">
+                <StackPanel Spacing="3">
+                    <TextBlock Classes="h2" Text="{Binding L[coop.join.title]}" />
+                    <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[coop.join.sub]}" />
+                </StackPanel>
+                <!-- Şifreyi Coop kendi menüsünde sorar; burada yalnızca adres. -->
+                <Grid ColumnDefinitions="*,12,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                    <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[coop.address]}" />
+                    <TextBox Grid.Row="1" Text="{Binding CoopJoinAddress}" Watermark="203.0.113.5:4200" />
+                    <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <Button Command="{Binding BrowseCoopCommand}" Content="{Binding L[coop.browse]}" />
+                        <Button Classes="primary" Command="{Binding JoinCoopCommand}" Content="{Binding L[coop.join.start]}" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

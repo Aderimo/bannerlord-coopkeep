@@ -46,7 +46,10 @@
                     <TextBlock Grid.Column="4" Classes="dim" FontSize="11.5" Text="{Binding L[backups.col.size]}" HorizontalAlignment="Right" />
                 </Grid>
 
-                <TextBlock Classes="hint" Margin="12" Text="{Binding L[msg.noBackups]}" IsVisible="{Binding !HasBackups}" />
+                <StackPanel Margin="12" Spacing="6" IsVisible="{Binding !HasBackups}">
+                    <TextBlock Classes="hint" Text="{Binding L[msg.noBackups]}" />
+                    <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[empty.backups]}" />
+                </StackPanel>
 
                 <ListBox ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}" MaxHeight="440"
                          IsVisible="{Binding HasBackups}">

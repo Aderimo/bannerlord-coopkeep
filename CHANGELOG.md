@@ -8,6 +8,150 @@ Sürüm numarasının tek kaynağı `Directory.Build.props` dosyasıdır.*
 
 ---
 
+## v1.0.0 — 2026-10-23
+
+First public release: a launcher and server manager for the **Bannerlord Coop** mod on the
+Steam Workshop. Built from a survey of the problems Coop players actually run into (Coop's
+server notes and README, its GitHub issues, and our own testers).
+
+*İlk herkese açık sürüm: Steam Atölyesi'ndeki **Bannerlord Coop** modu için başlatıcı ve
+sunucu yöneticisi. Coop oyuncularının gerçekten yaşadığı sorunların taramasından yola
+çıkıldı (Coop'un sunucu notları ve README'si, GitHub hata bildirimleri, kendi testçilerimiz).*
+
+### Added · Eklenenler
+
+- **Setup check** on Home: game version, Coop and its server package, DLCs Coop rejects
+  (War Sails, …), files Windows blocked, firewall — each with a one-click fix.
+  *Ana sayfada kurulum denetimi; her eksikte tek tıkla düzeltme.*
+- **Pre-start check:** a missing save (Coop would silently start a new world), missing
+  world mods, Steam not running (Steam search won't find you), broken Coop environment
+  variables, Documents on OneDrive.
+  *Başlatmadan önce denetim: kayıt yok, eksik mod, Steam kapalı, ortam değişkenleri, OneDrive.*
+- **Exit codes explained** (2 load failure, 3 crash, 4 Coop module changed, 6 license) with
+  what to do next, in English and Turkish.
+  *Çıkış kodları iki dilde, ne yapılacağıyla açıklanır.*
+- **Play:** opens the game with Coop and the world's mods and copies the server address;
+  **Start and play** does both in one click. **Join a friend:** opens the game, copies the
+  address, or searches Steam.
+  *Oyuna gir, başlat ve oyuna gir, arkadaşına katıl.*
+- **Modded Coop (experimental):** per-world mod list; mods are installed into the Coop
+  server's module folder (Coop's own files untouched) and the server starts with them.
+  **World mod pack** for friends; applying a pack keeps the game's modules and Coop on.
+  *Modlu Coop (deneysel): dünyaya özel modlar, sunucuya kurulum, dünya mod paketi.*
+- **Mod manager:** enable/disable, dependency-aware sorting, install from zip, remove to a
+  backup folder; find mods on the Steam Workshop and Nexus Mods; mod packs.
+  *Mod yöneticisi; Atölye ve Nexus'ta mod bulma; mod paketleri.*
+- **How to use** page: every step from download to playing with friends, and the most
+  common problems.
+  *Nasıl kullanılır sayfası.*
+
+- **Epic Games** installs are found too (players reported Epic joins work); Coop installed
+  by hand in the game's Modules folder is recognised. Mod packs can include Workshop mods for
+  friends on Epic.
+  *Epic kurulumları da bulunur; elle kurulan Coop tanınır; paketler Epic'teki arkadaşlar için
+  Atölye modlarını içerebilir.*
+- **Mods page for Coop:** Coop pinned on top (turn it on in one click), groups (your mods /
+  the game's modules / not working with Coop), filters, a Coop role per mod (UI/library, data,
+  code), game-version warnings, Workshop descriptions, drag-and-drop ordering, and an apply bar
+  that says what will change.
+  *Coop'a göre Modlar sayfası: sabit Coop, gruplar, süzgeçler, roller, sürüm uyarısı, açıklamalar,
+  sürükle-bırak, ne değişeceğini söyleyen uygula bandı.*
+
+### Changed · Değişenler
+
+- Home is one clear flow: **Start server** → **Play**; the invite lists the world's mods.
+  *Ana sayfa tek akış: Sunucuyu başlat → Oyuna gir.*
+- The new world wizard asks about mods ("No mods (recommended)" / "Modded world") and still
+  continues single-player campaigns.
+  *Sihirbaz modları da sorar; tek oyunculu kampanyayı sürdürme duruyor.*
+- The optional server plugin stays off until you turn it on (Settings → Coop mod).
+  *Sunucu eklentisi isteğe bağlı, varsayılan kapalı.*
+- Lighter while hosting: resource readings no longer scan every process on the PC every two
+  seconds, and the server's item list is only fetched when nobody is playing.
+  *Sunucu açıkken daha hafif: kaynak ölçümü her 2 sn'de bütün süreçleri taramıyor; eşya
+  listesi kimse oynamıyorken alınır.*
+- An unexpected error no longer closes CoopKeep (and leaves the server orphaned); it is written
+  to `crash.log` and included in the support report.
+  *Beklenmeyen hata programı kapatmaz; crash.log'a yazılır, hata raporuna girer.*
+- Closing CoopKeep gives the server up to two minutes to save and stop.
+  *Kapanışta sunucuya kaydedip durması için 2 dakika tanınır.*
+- Mods page explains its two switches: the toggle is **your game**, "Add to server" is the
+  **selected world's server** (column headers and a short guide).
+  *Modlar sayfası iki ayarı anlatıyor: aç/kapat senin oyunun, "Sunucuya ekle" dünyanın sunucusu.*
+- Mods a mod needs (ButterLib, Harmony, MCM…) come along automatically: when you add it to a
+  server, when you turn it on in your game, and when "Play" opens the game for your own server.
+  A mod another server mod needs can't be removed by mistake.
+  *Gereken modlar kendiliğinden gelir: sunucuya eklerken, oyununda açarken ve "Oyuna gir"de.*
+- Workshop mods downloaded by **another Steam account** on the same PC are detected: the game
+  can't see them, so CoopKeep marks them and offers "Subscribe on Steam". Packs, the server and
+  "Play" no longer treat them as ready.
+  *Başka Steam hesabının indirdiği modlar tespit edilir; "Steam'de abone ol" düğmesi çıkar.*
+- Packs: applying a pack also turns on the mods it needs and asks which **server worlds** to
+  install it to; the last applied pack is marked; a "Where do mods go?" guide with folder buttons.
+  *Paket uygulanınca gereken modlar da açılır, hangi dünyalara kurulacağı sorulur.*
+- The mod list refreshes when you come back to CoopKeep (after subscribing or installing by hand).
+  *CoopKeep'e dönünce mod listesi tazelenir.*
+- Home: the "mods differ" notice is a yellow note with a one-click **Match my game** button.
+  *Ana sayfadaki mod farkı uyarısı bilgi notu oldu; "Oyunumu eşitle" düğmesi.*
+- Sidebar: advanced pages (Cheats, Map, Encyclopedia, Console) are grouped under **Tools**.
+  Contact card (gitgit.me/aderimo) in Settings and How to use.
+  *Yan menü sade: ileri sayfalar "Araçlar" altında. İletişim kartı eklendi.*
+- **Invite file**: one zip with the world's mods, the mods they need and how to join (Steam name,
+  address, optional password, Coop version). Imported in CoopKeep it shows **Apply pack and join**.
+  *Tek dosyalık davet: modlar + adres; arkadaş "Paketi uygula ve katıl" ile tek tıkla girer.*
+- **Open port automatically** (UPnP) on Home; the internet address goes into the invite.
+  *Modem destekliyorsa port tek tıkla açılır.*
+- Coop update notice on Home: friends must update too, versions must match.
+  *Coop güncellenince ana sayfada uyarı.*
+- Apply fixes the load order by itself when a mod loads before a mod it needs.
+  *Uygula, gereken modlardan önce yüklenen modların sırasını kendisi düzeltir.*
+- Less memory: map layers only hold their own settlements and the map page is released when you
+  leave it (peak ~440 → ~275 MB in a measured run).
+  *Daha az bellek: harita katmanları ayrıldı, harita sayfası çıkınca bırakılıyor.*
+- Before starting, missing world mods come with a **Get missing mods** button: Steam subscribe
+  pages open for known Workshop mods, unknown ones are searched in Find mods. Messages show mod
+  names and say when a mod is only "not subscribed". Installing a pack to a world warns about
+  mods that aren't on this PC.
+  *Başlatmadan önce eksik modlar için "Eksikleri indir" düğmesi; paket dünyaya kurulurken eksik uyarısı.*
+- **Start and play opens the game first**; the server gets ready in the background and you are
+  told (address on the clipboard) when it is serving. Play no longer fails if the game is open.
+  *"Başlat ve oyna" önce oyunu açar, sunucu arkada hazırlanır.*
+- "Cheats" is now **Admin tools**; pages that need the optional server add-on say so, with a
+  button to turn it on (the add-on is marked experimental).
+  *"Hileler" artık "Yönetici araçları"; eklenti gereken yerlerde açıklama kartı.*
+- Notification history: a bell in the sidebar keeps the last 30 notifications.
+  *Bildirim geçmişi: yan menüde zil.*
+- Notices show mod names instead of ids.
+  *Uyarılarda mod kimliği yerine adı.*
+- Home shows the journey **Setup → World → Server → Friends** with the current step highlighted.
+  *Ana sayfada yolculuk: Kurulum → Dünya → Sunucu → Arkadaşlar.*
+- Mods page **Compact** view (one line per mod).
+  *Modlar sayfasında kompakt görünüm.*
+- Empty pages guide you: no players → invite buttons; no backups → how backups work.
+  *Boş sayfalar yönlendiriyor.*
+- **System tray** icon: server status and player count on hover; show, stop server or quit.
+  *Sistem tepsisi simgesi: durum, oyuncu sayısı, göster/durdur/çık.*
+- **Player joined alert** while CoopKeep is in the background: a short sound and a flashing taskbar
+  icon (Settings → Automation).
+  *Oyuncu katılınca ses ve görev çubuğu uyarısı.*
+- **Update now**: downloads the new CoopKeep.exe from the GitHub release and restarts on it
+  (stop the server first).
+  *Program içinden güncelleme.*
+- Mods page **Refresh** button. When Workshop folders were deleted by hand, Steam still thinks
+  they are installed and won't download them again: CoopKeep detects this and offers
+  **Verify in Steam** (verifying game files downloads them).
+  *Yenile düğmesi; elle silinen Atölye modları için "Steam'de doğrula".*
+- Packs: **Play with this pack** opens the game straight away with the pack's mods (plus the mods
+  they need, in order) and Coop; no ticking in the launcher.
+  *Paketler: "Oyunu bu paketle aç".*
+- **Load order fix:** libraries like Harmony, ButterLib, UIExtenderEx and MCM now load **before**
+  the game's own modules, as they ask in their SubModule.xml. Before, the game showed "ButterLib is
+  loaded after Native, terminate the game?". Applies when CoopKeep opens the game and when it
+  writes the launcher list; the Mods page also flags "must load before" problems.
+  *Yükleme sırası düzeltildi: kütüphaneler oyunun modüllerinden önce yüklenir.*
+
+---
+
 ## v0.5.0 — 2026-10-17
 
 Fourth round, after a live test with a friend. The new server commands were tried on a

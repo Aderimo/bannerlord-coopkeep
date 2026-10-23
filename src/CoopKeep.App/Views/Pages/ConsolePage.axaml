@@ -4,7 +4,7 @@
              x:Class="CoopKeep.App.Views.Pages.ConsolePage"
              x:DataType="vm:MainViewModel">
 
-  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="32,28,32,24">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="32,28,32,24">
     <Grid Classes="enter" ColumnDefinitions="*,Auto">
         <TextBlock Classes="display" Text="{Binding L[nav.console]}" ToolTip.Tip="{Binding L[console.sub]}" />
         <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding OpenLogsFolderCommand}">
@@ -57,6 +57,12 @@
             <ScrollViewer Name="ConsoleScroll" Effect="{Binding ConsoleEffect}"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding ConsoleView}">
+                    <!-- Sanallaştırma: 2000 satırın hepsi ekranda çizilmesin. -->
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
                             <SelectableTextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas, monospace"
@@ -75,5 +81,19 @@
             </Border>
         </Panel>
     </Border>
+
+    <!-- Elle komut: sunucu sahibi kendi sunucusuna yazar ("help" komut listesini verir). -->
+    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+        <TextBox Text="{Binding ConsoleInput}" Watermark="{Binding L[console.inputHint]}"
+                 FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12"
+                 IsEnabled="{Binding IsRunning}">
+            <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding SendConsoleInputCommand}" />
+                <KeyBinding Gesture="Up" Command="{Binding PreviousConsoleInputCommand}" />
+            </TextBox.KeyBindings>
+        </TextBox>
+        <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding SendConsoleInputCommand}"
+                Content="{Binding L[console.send]}" />
+    </Grid>
   </Grid>
 </UserControl>

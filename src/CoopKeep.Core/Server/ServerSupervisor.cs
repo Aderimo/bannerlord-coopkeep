@@ -28,7 +28,19 @@ public sealed class ServerSupervisor : IAsyncDisposable
     private Process? _process;
     private Task? _stdoutPump;
     private Task? _stderrPump;
-    private bool _stopRequested;
+    // Exited olayı thread havuzundan gelir; okuma ve yazma farklı thread'lerde.
+    private volatile bool _stopRequested;
+
+    /// <summary>
+    /// Modlu (doğrudan motor) açılışta çıktının yazıldığı günlük. Normalde bunu sarmalayıcı
+    /// yazıyor (<c>logs\coop-server-*.log</c>); onun yerine biz yazarız ki hata tespiti ve
+    /// hata raporu aynı dosyayı bulsun.
+    /// </summary>
+    private StreamWriter? _directLog;
+    private readonly object _logGate = new();
+
+    /// <summary>Son açılış modlu muydu (motor doğrudan mı başlatıldı)?</summary>
+    public bool LastStartWasDirect { get; private set; }
 
     /// <summary>Ham çıktı satırı (hem <c>@DS@</c> hem normal loglar). Konsol görünümü bunu tüketir.</summary>
     public event Action<string>? LineReceived;
@@ -85,10 +97,13 @@ public sealed class ServerSupervisor : IAsyncDisposable
             Players = Array.Empty<ConnectedPlayer>();
             ActiveSaveName = null;
 
+            if (options.IsDirect) options.PrepareDirectDataDirectory();
+            LastStartWasDirect = options.IsDirect;
+
             var psi = new ProcessStartInfo
             {
-                FileName = options.ExecutablePath,
-                WorkingDirectory = options.WorkingDirectory,
+                FileName = options.FileName,
+                WorkingDirectory = options.ProcessWorkingDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
@@ -107,8 +122,11 @@ public sealed class ServerSupervisor : IAsyncDisposable
             if (!process.Start())
                 throw new InvalidOperationException("Server process'i başlatılamadı.");
 
+            // Önceki (kapanmış) process'in tutamaçları serbest kalsın.
+            _process?.Dispose();
             _process = process;
             StartedAt = DateTimeOffset.UtcNow;
+            OpenDirectLog(options);
 
             // Akışları ayrı görevlerde okuyoruz. stderr'i de mutlaka boşaltmak gerekiyor:
             // okunmayan bir pipe dolduğunda yazan taraf bloklanır ve server donar.
@@ -128,6 +146,28 @@ public sealed class ServerSupervisor : IAsyncDisposable
         if (!ServerCommand.IsAllowed(commandLine) && !AdminCommand.IsAllowed(commandLine))
             throw new ArgumentException($"İzin verilmeyen komut: '{commandLine}'", nameof(commandLine));
 
+        await WriteLineAsync(commandLine, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sunucu sahibinin konsol kutusuna kendi yazdığı satırı gönderir.
+    /// </summary>
+    /// <remarks>
+    /// Allow-list'e takılmaz: sunucu sahibi zaten kendi sunucusunun konsolunu kullanıyor
+    /// (oyuncular hata çözmek için konsol istedi). Yine de tek satır olmalı; gömülü satır
+    /// sonu bir komutu ikiye bölerdi. Arayüzün kendi düğmeleri bunu kullanmaz.
+    /// </remarks>
+    /// <exception cref="ArgumentException">Satır boşsa, çok uzunsa veya satır sonu içeriyorsa.</exception>
+    public Task SendConsoleLineAsync(string line, CancellationToken cancellationToken = default)
+    {
+        if (!ServerCommand.IsValidConsoleLine(line))
+            throw new ArgumentException("Geçersiz konsol satırı.", nameof(line));
+
+        return WriteLineAsync(line.Trim(), cancellationToken);
+    }
+
+    private async Task WriteLineAsync(string commandLine, CancellationToken cancellationToken)
+    {
         var process = _process;
         if (process is null || process.HasExited)
             throw new InvalidOperationException("Server çalışmıyor.");
@@ -293,6 +333,7 @@ public sealed class ServerSupervisor : IAsyncDisposable
 
     private void HandleLine(string line)
     {
+        WriteDirectLog(line);
         LineReceived?.Invoke(line);
 
         if (!DsEventParser.TryParse(line, out var evt) || evt is null)
@@ -325,18 +366,86 @@ public sealed class ServerSupervisor : IAsyncDisposable
         var process = (Process)sender!;
         var code = process.ExitCode;
 
+        // Exited, akışlar boşalmadan tetiklenebiliyor; çöküşü anlatan son satırlar
+        // konsola düşmeden "kapandı" denmesin diye pompaları kısa süre bekle.
+        WaitForPumps(TimeSpan.FromSeconds(2));
+
+        WriteDirectLog($"[CoopKeep] engine exited with code {code}");
+        CloseDirectLog();
+
         Exited?.Invoke(new ServerExitInfo(
             ExitCode: code,
             Kind: ServerExit.Classify(code),
             WasExpected: _stopRequested));
     }
 
+    private void WaitForPumps(TimeSpan timeout)
+    {
+        var pumps = new[] { _stdoutPump, _stderrPump }.OfType<Task>().ToArray();
+        if (pumps.Length == 0) return;
+        try { Task.WaitAll(pumps, timeout); }
+        catch (AggregateException) { /* pompalar kendi hatalarını yutuyor */ }
+    }
+
+    // ------------------------------------------------------------------
+    // Modlu açılışın günlük dosyası
+    // ------------------------------------------------------------------
+
+    /// <summary>Sarmalayıcı gibi en yeni 10 günlüğü tutar.</summary>
+    private const int KeepLogs = 10;
+
+    private void OpenDirectLog(ServerLaunchOptions options)
+    {
+        CloseDirectLog();
+        if (!options.IsDirect) return;
+
+        try
+        {
+            var dir = Path.Combine(options.EffectiveDataDirectory, "logs");
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, $"coop-server-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+            var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+            lock (_logGate) _directLog = new StreamWriter(stream, new System.Text.UTF8Encoding(false)) { AutoFlush = true };
+
+            WriteDirectLog("[CoopKeep] modded launch: " + ServerLaunchOptions.ModuleArgument(options.EngineModules!));
+
+            foreach (var old in new DirectoryInfo(dir).GetFiles("coop-server-*.log")
+                         .OrderByDescending(f => f.LastWriteTimeUtc).Skip(KeepLogs))
+            {
+                try { old.Delete(); } catch (IOException) { /* açık olabilir; sonra silinir */ }
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // Günlük yazılamıyorsa sunucu yine çalışır; yalnızca dosya olmaz.
+        }
+    }
+
+    private void WriteDirectLog(string line)
+    {
+        lock (_logGate)
+        {
+            try { _directLog?.WriteLine($"{DateTime.Now:HH:mm:ss.fff}  {line}"); }
+            catch (Exception e) when (e is IOException or ObjectDisposedException) { _directLog = null; }
+        }
+    }
+
+    private void CloseDirectLog()
+    {
+        lock (_logGate)
+        {
+            try { _directLog?.Dispose(); } catch (IOException) { }
+            _directLog = null;
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         try
         {
+            // Büyük dünyalarda kapanıştaki kayıt uzun sürebiliyor; erken zorla kapatmak kaydı bozar.
             if (IsRunning)
-                await StopAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                await StopAsync(TimeSpan.FromSeconds(120)).ConfigureAwait(false);
         }
         catch
         {

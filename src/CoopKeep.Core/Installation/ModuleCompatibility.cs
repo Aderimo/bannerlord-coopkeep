@@ -78,6 +78,8 @@ public static class ModuleCompatibility
     public static readonly IReadOnlySet<string> BlockedModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "NavalDLC", "BirthAndDeath", "FastMode",
+        // Başka bir co-op modu (CoopKeep'in kendi modu): Coop ile aynı işi yapar, birlikte açılmaz.
+        "CoopKeep",
     };
 
     public static string LauncherDataPath => Path.Combine(
@@ -155,14 +157,17 @@ public static class ModuleCompatibility
         (launcherDataPath ?? LauncherDataPath) + ".coopkeep-backup";
 
     /// <summary>Oyun veya başlatıcısı açık mı? Açıkken dosyayı değiştirmek boşa gider: kapanırken üzerine yazar.</summary>
-    public static bool IsGameRunning()
+    public static bool IsGameRunning() => IsGameRunning(null);
+
+    /// <param name="exceptProcessId">Sayılmayacak süreç (yoksa <c>null</c>).</param>
+    public static bool IsGameRunning(int? exceptProcessId)
     {
         string[] names = ["Bannerlord", "Bannerlord.Native", "TaleWorlds.MountAndBlade.Launcher", "Bannerlord.BLSE.Standalone"];
 
         foreach (var name in names)
         {
             var processes = Process.GetProcessesByName(name);
-            var running = processes.Length > 0;
+            var running = processes.Any(p => p.Id != exceptProcessId);
             foreach (var p in processes) p.Dispose();
             if (running) return true;
         }

@@ -28,6 +28,7 @@ public sealed class ServerConfigStoreTests : IDisposable
 
     // --- yeni dosya oluşturma --------------------------------------------
 
+
     [Fact]
     public void yapilandirma_yoksa_olusturulur_ve_okunabilir()
     {

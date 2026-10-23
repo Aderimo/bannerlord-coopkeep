@@ -10,6 +10,9 @@ public sealed record CoopInstallation
 
     public required string DedicatedServerExe { get; init; }
 
+    /// <summary>Coop modülünün kimliği (<c>Coop</c>; deneme sürümünde <c>CoopNightly</c>).</summary>
+    public string ModuleId { get; init; } = "Coop";
+
     /// <summary>Steam Workshop öğe kimliği. Sürüm takibi için kullanılır.</summary>
     public string? WorkshopItemId { get; init; }
 
@@ -91,6 +94,9 @@ public sealed record BannerlordInstallation
     /// yapılmalı, aksi hâlde uyumlu bir kurulum yanlışlıkla uyumsuz raporlanır.
     /// </remarks>
     public string? GameVersion { get; init; }
+
+    /// <summary>Epic Games kurulumu mu (Steam Atölyesi yok; modlar zip ile gelir)?</summary>
+    public bool IsEpic { get; init; }
 
     public string ModulesDirectory => Path.Combine(InstallDirectory, "Modules");
 

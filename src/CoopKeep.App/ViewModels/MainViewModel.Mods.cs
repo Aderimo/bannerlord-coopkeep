@@ -134,6 +134,7 @@ public partial class MainViewModel
 
     partial void OnModuleProblemChanged(bool value)
     {
+        OnPropertyChanged(nameof(ShowModuleBanner));
         OnPropertyChanged(nameof(ModsHeadline));
         OnPropertyChanged(nameof(ModsCardBorder));
         OnPropertyChanged(nameof(ModsIconBackground));
@@ -163,7 +164,7 @@ public partial class MainViewModel
 
         try
         {
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+            using var http = CoopKeep.Core.Net.FastHttp.Create(TimeSpan.FromSeconds(8));
             http.DefaultRequestHeaders.UserAgent.ParseAdd("CoopKeep/" + AppVersion.TrimStart('v'));
             _community = await ModCompatDatabase.FetchAsync(http, CommunityCachePath);
         }
@@ -203,12 +204,7 @@ public partial class MainViewModel
             foreach (var file in latest)
             {
                 string[] content;
-                try
-                {
-                    using var reader = new StreamReader(new FileStream(file.FullName, FileMode.Open, FileAccess.Read,
-                        FileShare.ReadWrite | FileShare.Delete));
-                    content = reader.ReadToEnd().Split('\n');
-                }
+                try { content = ReadLogTail(file.FullName).Split('\n'); }
                 catch (IOException) { continue; }
 
                 foreach (var l in content) yield return l;
@@ -222,6 +218,17 @@ public partial class MainViewModel
             found.Add(id);
 
         _localModuleErrors = found;
+    }
+
+    /// <summary>Taranacak en fazla son bayt: günlükler 16 MB'a çıkabiliyor, katılma hataları sonda olur.</summary>
+    private const int LogTailBytes = 2 * 1024 * 1024;
+
+    private static string ReadLogTail(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        if (stream.Length > LogTailBytes) stream.Seek(-LogTailBytes, SeekOrigin.End);
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 
     private void ReloadModules(ModuleCheckResult? result)
@@ -508,7 +515,7 @@ public partial class MainViewModel
 
     private static readonly Lazy<HttpClient> WorkshopHttp = new(() =>
     {
-        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        var http = CoopKeep.Core.Net.FastHttp.Create(TimeSpan.FromSeconds(10));
         http.DefaultRequestHeaders.UserAgent.ParseAdd("CoopKeep/" + AppVersion.TrimStart('v'));
         return http;
     });

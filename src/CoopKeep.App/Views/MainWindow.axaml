@@ -80,43 +80,6 @@
                             <TextBlock Text="{Binding L[nav.worlds]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PagePlayers}" IsVisible="{Binding !IsViewerMode}">
-                        <RadioButton.Tag>
-                            <Border Classes="badge" Background="{StaticResource SuccessSoft}" Padding="7,1"
-                                    IsVisible="{Binding HasPlayers}">
-                                <TextBlock Text="{Binding OnlinePlayerCount}" FontSize="11" FontWeight="SemiBold"
-                                           Foreground="{StaticResource Success}" />
-                            </Border>
-                        </RadioButton.Tag>
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconUsers}" />
-                            <TextBlock Text="{Binding L[nav.players]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageCheats}" IsVisible="{Binding !IsViewerMode}">
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconSparkle}" />
-                            <TextBlock Text="{Binding L[nav.cheats]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMap}">
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconMap}" />
-                            <TextBlock Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageEncyclopedia}">
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconBook}" />
-                            <TextBlock Text="{Binding L[nav.encyclopedia]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageBackups}" IsVisible="{Binding !IsViewerMode}">
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconArchive}" />
-                            <TextBlock Text="{Binding L[nav.backups]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
                     <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMods}" IsVisible="{Binding !IsViewerMode}">
                         <RadioButton.Tag>
                             <Border Classes="badge" Background="{StaticResource DangerSoft}" Padding="7,1"
@@ -130,6 +93,31 @@
                             <TextBlock Text="{Binding L[nav.mods]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PagePlayers}" IsVisible="{Binding !IsViewerMode}">
+                        <RadioButton.Tag>
+                            <Border Classes="badge" Background="{StaticResource SuccessSoft}" Padding="7,1"
+                                    IsVisible="{Binding HasPlayers}">
+                                <TextBlock Text="{Binding OnlinePlayerCount}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource Success}" />
+                            </Border>
+                        </RadioButton.Tag>
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconUsers}" />
+                            <TextBlock Text="{Binding L[nav.players]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageBackups}" IsVisible="{Binding !IsViewerMode}">
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconArchive}" />
+                            <TextBlock Text="{Binding L[nav.backups]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageGuide}">
+                        <StackPanel Orientation="Horizontal" Spacing="11">
+                            <Path Classes="icon" Data="{StaticResource IconInfo}" />
+                            <TextBlock Text="{Binding L[nav.guide]}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
                     <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageSettings}">
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Path Classes="icon" Data="{StaticResource IconSliders}" />
@@ -139,12 +127,45 @@
 
                     <Border Height="1" Background="{StaticResource BorderDim}" Margin="8,10" />
 
-                    <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageConsole}" IsVisible="{Binding !IsViewerMode}">
-                        <StackPanel Orientation="Horizontal" Spacing="11">
-                            <Path Classes="icon" Data="{StaticResource IconTerminal}" />
-                            <TextBlock Text="{Binding L[nav.console]}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </RadioButton>
+                    <!-- Araçlar: ileri düzey sayfalar; kapalıyken ana yol sade kalır -->
+                    <ToggleButton Classes="disclosure navgroup" IsChecked="{Binding ToolsExpanded}" HorizontalAlignment="Stretch"
+                                  ToolTip.Tip="{Binding L[nav.toolsTip]}">
+                        <Grid ColumnDefinitions="*,Auto" Margin="12,0,8,0">
+                            <TextBlock Classes="dim" FontSize="11.5" FontWeight="SemiBold" Text="{Binding L[nav.tools]}" VerticalAlignment="Center" />
+                            <Panel Grid.Column="1" VerticalAlignment="Center">
+                                <Path Data="M6,9 L12,15 L18,9" IsVisible="{Binding !$parent[ToggleButton].IsChecked}" Stroke="{StaticResource TextDim}" StrokeThickness="2"
+                                  Width="10" Height="10" Stretch="Uniform" StrokeLineCap="Round" StrokeJoin="Round" />
+                                <Path Data="M6,15 L12,9 L18,15" IsVisible="{Binding $parent[ToggleButton].IsChecked}" Stroke="{StaticResource TextDim}" StrokeThickness="2"
+                                  Width="10" Height="10" Stretch="Uniform" StrokeLineCap="Round" StrokeJoin="Round" />
+                            </Panel>
+                        </Grid>
+                    </ToggleButton>
+                    <StackPanel Spacing="3" IsVisible="{Binding ToolsExpanded}">
+                        <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageCheats}" IsVisible="{Binding !IsViewerMode}">
+                            <StackPanel Orientation="Horizontal" Spacing="11">
+                                <Path Classes="icon" Data="{StaticResource IconSparkle}" />
+                                <TextBlock Text="{Binding L[nav.cheats]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageMap}">
+                            <StackPanel Orientation="Horizontal" Spacing="11">
+                                <Path Classes="icon" Data="{StaticResource IconMap}" />
+                                <TextBlock Text="{Binding L[nav.map]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageEncyclopedia}">
+                            <StackPanel Orientation="Horizontal" Spacing="11">
+                                <Path Classes="icon" Data="{StaticResource IconBook}" />
+                                <TextBlock Text="{Binding L[nav.encyclopedia]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding PageConsole}" IsVisible="{Binding !IsViewerMode}">
+                            <StackPanel Orientation="Horizontal" Spacing="11">
+                                <Path Classes="icon" Data="{StaticResource IconTerminal}" />
+                                <TextBlock Text="{Binding L[nav.console]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Alt: gizlilik, dil, geliştirici -->
@@ -169,14 +190,63 @@
                             <TextBlock Text="{Binding L[lang.label]}" FontSize="12" HorizontalAlignment="Center" />
                         </Button>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Spacing="5" Margin="6,0,0,0">
+                    <Grid ColumnDefinitions="*,Auto" Margin="6,0,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Classes="dim" FontSize="11" Text="{Binding L[lbl.madeBy]}" VerticalAlignment="Center" />
                         <Button Classes="ghost" Command="{Binding OpenAuthorPageCommand}" Padding="2,0"
                                 ToolTip.Tip="{Binding AuthorUrl}">
-                            <TextBlock Text="{Binding AuthorName}" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Accent}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding AuthorName}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource Accent}" VerticalAlignment="Center" />
+                                <Path Data="{StaticResource IconGlobe}" Stroke="{StaticResource Accent}" StrokeThickness="1.8"
+                                      Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" />
+                            </StackPanel>
                         </Button>
                     </StackPanel>
+                    <!-- Bildirim geçmişi (zil) -->
+                    <Button Grid.Column="1" Classes="ghost" Padding="6,3" Command="{Binding MarkToastsSeenCommand}" ToolTip.Tip="{Binding L[notif.title]}">
+                        <Panel>
+                            <Path Data="{StaticResource IconBell}" Stroke="{StaticResource TextDim}" StrokeThickness="1.7"
+                                  Width="14" Height="14" Stretch="Uniform" />
+                            <Border Background="{StaticResource Danger}" CornerRadius="6" MinWidth="12" Height="12" Padding="3,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-6,-8,0" IsVisible="{Binding HasUnseenToasts}">
+                                <TextBlock Text="{Binding UnseenToasts}" FontSize="8.5" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Panel>
+                        <Button.Flyout>
+                            <Flyout Placement="TopEdgeAlignedLeft">
+                                <StackPanel Width="380" Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Classes="h2" Text="{Binding L[notif.title]}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Classes="ghost small" Command="{Binding ClearToastHistoryCommand}"
+                                                Content="{Binding L[notif.clear]}" IsVisible="{Binding HasToastHistory}" />
+                                    </Grid>
+                                    <TextBlock Classes="hint" Text="{Binding L[notif.empty]}" IsVisible="{Binding !HasToastHistory}" />
+                                    <ScrollViewer MaxHeight="420" IsVisible="{Binding HasToastHistory}">
+                                        <ItemsControl ItemsSource="{Binding ToastHistory}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ToastRecord">
+                                                    <Grid ColumnDefinitions="Auto,*" Margin="0,4">
+                                                        <Panel Width="8" Height="8" Margin="0,5,10,0" VerticalAlignment="Top">
+                                                            <Ellipse Fill="{StaticResource Success}" IsVisible="{Binding IsNormal}" />
+                                                            <Ellipse Fill="{StaticResource Warning}" IsVisible="{Binding IsWarning}" />
+                                                            <Ellipse Fill="{StaticResource Danger}" IsVisible="{Binding IsError}" />
+                                                        </Panel>
+                                                        <StackPanel Grid.Column="1" Spacing="1">
+                                                            <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Text="{Binding Text}" />
+                                                            <TextBlock Classes="dim" FontSize="10.5" Text="{Binding Time}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    </Grid>
                 </StackPanel>
             </Grid>
         </Border>
@@ -287,6 +357,7 @@
 
     <!-- ================= SUNUCU LİSANS ONAYI ================= -->
     <views:EulaOverlay IsVisible="{Binding EulaOpen}" />
+    <views:PreflightOverlay IsVisible="{Binding PreflightOpen}" />
 
     <!-- ================= KARŞILAMA ================= -->
     <views:WelcomeOverlay IsVisible="{Binding ShowTutorial}" />

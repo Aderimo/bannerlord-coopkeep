@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CoopKeep.App.ViewModels"
+             x:Class="CoopKeep.App.Views.Pages.GuidePage"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+      Nasıl kullanılır: indirmeden ilk oyuna, sonra arkadaşların katılması, modlu oynama ve
+      en sık sorunlar. Metinler iki dilli (guide.*); her adımda o işi yapan düğme.
+  -->
+  <UserControl.Styles>
+    <Style Selector="TextBlock.step">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="TextBlock.guide">
+        <Setter Property="FontSize" Value="13.5" />
+        <Setter Property="LineHeight" Value="21" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="32,28,32,36" Spacing="14" MaxWidth="900">
+        <StackPanel Classes="enter" Spacing="4">
+            <TextBlock Classes="display" Text="{Binding L[guide.title]}" />
+            <TextBlock Classes="dim" FontSize="13.5" TextWrapping="Wrap" Text="{Binding L[guide.sub]}" />
+        </StackPanel>
+
+        <!-- 1. Kurulum -->
+        <Border Classes="card enter d1">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s1.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s1.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s1.body]}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Classes="primary" Command="{Binding RunCheckFixCommand}" CommandParameter="{x:Static vm:GuideFixes.Workshop}"
+                            Content="{Binding L[guide.s1.btn]}" />
+                    <Button Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Home}" Content="{Binding L[guide.s1.check]}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 2. Dünya -->
+        <Border Classes="card enter d1">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s2.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s2.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s2.body]}" />
+                <Button HorizontalAlignment="Left" Command="{Binding OpenWizardCommand}" Content="{Binding L[guide.s2.btn]}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 3. Sunucu -->
+        <Border Classes="card enter d2">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s3.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s3.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s3.body]}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 4. Arkadaşlar -->
+        <Border Classes="card enter d2">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s4.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s4.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s4.body]}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 5. Modlu oynama -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s5.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s5.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s5.body]}" />
+                <Button HorizontalAlignment="Left" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Mods}" Content="{Binding L[guide.s5.btn]}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 6. Sorun giderme -->
+        <Border Classes="card enter d3">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="step" Text="{Binding L[guide.s6.step]}" />
+                <TextBlock Classes="h2" Text="{Binding L[guide.s6.title]}" />
+                <TextBlock Classes="guide" Text="{Binding L[guide.s6.body]}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Backups}" Content="{Binding L[guide.s6.backups]}" />
+                    <Button Command="{Binding CreateBugReportCommand}" Content="{Binding L[btn.createReport]}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Ulaşmak için -->
+        <Border Classes="card enter d3" Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Width="42" Height="42" CornerRadius="21" Background="{StaticResource BgRaised}" VerticalAlignment="Center">
+                    <Path Data="{StaticResource IconHeart}" Stroke="{StaticResource Accent}" StrokeThickness="1.8" Width="18" Height="18" Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="h2" Text="{Binding L[guide.contact.title]}" />
+                    <TextBlock Classes="body" TextWrapping="Wrap" Text="{Binding L[guide.contact.body]}" />
+                </StackPanel>
+                <Button Grid.Column="2" Classes="primary" VerticalAlignment="Center" Command="{Binding OpenAuthorPageCommand}" ToolTip.Tip="{Binding AuthorUrl}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Data="{StaticResource IconGlobe}" Stroke="{StaticResource OnAccent}" StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform" />
+                        <TextBlock Text="{Binding AuthorLinkText}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

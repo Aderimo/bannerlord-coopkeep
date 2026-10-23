@@ -79,7 +79,7 @@ public sealed class GameImageService : IDisposable
         // Oyundan çıkarılan görseller ("game" alt klasörü) wiki'dekilerin önüne geçer.
         var roots = (packDirectories ?? []).Append(cacheDirectory).Distinct().ToList();
         _packDirectories = roots.Select(r => Path.Combine(r, "game")).Concat(roots).ToList();
-        _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        _http = http ?? Net.FastHttp.Create(TimeSpan.FromSeconds(20));
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("CoopKeep/0.4 (+https://github.com/Aderimo/bannerlord-coopkeep)");
         _index = LoadIndex();
     }

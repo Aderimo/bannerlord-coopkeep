@@ -46,6 +46,29 @@ public class ServerCommandTests
         Assert.False(ServerCommand.IsAllowed(komut));
     }
 
+    // --- elle konsol satırı ---------------------------------------------
+
+    [Theory]
+    [InlineData("help")]
+    [InlineData("coop.debug.players.list")]
+    [InlineData("campaign.add_gold_to_hero 100")]  // sahibin kendi sunucusu: izin listesi yok
+    public void elle_yazilan_tek_satir_kabul_edilir(string satir)
+        => Assert.True(ServerCommand.IsValidConsoleLine(satir));
+
+    [Theory]
+    [InlineData("say a\nstop")]
+    [InlineData("status\r")]
+    [InlineData("say \u0007")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public void elle_yazilan_satirda_satir_sonu_ve_bos_girdi_reddedilir(string? satir)
+        => Assert.False(ServerCommand.IsValidConsoleLine(satir));
+
+    [Fact]
+    public void elle_yazilan_cok_uzun_satir_reddedilir()
+        => Assert.False(ServerCommand.IsValidConsoleLine(new string('a', ServerCommand.MaxConsoleLineLength + 1)));
+
     // --- say ------------------------------------------------------------
 
     [Fact]

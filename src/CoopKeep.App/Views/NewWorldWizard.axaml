@@ -7,8 +7,9 @@
              x:DataType="vm:MainViewModel">
 
   <!--
-      Oyundaki "Yeni kampanya" akışının karşılığı: başlangıç türü → ad → zorluk →
-      kurallar → sunucu ve özet. Her adım tek bir karar ister.
+      Oyundaki "Yeni kampanya" akışının karşılığı: ad → zorluk → kurallar → modlar →
+      sunucu ve özet. Her adım tek bir karar ister. Sonunda "Oluştur ve oyna" ya da
+      "Yalnızca oluştur".
   -->
   <Border Background="#D9090A0D">
     <Border Classes="enter" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource BorderDim}"
@@ -57,34 +58,24 @@
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
           <Panel Margin="30,14,30,10">
 
-            <!-- ===== 0 · Başlangıç ===== -->
-            <StackPanel Classes="enter" Spacing="16" IsVisible="{Binding WizardStep0}">
-                <TextBlock Classes="body" FontSize="14" Text="{Binding L[wiz.start.q]}" />
-                <UniformGrid Columns="2">
-                    <RadioButton Classes="choice" GroupName="wizStart" IsChecked="{Binding WizardNew}" Margin="0,0,6,0">
-                        <StackPanel Spacing="8">
-                            <Path Data="{StaticResource IconSparkle}" Stroke="{StaticResource Accent}" StrokeThickness="1.6"
-                                  Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Left" />
-                            <TextBlock Text="{Binding L[wiz.start.new]}" FontWeight="SemiBold" FontSize="15" />
-                            <TextBlock Classes="hint" Text="{Binding L[wiz.start.new.desc]}" />
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton Classes="choice" GroupName="wizStart" IsChecked="{Binding WizardImport}" Margin="6,0,0,0">
-                        <StackPanel Spacing="8">
-                            <Path Data="{StaticResource IconImport}" Stroke="{StaticResource Accent}" StrokeThickness="1.6"
-                                  Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Left" />
-                            <TextBlock Text="{Binding L[wiz.start.import]}" FontWeight="SemiBold" FontSize="15" />
-                            <TextBlock Classes="hint" Text="{Binding L[wiz.start.import.desc]}" />
-                        </StackPanel>
-                    </RadioButton>
-                </UniformGrid>
+            <!-- ===== 0 · Ad ===== -->
+            <StackPanel Classes="enter" Spacing="12" IsVisible="{Binding WizardStep0}" MaxWidth="560" HorizontalAlignment="Left">
+                <TextBlock Classes="h2" Text="{Binding L[wiz.name.q]}" />
+                <TextBlock Classes="hint" Text="{Binding L[wiz.name.hint]}" />
+                <TextBox Text="{Binding WizardName}" FontSize="16" Padding="14,11" MaxLength="64" />
+                <TextBlock Foreground="{StaticResource Danger}" FontSize="12.5" Text="{Binding WizardNameError}"
+                           IsVisible="{Binding WizardHasNameError}" />
 
-                <!-- İçe aktarılacak kaydı seç -->
+                <!-- Yeni dünya ya da tek oyunculu bir kampanyayı sürdürmek -->
+                <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,6,0,0">
+                    <RadioButton GroupName="wizStart" IsChecked="{Binding WizardNew}" Content="{Binding L[wiz.start.new]}" />
+                    <RadioButton GroupName="wizStart" IsChecked="{Binding WizardImport}" Content="{Binding L[wiz.start.import]}" />
+                </StackPanel>
                 <StackPanel Spacing="10" IsVisible="{Binding WizardImport}">
-                    <TextBlock Classes="h2" Text="{Binding L[wiz.import.pick]}" />
+                    <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[wiz.start.import.desc]}" />
                     <TextBlock Classes="hint" Text="{Binding L[wiz.import.none]}" IsVisible="{Binding !HasSinglePlayerSaves}" />
                     <ListBox ItemsSource="{Binding SinglePlayerSaves}" SelectedItem="{Binding SelectedImportSave}"
-                             MaxHeight="210" IsVisible="{Binding HasSinglePlayerSaves}">
+                             MaxHeight="170" IsVisible="{Binding HasSinglePlayerSaves}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="saves:SaveSet">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -95,48 +86,48 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-
-                    <!-- Seçili kaydın bilgisi ve uyumu -->
                     <Border Classes="inset" IsVisible="{Binding HasImportInfo}">
                         <StackPanel Spacing="8">
                             <TextBlock Classes="body" Text="{Binding ImportSummary}" />
-                            <Border Background="{StaticResource DangerSoft}" CornerRadius="8" Padding="12,10"
-                                    IsVisible="{Binding ImportBlocked}">
-                                <Grid ColumnDefinitions="Auto,*">
-                                    <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.8"
-                                          Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Top" />
-                                    <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="body" Foreground="#F5C2C2"
-                                               Text="{Binding ImportProblem}" />
-                                </Grid>
-                            </Border>
-                            <Border Background="{StaticResource WarningSoft}" CornerRadius="8" Padding="12,10"
-                                    IsVisible="{Binding ImportWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                <TextBlock Classes="body" Text="{Binding ImportWarning}" />
-                            </Border>
+                            <TextBlock Classes="body" TextWrapping="Wrap" Foreground="{StaticResource Danger}"
+                                       Text="{Binding ImportProblem}" IsVisible="{Binding ImportBlocked}" />
+                            <TextBlock Classes="body" TextWrapping="Wrap" Text="{Binding ImportWarning}" IsVisible="{Binding HasImportWarning}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </StackPanel>
 
-            <!-- ===== 1 · Ad ===== -->
-            <StackPanel Classes="enter" Spacing="12" IsVisible="{Binding WizardStep1}" MaxWidth="560" HorizontalAlignment="Left">
-                <TextBlock Classes="h2" Text="{Binding L[wiz.name.q]}" />
-                <TextBlock Classes="hint" Text="{Binding L[wiz.name.hint]}" />
-                <TextBox Text="{Binding WizardName}" FontSize="16" Padding="14,11" MaxLength="64" />
-                <TextBlock Foreground="{StaticResource Danger}" FontSize="12.5" Text="{Binding WizardNameError}"
-                           IsVisible="{Binding WizardHasNameError}" />
-            </StackPanel>
-
-            <!-- ===== 2 · Zorluk ===== -->
-            <Panel Classes="enter" IsVisible="{Binding WizardStep2}">
+            <!-- ===== 1 · Zorluk ===== -->
+            <Panel Classes="enter" IsVisible="{Binding WizardStep1}">
                 <pages:WorldSettingsPanel DataContext="{Binding WizardSettings}" ShowRules="False"
                                           PresetGroup="wizPreset" ExpandDetails="False" />
             </Panel>
 
-            <!-- ===== 3 · Kurallar ===== -->
-            <StackPanel Classes="enter" Spacing="10" IsVisible="{Binding WizardStep3}">
+            <!-- ===== 2 · Kurallar ===== -->
+            <StackPanel Classes="enter" Spacing="10" IsVisible="{Binding WizardStep2}">
                 <TextBlock Classes="hint" Text="{Binding L[wiz.rules.hint]}" />
                 <pages:WorldSettingsPanel DataContext="{Binding WizardSettings}" ShowDifficulty="False" />
+            </StackPanel>
+
+            <!-- ===== 3 · Modlar ===== -->
+            <StackPanel Classes="enter" Spacing="12" IsVisible="{Binding WizardStep3}">
+                <TextBlock Classes="h2" Text="{Binding L[wiz.mods.q]}" />
+                <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[wiz.mods.hint]}" />
+                <ToggleSwitch IsChecked="{Binding WizardModded}"
+                              OnContent="{Binding L[wiz.mods.on]}" OffContent="{Binding L[wiz.mods.off]}" />
+                <TextBlock Classes="hint" Text="{Binding L[wiz.mods.none]}" IsVisible="{Binding !HasWizardMods}" />
+                <Border Classes="inset" IsVisible="{Binding HasWizardMods}" IsEnabled="{Binding WizardModded}">
+                    <ItemsControl ItemsSource="{Binding WizardMods}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:WorldModOption">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Id}" />
+                                    <TextBlock Grid.Column="1" Classes="dim" VerticalAlignment="Center" Text="{Binding Version}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
             </StackPanel>
 
             <!-- ===== 4 · Sunucu ve özet ===== -->
@@ -148,10 +139,6 @@
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[settings.passwordHint]}"><TextBlock Text="{Binding L[lbl.password]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
                             <TextBox Grid.Column="1" Width="220" Text="{Binding EditPassword}" PasswordChar="•"
                                      RevealPassword="{Binding !PrivacyMode}" VerticalAlignment="Center" />
-                        </Grid>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.steamHint]}"><TextBlock Text="{Binding L[lbl.steam]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
-                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding EditSteam}" VerticalAlignment="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,0" VerticalAlignment="Center" Background="Transparent" ToolTip.Tip="{Binding L[msg.autosaveHint]}"><TextBlock Text="{Binding L[lbl.autosave]}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" /><Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" /></StackPanel>
@@ -169,9 +156,27 @@
                         <TextBlock Classes="eyebrow" Text="{Binding L[wiz.summary]}" />
                         <TextBlock Classes="h1" Text="{Binding WizardName}" />
                         <TextBlock Classes="body" Text="{Binding WizardSettings.Summary}" />
-                        <TextBlock Classes="hint" Text="{Binding WizardCreateHint}" />
                     </StackPanel>
                 </Border>
+
+                <!-- Nasıl başlasın: alttaki iki düğmenin açıklaması -->
+                <StackPanel Spacing="10" IsVisible="{Binding !WizardCreating}">
+                    <TextBlock Classes="h2" Text="{Binding L[wiz.how]}" />
+                    <UniformGrid Columns="2">
+                        <Border Classes="inset" Margin="0,0,6,0">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding L[wiz.play]}" FontWeight="SemiBold" FontSize="14" />
+                                <TextBlock Classes="hint" Text="{Binding L[wiz.play.desc]}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="inset" Margin="6,0,0,0">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding L[wiz.only]}" FontWeight="SemiBold" FontSize="14" />
+                                <TextBlock Classes="hint" Text="{Binding L[wiz.only.desc]}" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
 
                 <!-- Kuruluyor -->
                 <StackPanel Spacing="10" IsVisible="{Binding WizardCreating}">
@@ -206,13 +211,17 @@
                         <Path Classes="icon" Data="{StaticResource IconArrowRight}" Width="14" />
                     </StackPanel>
                 </Button>
-                <Button Grid.Column="2" Classes="primary big" Command="{Binding WizardCreateCommand}"
-                        IsVisible="{Binding WizardIsLastStep}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Path Classes="icon" Data="{StaticResource IconCheck}" StrokeThickness="2.4" Width="14" />
-                        <TextBlock Text="{Binding WizardCreateLabel}" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" IsVisible="{Binding WizardIsLastStep}">
+                    <Button Command="{Binding WizardCreateOnlyCommand}" ToolTip.Tip="{Binding L[wiz.only.desc]}">
+                        <TextBlock Text="{Binding L[wiz.only]}" />
+                    </Button>
+                    <Button Classes="primary big" Command="{Binding WizardCreateAndPlayCommand}" ToolTip.Tip="{Binding L[wiz.play.desc]}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Data="{StaticResource IconPlay}" Fill="{StaticResource OnAccent}" Width="12" Height="12" Stretch="Uniform" />
+                            <TextBlock Text="{Binding L[wiz.play]}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
       </Grid>

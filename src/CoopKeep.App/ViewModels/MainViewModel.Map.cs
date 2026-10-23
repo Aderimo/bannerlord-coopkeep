@@ -160,6 +160,13 @@ public partial class MainViewModel
     public const double MapHeight = MapProjection.ImageHeight;
 
     public ObservableCollection<MapSettlement> MapSettlements { get; } = [];
+
+    // Katmanlar yalnızca kendi türlerini alır. Önce her katman bütün listeyi alıp türü olmayanı
+    // gizliyordu: ~1.400 görünmez işaret harita sayfasında ~200 MB bellek tutuyordu (ölçüldü).
+    public ObservableCollection<MapSettlement> MapFortified { get; } = [];
+    public ObservableCollection<MapSettlement> MapTowns { get; } = [];
+    public ObservableCollection<MapSettlement> MapCastles { get; } = [];
+    public ObservableCollection<MapSettlement> MapVillages { get; } = [];
     public ObservableCollection<MapPlayer> MapPlayers { get; } = [];
     public ObservableCollection<MapLord> MapLords { get; } = [];
     public ObservableCollection<KingdomLabel> KingdomLabels { get; } = [];
@@ -223,6 +230,14 @@ public partial class MainViewModel
             // Köyler bağlı oldukları kasaba/kalenin sahibine aittir.
             foreach (var v in MapSettlements.Where(s => s.IsVillage && s.Info.BoundTo is not null))
                 if (MapSettlements.FirstOrDefault(s => s.Id == v.Info.BoundTo) is { OwnerClanId: { } owner }) ApplyOwner(v, owner);
+
+            foreach (var pin in MapSettlements)
+            {
+                if (pin.IsFortified) MapFortified.Add(pin);
+                if (pin.IsTown) MapTowns.Add(pin);
+                else if (pin.IsCastle) MapCastles.Add(pin);
+                else if (pin.IsVillage) MapVillages.Add(pin);
+            }
 
             RebuildKingdomLabels();
             InitRulers();

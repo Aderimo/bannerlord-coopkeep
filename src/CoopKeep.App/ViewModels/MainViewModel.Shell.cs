@@ -10,7 +10,7 @@ using CoopKeep.Core.Protocol;
 namespace CoopKeep.App.ViewModels;
 
 /// <summary>Uygulamanın sayfaları.</summary>
-public enum AppPage { Home, Worlds, Players, Cheats, Map, Backups, Mods, Settings, Console, Encyclopedia }
+public enum AppPage { Home, Worlds, Players, Cheats, Map, Backups, Mods, Settings, Console, Encyclopedia, Guide }
 
 /// <summary>Ana sayfanın gösterdiği "sıradaki adım".</summary>
 public enum HomeState
@@ -51,6 +51,15 @@ public sealed partial class Toast(string text, ToastKind kind) : ObservableObjec
     [ObservableProperty] private bool _isLeaving;
 }
 
+/// <summary>Bildirim geçmişindeki bir kayıt (zil menüsü).</summary>
+public sealed record ToastRecord(string Text, ToastKind Kind, DateTime At)
+{
+    public string Time => At.ToString("HH:mm");
+    public bool IsError => Kind == ToastKind.Error;
+    public bool IsWarning => Kind == ToastKind.Warning;
+    public bool IsNormal => Kind is ToastKind.Success or ToastKind.Info;
+}
+
 /// <summary>
 /// Gezinme, ana sayfa durumu ve bildirimler.
 /// </summary>
@@ -75,10 +84,26 @@ public partial class MainViewModel
     public bool PageMods { get => CurrentPage == AppPage.Mods; set { if (value) CurrentPage = AppPage.Mods; } }
     public bool PageSettings { get => CurrentPage == AppPage.Settings; set { if (value) CurrentPage = AppPage.Settings; } }
     public bool PageConsole { get => CurrentPage == AppPage.Console; set { if (value) CurrentPage = AppPage.Console; } }
+    public bool PageGuide { get => CurrentPage == AppPage.Guide; set { if (value) CurrentPage = AppPage.Guide; } }
     public bool PageEncyclopedia { get => CurrentPage == AppPage.Encyclopedia; set { if (value) CurrentPage = AppPage.Encyclopedia; } }
+
+    /// <summary>Yan menüdeki "Araçlar" grubu açık mı (Hileler, Harita, Ansiklopedi, Konsol).</summary>
+    [ObservableProperty] private bool _toolsExpanded;
+
+    partial void OnToolsExpandedChanged(bool value)
+    {
+        if (_ui.ToolsExpanded == value) return;
+        _ui.ToolsExpanded = value;
+        _ui.Save();
+    }
+
+    private static bool IsToolPage(AppPage page) =>
+        page is AppPage.Cheats or AppPage.Map or AppPage.Encyclopedia or AppPage.Console;
 
     partial void OnCurrentPageChanged(AppPage value)
     {
+        // Başka yerden bir araç sayfasına gidilirse grup açılır ki seçili sayfa görünsün.
+        if (IsToolPage(value)) ToolsExpanded = true;
         OnPropertyChanged(nameof(PageHome));
         OnPropertyChanged(nameof(PageWorlds));
         OnPropertyChanged(nameof(PagePlayers));
@@ -88,10 +113,16 @@ public partial class MainViewModel
         OnPropertyChanged(nameof(PageMods));
         OnPropertyChanged(nameof(PageSettings));
         OnPropertyChanged(nameof(PageConsole));
+        OnPropertyChanged(nameof(PageGuide));
         OnPropertyChanged(nameof(PageEncyclopedia));
         if (value == AppPage.Encyclopedia) OnEncyclopediaOpened();
+        if (value is AppPage.Home or AppPage.Settings) OnCoopPageOpened();
 
-        if (value == AppPage.Mods) CheckModules();
+        if (value == AppPage.Mods)
+        {
+            CheckModules();
+            LoadManagedMods();
+        }
         if (value is AppPage.Players or AppPage.Cheats && IsServing) _ = RefreshHeroesAsync();
         if (value == AppPage.Players) ReloadBans();
         if (value == AppPage.Cheats) LoadCheatCatalogs();
@@ -116,6 +147,30 @@ public partial class MainViewModel
     }
 
     public bool HomeSetup => HomeState == HomeState.Setup;
+
+    // Ana sayfanın üstündeki yolculuk: Kurulum → Dünya → Sunucu → Arkadaşlar. Yeni kullanıcı
+    // "şu an neredeyim, sırada ne var"ı görür.
+    public bool JourneySetupDone => InstallationFound;
+    public bool JourneyWorldDone => JourneySetupDone && HasCampaigns && SelectedCampaign is not null;
+    public bool JourneyServerDone => JourneyWorldDone && IsServing;
+    public bool JourneyFriendsDone => JourneyServerDone && OnlinePlayerCount > 0;
+    public bool JourneySetupActive => !JourneySetupDone;
+    public bool JourneyWorldActive => JourneySetupDone && !JourneyWorldDone;
+    public bool JourneyServerActive => JourneyWorldDone && !JourneyServerDone;
+    public bool JourneyFriendsActive => JourneyServerDone && !JourneyFriendsDone;
+
+    private void RaiseJourneyChanged()
+    {
+        foreach (var name in new[]
+                 {
+                     nameof(JourneySetupDone), nameof(JourneyWorldDone), nameof(JourneyServerDone), nameof(JourneyFriendsDone),
+                     nameof(JourneySetupActive), nameof(JourneyWorldActive), nameof(JourneyServerActive), nameof(JourneyFriendsActive),
+                 })
+            OnPropertyChanged(name);
+    }
+
+    /// <summary>Kurulum tamam ama düzeltilecek bir şey var: ana kartın altında gösterilir.</summary>
+    public bool ShowSetupProblems => !HomeSetup && HasSetupProblems;
     public bool HomeNoWorld => HomeState == HomeState.NoWorld;
     public bool HomeReady => HomeState == HomeState.Ready;
     public bool HomeStarting => HomeState is HomeState.Starting or HomeState.Stopping;
@@ -182,7 +237,7 @@ public partial class MainViewModel
     private void OpenSteamFriends() => OpenPath("steam://open/friends");
 
     /// <summary>Steam adı henüz bilinmiyorken gösterilen metin: Steam kapalıysa bunu söyler.</summary>
-    public string HostNamePlaceholder => L[!EditSteam ? "invite.steamOff" : IsServing ? "invite.steamWaiting" : "msg.hostNameUnknown"];
+    public string HostNamePlaceholder => L[IsRunning ? "invite.steamWaiting" : "msg.hostNameUnknown"];
 
     private void RaiseHomeChanged()
     {
@@ -190,6 +245,7 @@ public partial class MainViewModel
         OnPropertyChanged(nameof(HomeSetup));
         OnPropertyChanged(nameof(HomeNoWorld));
         OnPropertyChanged(nameof(HomeReady));
+        OnPropertyChanged(nameof(ShowModuleBanner));
         OnPropertyChanged(nameof(HomeStarting));
         OnPropertyChanged(nameof(HomeOnline));
         OnPropertyChanged(nameof(HeroTitle));
@@ -202,6 +258,7 @@ public partial class MainViewModel
         OnPropertyChanged(nameof(Step3Done));
         OnPropertyChanged(nameof(OnlinePlayerCount));
         OnPropertyChanged(nameof(SidebarWorldName));
+        RaiseJourneyChanged();
         OnPropertyChanged(nameof(HostNamePlaceholder));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
@@ -210,6 +267,31 @@ public partial class MainViewModel
     // --- bildirimler -----------------------------------------------------
 
     public ObservableCollection<Toast> Toasts { get; } = [];
+
+    /// <summary>
+    /// Son bildirimler (en yeni üstte). Bildirim birkaç saniyede kaybolduğu için kaçırılan
+    /// mesaj ("gereken modlar açıldı", "abone ol sayfaları açıldı"…) buradan okunur.
+    /// </summary>
+    public ObservableCollection<ToastRecord> ToastHistory { get; } = [];
+
+    /// <summary>Zil açılmadan gelen bildirim sayısı.</summary>
+    [ObservableProperty] private int _unseenToasts;
+
+    public bool HasUnseenToasts => UnseenToasts > 0;
+    public bool HasToastHistory => ToastHistory.Count > 0;
+
+    partial void OnUnseenToastsChanged(int value) => OnPropertyChanged(nameof(HasUnseenToasts));
+
+    [RelayCommand]
+    private void MarkToastsSeen() => UnseenToasts = 0;
+
+    [RelayCommand]
+    private void ClearToastHistory()
+    {
+        ToastHistory.Clear();
+        UnseenToasts = 0;
+        OnPropertyChanged(nameof(HasToastHistory));
+    }
 
     private static readonly TimeSpan ToastLifetime = TimeSpan.FromSeconds(4.5);
 
@@ -225,6 +307,10 @@ public partial class MainViewModel
 
             var toast = new Toast(text, kind);
             Toasts.Add(toast);
+            ToastHistory.Insert(0, new ToastRecord(text, kind, DateTime.Now));
+            while (ToastHistory.Count > 30) ToastHistory.RemoveAt(ToastHistory.Count - 1);
+            UnseenToasts++;
+            OnPropertyChanged(nameof(HasToastHistory));
             while (Toasts.Count > 4) Toasts.RemoveAt(0);
 
             _ = RemoveLaterAsync(toast, kind == ToastKind.Error ? ToastLifetime * 2 : ToastLifetime);

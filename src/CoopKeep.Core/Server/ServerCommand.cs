@@ -81,6 +81,23 @@ public static class ServerCommand
         return Allowed.Contains(verb);
     }
 
+    /// <summary>Konsol kutusundan elle yazılabilecek satırın üst sınırı.</summary>
+    public const int MaxConsoleLineLength = 500;
+
+    /// <summary>
+    /// Sunucu sahibinin elle yazdığı satır stdin'e yazılmaya uygun mu?
+    /// </summary>
+    /// <remarks>
+    /// Allow-list uygulanmaz (bkz. <see cref="ServerSupervisor.SendConsoleLineAsync"/>);
+    /// yalnızca tek satır, kontrol karakteri yok ve makul uzunluk şartı var.
+    /// </remarks>
+    public static bool IsValidConsoleLine(string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line)) return false;
+        if (line.Length > MaxConsoleLineLength) return false;
+        return !line.Any(char.IsControl);
+    }
+
     /// <summary>
     /// Bir argümanı tek satırlık, kontrol karakteri içermeyen güvenli bir metne indirger.
     /// </summary>

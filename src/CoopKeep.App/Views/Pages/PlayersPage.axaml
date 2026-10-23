@@ -30,6 +30,15 @@
 
         <TextBlock Classes="display enter" Text="{Binding L[nav.players]}" />
 
+        <!-- İsteğe bağlı sunucu eklentisi kapalıyken: neyin eksik kalacağı ve nasıl açılacağı -->
+        <Border Classes="card enter d1" Padding="16,12" IsVisible="{Binding !ServerToolsEnabled}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Margin="10,0" Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding L[tools.card]}" />
+                <Button Grid.Column="2" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppPage.Settings}" Content="{Binding L[tools.card.open]}" />
+            </Grid>
+        </Border>
+
         <!-- Son işlem + geri al -->
         <Border Classes="card enter" Padding="14,10" IsVisible="{Binding CanUndoPlayerAction}"
                 Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}">
@@ -107,7 +116,14 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock Classes="dim" Text="{Binding L[msg.noPlayers]}" IsVisible="{Binding !HasPlayers}" />
+                    <StackPanel Spacing="8" IsVisible="{Binding !HasPlayers}">
+                        <TextBlock Classes="dim" Text="{Binding L[msg.noPlayers]}" />
+                        <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[empty.players]}" />
+                        <WrapPanel>
+                            <Button Margin="0,0,8,0" Command="{Binding CreateInviteFileCommand}" Content="{Binding L[invite.file.btn]}" />
+                            <Button Command="{Binding CopyConnectInfoCommand}" Content="{Binding L[invite.copy]}" />
+                        </WrapPanel>
+                    </StackPanel>
 
                     <Grid ColumnDefinitions="*,6,Auto">
                         <TextBox Text="{Binding AnnounceText}" Watermark="{Binding L[msg.announcePlaceholder]}" />

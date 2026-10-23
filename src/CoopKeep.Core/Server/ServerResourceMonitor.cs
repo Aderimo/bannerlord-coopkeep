@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CoopKeep.Core.Server;
 
@@ -47,6 +48,16 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
     /// </remarks>
     public ProcessPriorityClass? DesiredPriority { get; set; }
 
+    /// <summary>Son taramada sunucuya ait bulunan süreçler.</summary>
+    private readonly HashSet<int> _serverPids = [];
+    private DateTimeOffset _lastScanAt;
+
+    /// <summary>
+    /// Bütün süreçlerin yeniden taranma aralığı. Her ölçümde bilgisayardaki yüzlerce sürecin
+    /// yolu okunuyordu; arada yalnızca bilinen sunucu süreçleri ölçülür.
+    /// </summary>
+    private static readonly TimeSpan ScanInterval = TimeSpan.FromSeconds(15);
+
     private TimeSpan _previousCpuTime;
     private DateTimeOffset _previousSampleAt;
     private bool _hasPreviousSample;
@@ -59,11 +70,17 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
         var cpuTime = TimeSpan.Zero;
         var count = 0;
 
-        foreach (var process in Process.GetProcesses())
+        var now = DateTimeOffset.UtcNow;
+        var rescan = _serverPids.Count == 0 || now - _lastScanAt > ScanInterval;
+        if (rescan) _lastScanAt = now;
+        var found = new HashSet<int>();
+
+        foreach (var process in rescan ? Process.GetProcesses() : KnownProcesses(rootProcessId))
         {
             try
             {
                 if (!BelongsToServer(process, rootProcessId)) continue;
+                found.Add(process.Id);
 
                 if (DesiredPriority is { } priority && process.PriorityClass != priority)
                     process.PriorityClass = priority;
@@ -84,10 +101,14 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
             }
         }
 
-        var now = DateTimeOffset.UtcNow;
+        // Süreç kümesi değiştiyse (çocuk süreç açıldı/kapandı) CPU farkı anlamsız olur.
+        var sameSet = found.SetEquals(_serverPids);
+        _serverPids.Clear();
+        _serverPids.UnionWith(found);
+
         var cpuPercent = 0d;
 
-        if (_hasPreviousSample && count > 0)
+        if (_hasPreviousSample && sameSet && count > 0)
         {
             var wall = (now - _previousSampleAt).TotalMilliseconds;
             var used = (cpuTime - _previousCpuTime).TotalMilliseconds;
@@ -108,6 +129,20 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
     {
         _hasPreviousSample = false;
         _previousCpuTime = TimeSpan.Zero;
+        _serverPids.Clear();
+    }
+
+    private IEnumerable<Process> KnownProcesses(int? rootProcessId)
+    {
+        var ids = new HashSet<int>(_serverPids);
+        if (rootProcessId is { } root) ids.Add(root);
+        foreach (var id in ids)
+        {
+            Process? process = null;
+            try { process = Process.GetProcessById(id); }
+            catch (ArgumentException) { }
+            if (process is not null) yield return process;
+        }
     }
 
     private bool BelongsToServer(Process process, int? rootProcessId)
@@ -115,9 +150,41 @@ public sealed class ServerResourceMonitor(string serverRootDirectory)
         if (rootProcessId is { } root && process.Id == root) return true;
         if (_root.Length == 0) return false;
 
-        var path = process.MainModule?.FileName;
+        var path = ImagePath(process.Id);
         return path is not null && path.StartsWith(_root, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// Sürecin dosya yolu. <c>Process.MainModule</c> sürecin bütün modüllerini dolaşıyor (o sırada
+    /// oynanan oyun dahil); bu çağrı yalnızca yolu sorar ve sınırlı erişim yeter.
+    /// </summary>
+    private static string? ImagePath(int pid)
+    {
+        if (!OperatingSystem.IsWindows()) return null;
+        var handle = OpenProcess(ProcessQueryLimitedInformation, false, pid);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var buffer = new char[1024];
+            var size = buffer.Length;
+            return QueryFullProcessImageName(handle, 0, buffer, ref size) ? new string(buffer, 0, size) : null;
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
+    private const uint ProcessQueryLimitedInformation = 0x1000;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint access, bool inheritHandle, int processId);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool QueryFullProcessImageName(IntPtr process, int flags, [Out] char[] buffer, ref int size);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool CloseHandle(IntPtr handle);
 
     private static string NormalizeDirectory(string directory)
     {

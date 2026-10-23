@@ -115,8 +115,12 @@ public partial class MainViewModel
             ServerToolsAvailable = System.Linq.Enumerable.Any(ping, l => l.StartsWith("COOPKEEP_TOOLS", StringComparison.Ordinal));
             if (!ServerToolsAvailable || !ItemCatalogStale()) return;
 
+            // Oyuncular oynarken sorulmaz: uzun liste sunucuyu meşgul edip onlarda takılma yapar.
+            // Kimse yokken alınır; o ana kadar eşya penceresi açılırsa orada alınır.
             await Task.Delay(TimeSpan.FromMinutes(1));
-            if (IsServing) await RefreshServerItemsAsync();
+            while (IsServing && OnlinePlayerCount > 0 && ItemCatalogStale())
+                await Task.Delay(TimeSpan.FromMinutes(1));
+            if (IsServing && ItemCatalogStale()) await RefreshServerItemsAsync();
         }
         catch (Exception ex)
         {

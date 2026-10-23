@@ -20,3 +20,10 @@ publish/
 
 # Görselli indirme paketi: ayrı yayınlanır, repoya girmez
 image-pack/
+
+# CoopKeep oyun modunun derlenmiş modül klasörü (mod/src/CoopKeep.Mod derlemesi üretir)
+mod/dist/
+
+# Oyun içi test betiğinin çalışma dosyaları
+tools/ingame-test/logs/
+tools/ingame-test/state.json

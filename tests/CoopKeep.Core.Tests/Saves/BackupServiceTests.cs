@@ -43,14 +43,22 @@ public sealed class BackupServiceTests : IDisposable
     }
 
     [Fact]
-    public void es_json_eksikse_yedek_alinmaz()
+    public void es_json_olmayan_kayit_yalnizca_kayitla_yedeklenir_ve_geri_yuklenir()
     {
-        // Yarım bir yedek geri yüklendiğinde oyuncu eşlemeleri kaybolur;
-        // en baştan almamak doğrusu.
-        File.WriteAllText(Path.Combine(_dizin, "Yarim.sav"), "dunya");
+        // CoopKeep modunun kayıtlarında eş JSON yok: oyuncu eşlemesi kaydın içinde.
+        File.WriteAllText(Path.Combine(_dizin, "Tek.sav"), "dunya-1");
 
-        var hata = Assert.Throws<InvalidOperationException>(() => _yedek.Create("Yarim"));
-        Assert.Contains("eş JSON", hata.Message);
+        var kayit = _yedek.Create("Tek");
+        using (var zip = ZipFile.OpenRead(kayit.FilePath))
+        {
+            Assert.NotNull(zip.GetEntry("Tek.sav"));
+            Assert.Null(zip.GetEntry("Tek.json"));
+        }
+
+        File.WriteAllText(Path.Combine(_dizin, "Tek.sav"), "dunya-2");
+        _yedek.Restore(kayit);
+        Assert.Equal("dunya-1", File.ReadAllText(Path.Combine(_dizin, "Tek.sav")));
+        Assert.False(File.Exists(Path.Combine(_dizin, "Tek.json")));
     }
 
     [Fact]

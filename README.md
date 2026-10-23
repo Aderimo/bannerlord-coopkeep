@@ -4,13 +4,14 @@
 
 **Bannerlord Coop server manager**
 
-[![Version](https://img.shields.io/badge/version-v0.5.0-C9A227)](../../releases/latest)
+[![Version](https://img.shields.io/badge/version-v1.0.0-C9A227)](../../releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-4ADE80)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-6B7280)](#install)
 
-Host a Mount & Blade II: Bannerlord co-op campaign on your own PC — create the world,
-start the server, manage players, fix what cheaters broke and watch the whole of
-Calradia live. No command line, no editing config files, no creating a save in-game first.
+A launcher and server manager for the **Bannerlord Coop** mod. Host a Mount & Blade II:
+Bannerlord co-op campaign on your own PC — create the world, start the server, play with
+mods, manage players, fix what cheaters broke and watch the whole of Calradia live.
+No command line, no editing config files, no creating a save in-game first.
 
 **English** · [Türkçe](README.tr.md)
 
@@ -24,8 +25,8 @@ Calradia live. No command line, no editing config files, no creating a save in-g
 
 ## Contents
 
-[Why](#why) · [Install](#install) · [How to use](#how-to-use) · [Features](#features) ·
-[Server plugin](#the-coopkeep-server-plugin) · [Troubleshooting](#troubleshooting) ·
+[Why](#why) · [Install](#install) · [How to use](#how-to-use) · [Playing with mods](#playing-with-mods) ·
+[Features](#features) · [Server plugin](#the-coopkeep-server-plugin) · [Troubleshooting](#troubleshooting) ·
 [Known limitations](#known-limitations) · [Development](#development)
 
 ---
@@ -37,7 +38,9 @@ unblock DLLs, create a singleplayer save first, edit `server-config.json` in Not
 keep a console window open, copy files by hand when a save breaks — and when a player
 cheats, there is nothing you can do about it.
 
-CoopKeep takes all of that over in one window.
+CoopKeep takes all of that over in one window — and it knows the Coop mod's traps
+(version and DLC mismatches, blocked DLLs, a missing save that silently becomes a new
+world, Steam not running, exit codes nobody explains) and tells you what to do.
 
 ---
 
@@ -45,7 +48,7 @@ CoopKeep takes all of that over in one window.
 
 | | |
 |---|---|
-| Game | Mount & Blade II: Bannerlord **v1.4.8** (Steam) |
+| Game | Mount & Blade II: Bannerlord **v1.4.8** (Steam or Epic) |
 | Mod | [Bannerlord Coop](https://steamcommunity.com/sharedfiles/filedetails/?id=3770450698) — subscribe on the Steam Workshop |
 | OS | Windows 10/11 |
 | .NET | **Not required** — the exe is self-contained |
@@ -53,7 +56,9 @@ CoopKeep takes all of that over in one window.
 1. Install **Bannerlord** from Steam
 2. Subscribe to **Bannerlord Coop** on the Steam Workshop
 3. Download **`CoopKeep.exe`** from [Releases](../../releases/latest)
-4. Double-click it. That's it.
+4. Double-click it. The **setup check** on the home page lists anything still missing
+   (game version, Coop, its server package, DLCs, blocked files, firewall) with a button
+   that fixes each one. The **How to use** page walks through every step.
 
 > **No installer.** Keep the exe wherever you like; to uninstall, delete it.
 > Nothing is copied into the game folder. The only exception is the optional
@@ -69,21 +74,47 @@ CoopKeep takes all of that over in one window.
 
 The home page offers **Create a world**. The wizard works like starting a new campaign:
 start fresh or continue a single-player campaign, pick a name, a difficulty
-(Very easy / Easy / Realistic or every option by hand), the rules and the server
-password. The world is created **instantly** — you never have to enter the game.
+(Very easy / Easy / Realistic or every option by hand), the rules, mods (optional) and the
+server password. The world is created **instantly** — you never have to enter the game.
 
 <img src="docs/screenshots/en/03-wizard.png" alt="New world wizard" width="760">
 
 ### 2 · Start
 
 Press **Start server**. The first time, the Coop server's license agreement is shown.
-The home page follows the boot (`Booting engine` → `Loading world` → **`Online`**), about a minute.
+Before it starts, CoopKeep checks the usual traps and warns you (for example: the save is
+missing, Steam is not running, a world mod is not installed). The server runs in the
+background without a game window; the home page follows the boot (`Booting engine` →
+`Loading world` → **`Online`**), about a minute.
+
+To play on the same PC press **Play**: the game opens with Coop and the world's mods and
+the server address is copied to your clipboard — paste it in the Coop menu.
 
 ### 3 · Invite your friends
 
 **Copy invite** puts everything they need in one message. They open the game →
 **Coop** → **Steam Lobbies** and search for **your Steam name** — not the server name.
 For a direct IP join, forward **UDP 4200** on your router.
+
+---
+
+## Playing with mods
+
+Coop compares the mods on the server and on every player **exactly, both ways** (same
+mods, same versions; DLCs like War Sails off). Playing without mods is the smoothest; for
+modded play CoopKeep does the bookkeeping:
+
+1. In the wizard (or on **Worlds**) make the world **Modded** and tick its mods.
+2. When you start, CoopKeep copies those mods into the Coop server's module folder (only
+   the parts a server reads) and starts the server with them. Coop's own files are never
+   touched; switching back to an unmodded world removes them again.
+3. **Create mod pack** on the Worlds page and send it to your friends (**Mods → Packs →
+   Send to a friend**). They press **Apply pack**: missing Workshop mods are subscribed,
+   bundled ones installed, the launcher set to exactly the same list and order.
+4. **Copy invite** lists the world's mods so nobody joins with the wrong set.
+
+> Modded servers are **experimental**: whether a mod works in multiplayer depends on the
+> mod. The Mods page marks mods the community reported as broken with Coop.
 
 ---
 
@@ -111,7 +142,7 @@ For a direct IP join, forward **UDP 4200** on your router.
 <td><img src="docs/screenshots/en/07-profile-army.png" alt="Army"></td>
 </tr></table>
 
-### Cheats — repair what a cheater broke
+### Admin tools — repair what a cheater broke
 Pick one player, several or everyone:
 - Gold, health, clan influence and renown, age
 - **Troops by type and count** with their real portraits; take troops away; heal the wounded
@@ -120,7 +151,7 @@ Pick one player, several or everyone:
 - **Skills screen like the game's:** click a skill for level, focus or XP, an attribute for points
 - Recent actions can be undone; every action is verified and goes to an audit log
 
-<img src="docs/screenshots/en/08-cheats-skills.png" alt="Cheats — skills" width="760">
+<img src="docs/screenshots/en/08-cheats-skills.png" alt="Admin tools — skills" width="760">
 
 <table><tr>
 <td><img src="docs/screenshots/en/09-cheats-troops.png" alt="Troops"></td>
@@ -150,11 +181,24 @@ Pick one player, several or everyone:
 </tr></table>
 
 ### Mods
-- Status of every module in your launcher (compatible / not on server / refused by Coop)
-- **Set up for Coop:** turn off problem mods in one click, restore them later
-- A list of all known mods with community results; click one for its description
+- **Mod manager:** enable/disable, reorder (dependency-aware), install from zip, remove
+  (moved to a backup folder)
+- **Find mods** on the Steam Workshop and Nexus Mods (your own API key; Premium downloads directly)
+- **Mod packs:** create, send to a friend as a zip with instructions, import and apply
+- Status of every module (compatible / not on server / refused by Coop) and
+  **Set up for Coop** to turn off problem modules in one click
+- Community results for known mods; click one for its description
 
 <img src="docs/screenshots/en/15-mods.png" alt="Mods" width="760">
+
+### Setup check and guide
+- The home page checks the game version, Coop and its server package, DLCs, files
+  Windows blocked, and the firewall — each with a one-click fix
+- Before starting: a missing save (Coop would silently start a new world), missing world
+  mods, Steam not running, broken Coop environment variables, OneDrive
+- When the server stops, the exit code is explained with what to do next (2: restore a
+  backup, 4: refresh Coop on the Workshop, 6: license agreement)
+- **How to use** page with every step and the most common problems
 
 ### Other
 - **Streamer mode** masks your IP, port and Steam name and blurs the console
@@ -199,7 +243,15 @@ coopkeep run             # start and drive the console
 | **The server closes right away (code 6)** | The Coop server's license agreement was not accepted. Start again from CoopKeep and accept it. |
 | **Skills, items or the profile are empty** | Turn on the server plugin in Settings and restart the server. |
 | **Importing a save is refused** | The save was made with mods the server can't load. Start a new sandbox without mods, save, and import that. |
-| **Mod DLLs fail to load** | Windows may have blocked them. In the mod folder run:<br>`Get-ChildItem "<mod folder>" -Recurse \| Unblock-File` |
+| **Mod DLLs fail to load** | Windows blocked them. The setup check on Home finds them; press **Unblock**. |
+| **The server closes right away (code 4)** | Coop was updated or its files changed. Unsubscribe from Coop on the Workshop and subscribe again. If the server plugin is on, turn it off and retry. |
+| **The server closes right away (code 2)** | The save could not be loaded (damaged, or made with other mods). Restore the last good save from **Backups**. |
+| **A brand-new world opened** | The configured save was missing — Coop then starts a new world. CoopKeep now warns before starting; restore from **Backups**. |
+| **Stuck on "Loading host save"** | Leave and reconnect; if it persists, restart the server. |
+| **Big battles are very slow** | Battles over ~200 troops are heavy for Coop; lower the battle size in the world settings. |
+| **A mod is on the PC but the game/launcher doesn't show it** | It was downloaded by **another Steam account** on this PC. The game only sees Workshop mods the current account is subscribed to. CoopKeep shows a "Subscribe on Steam" button on those mods. |
+| **Modded server says a needed mod is missing** | Check the mod's row on the Mods page: install it, or subscribe if it says "not subscribed". The list refreshes when you come back to CoopKeep. |
+| **Windows says "Windows protected your PC"** | The exe is unsigned, so this shows on first launch. Click **More info → Run anyway**. |
 
 ---
 
@@ -213,8 +265,9 @@ These are limits of the mod itself, not gaps in CoopKeep:
 - **Renown cannot be taken away**, and there is no god mode.
 - **Skill XP follows the game's learning rate** — at high levels it barely moves the
   level, so the skills screen can also change the level directly.
-- **No other mods on the server.** It loads the official modules and Coop only.
-- Only **Steam** installations are detected; **one server at a time**.
+- **Mods on the server are experimental**; everyone needs the same mods and versions.
+- **About 8 players** is the supported maximum for stability.
+- **Steam and Epic** installs are detected. On Epic, install Coop by hand; friends on Epic get Workshop mods through a mod pack zip. **One server at a time**.
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
 
@@ -240,7 +293,7 @@ The configuration file is edited **preserving its comments, key order and unknow
 ## Development
 
 ```bash
-dotnet test                                    # 309 tests
+dotnet test                                    # 376 tests
 dotnet run --project src/CoopKeep.Cli -- doctor
 powershell -File publish.ps1                   # produces the single-file exe
 ```
@@ -251,7 +304,7 @@ powershell -File publish.ps1                   # produces the single-file exe
 | `src/CoopKeep.App` | Avalonia UI (English/Turkish, dark theme) |
 | `src/CoopKeep.Cli` | Command line tool |
 | `src/CoopKeep.ServerTools` | The optional server plugin (built against the server's game DLLs) |
-| `tests/CoopKeep.Core.Tests` | 309 tests |
+| `tests/CoopKeep.Core.Tests` | 376 tests |
 
 The single source of the version number is `Directory.Build.props`.
 

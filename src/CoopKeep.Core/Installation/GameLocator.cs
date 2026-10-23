@@ -156,6 +156,10 @@ public static class GameLocator
                 return Describe(guess);
         }
 
+        // Epic Games: Coop orada da çalışıyor (kullanıcılar Epic'ten girebildiklerini bildirdi).
+        if (FindEpicGame(EpicManifestDirectory) is { } epic)
+            return Describe(epic) with { IsEpic = true };
+
         return null;
 
         static BannerlordInstallation Describe(string dir) => new()
@@ -163,6 +167,36 @@ public static class GameLocator
             InstallDirectory = dir,
             GameVersion = ReadGameVersion(dir),
         };
+    }
+
+    public static string EpicManifestDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "Epic", "EpicGamesLauncher", "Data", "Manifests");
+
+    /// <summary>Epic Games kurulum bildirimlerinden (<c>*.item</c>, JSON) Bannerlord'u bulur.</summary>
+    public static string? FindEpicGame(string manifestDirectory)
+    {
+        if (!Directory.Exists(manifestDirectory)) return null;
+
+        foreach (var file in Directory.EnumerateFiles(manifestDirectory, "*.item"))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+                var root = doc.RootElement;
+                var name = root.TryGetProperty("DisplayName", out var n) ? n.GetString() ?? "" : "";
+                if (!name.Contains("Bannerlord", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var location = root.TryGetProperty("InstallLocation", out var l) ? l.GetString() : null;
+                if (location is not null && IsBannerlordDirectory(location)) return location;
+            }
+            catch (Exception e) when (e is IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
+            {
+                // Bozuk ya da okunamayan bildirim: sonrakine bak.
+            }
+        }
+
+        return null;
     }
 
     private static bool IsBannerlordDirectory(string dir) =>
@@ -237,6 +271,7 @@ public static class GameLocator
                     ModRoot = itemDir,
                     DedicatedServerExe = exe,
                     WorkshopItemId = Path.GetFileName(itemDir),
+                    ModuleId = ReadSubModuleId(Path.Combine(itemDir, "SubModule.xml")) ?? "Coop",
                     ModVersion = ReadSubModuleVersion(Path.Combine(itemDir, "SubModule.xml")),
                     RequiredGameVersion = ReadRequiredGameVersion(Path.Combine(itemDir, "SubModule.xml")),
                 });
@@ -246,11 +281,55 @@ public static class GameLocator
         return found;
     }
 
-    /// <summary>En son güncellenmiş Coop kurulumu.</summary>
-    public static CoopInstallation? FindCoop() =>
-        FindCoopInstallations()
+    /// <summary>Bannerlord'un Steam Atölyesi klasörleri (her kütüphanede bir tane olabilir).</summary>
+    public static IReadOnlyList<string> FindWorkshopDirectories() =>
+        FindSteamLibraries()
+            .Select(l => Path.Combine(l, "steamapps", "workshop", "content", BannerlordAppId))
+            .Where(Directory.Exists)
+            .ToList();
+
+    private static string? ReadSubModuleId(string subModuleXmlPath)
+    {
+        try
+        {
+            return File.Exists(subModuleXmlPath) ? XDocument.Load(subModuleXmlPath).Root?.Element("Id")?.Attribute("value")?.Value : null;
+        }
+        catch (Exception e) when (e is IOException or System.Xml.XmlException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// En son güncellenmiş Coop kurulumu: Steam Atölyesi'nden, yoksa oyunun <c>Modules\Coop</c>
+    /// klasöründen (Epic ya da elle kurulum). Elle kurulumda sunucu paketi olmayabilir; o zaman
+    /// oyuncu katılabilir ama sunucu açamaz (kurulum denetimi söyler).
+    /// </summary>
+    public static CoopInstallation? FindCoop(string? gameDirectory = null)
+    {
+        var workshop = FindCoopInstallations()
             .OrderByDescending(c => Directory.GetLastWriteTimeUtc(c.ModRoot))
             .FirstOrDefault();
+        if (workshop is not null || gameDirectory is null) return workshop;
+
+        foreach (var id in new[] { "Coop", "CoopNightly" })
+        {
+            var root = Path.Combine(gameDirectory, "Modules", id);
+            var subModule = Path.Combine(root, "SubModule.xml");
+            if (!File.Exists(subModule)) continue;
+
+            return new CoopInstallation
+            {
+                ModRoot = root,
+                DedicatedServerExe = Path.Combine(root, "DedicatedServer", ServerExeName),
+                ModuleId = ReadSubModuleId(subModule) ?? id,
+                ModVersion = ReadSubModuleVersion(subModule),
+                RequiredGameVersion = ReadRequiredGameVersion(subModule),
+            };
+        }
+
+        return null;
+    }
 
     /// <summary>
     /// Modun bağımlı olduğu oyun sürümünü <c>DependedModule</c> girdilerinden okur.

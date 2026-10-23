@@ -28,8 +28,12 @@ public partial class MainViewModel
     /// <summary>Onaydan sonra yapılacak iş (başlatma ya da dünya kurma).</summary>
     private Func<Task>? _afterEula;
 
+    /// <summary>
+    /// CoopKeep modunun sunucusunda ayrı bir lisans sözleşmesi yok (mod MIT lisanslı); eski
+    /// sunucunun sözleşmesi yalnızca o kuruluysa sorulurdu.
+    /// </summary>
     private bool EulaAccepted =>
-        _coop?.EulaFingerprint() is { } fp && string.Equals(_ui.AcceptedEulaFingerprint, fp, StringComparison.Ordinal);
+        _coop is null || (_coop.EulaFingerprint() is { } fp && string.Equals(_ui.AcceptedEulaFingerprint, fp, StringComparison.Ordinal));
 
     /// <summary>
     /// EULA onaylıysa işi hemen yapar; değilse sözleşmeyi gösterir ve onaydan sonra yapar.

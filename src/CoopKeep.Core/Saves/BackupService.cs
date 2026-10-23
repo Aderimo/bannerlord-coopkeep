@@ -98,9 +98,8 @@ public sealed class BackupService
         var save = _saves.Find(saveName)
                    ?? throw new FileNotFoundException($"'{saveName}' adlı sunucu bulunamadı.");
 
-        if (!save.IsComplete)
-            throw new InvalidOperationException(
-                $"'{saveName}' eksik: eş JSON dosyası yok. Yarım bir yedek geri yüklenemez.");
+        // Eş JSON (eski Coop modunun oyuncu eşlemesi) varsa birlikte yedeklenir. CoopKeep
+        // modunun kayıtlarında yok: oyuncu eşlemesi kaydın içinde.
 
         var folder = FolderFor(saveName);
         Directory.CreateDirectory(folder);
@@ -122,7 +121,8 @@ public sealed class BackupService
             using (var zip = ZipFile.Open(temp, ZipArchiveMode.Create))
             {
                 zip.CreateEntryFromFile(save.SavePath, Path.GetFileName(save.SavePath), CompressionLevel.Optimal);
-                zip.CreateEntryFromFile(save.CompanionPath, Path.GetFileName(save.CompanionPath), CompressionLevel.Optimal);
+                if (File.Exists(save.CompanionPath))
+                    zip.CreateEntryFromFile(save.CompanionPath, Path.GetFileName(save.CompanionPath), CompressionLevel.Optimal);
             }
 
             File.Move(temp, target);
@@ -191,12 +191,13 @@ public sealed class BackupService
         var savFile = entry.SaveName + SaveSet.SaveExtension;
         var jsonFile = entry.SaveName + SaveSet.CompanionExtension;
 
-        // 1) Doğrula
+        // 1) Doğrula: kayıt dosyası olmalı ve boş olmamalı. Eş JSON isteğe bağlı.
+        bool hasJson;
         using (var zip = ZipFile.OpenRead(entry.FilePath))
         {
-            if (zip.GetEntry(savFile) is null || zip.GetEntry(jsonFile) is null)
-                throw new InvalidDataException(
-                    "Yedek eksik: .sav ve .json dosyalarının ikisi de bulunmalı.");
+            if (zip.GetEntry(savFile) is not { Length: > 0 })
+                throw new InvalidDataException("Yedek eksik ya da bozuk: kayıt dosyası yok veya boş.");
+            hasJson = zip.GetEntry(jsonFile) is not null;
         }
 
         // 2) Mevcut hâlin güvenlik yedeği
@@ -222,7 +223,7 @@ public sealed class BackupService
             var stagedSav = Path.Combine(staging, savFile);
             var stagedJson = Path.Combine(staging, jsonFile);
 
-            if (!File.Exists(stagedSav) || !File.Exists(stagedJson))
+            if (!File.Exists(stagedSav) || (hasJson && !File.Exists(stagedJson)))
                 throw new InvalidDataException("Yedek açılamadı: beklenen dosyalar çıkmadı.");
 
             // 4) Mevcut dosyaları kenara al
@@ -230,7 +231,7 @@ public sealed class BackupService
             if (File.Exists(companionPath)) File.Move(companionPath, rollbackJson, overwrite: true);
 
             File.Move(stagedSav, savePath, overwrite: true);
-            File.Move(stagedJson, companionPath, overwrite: true);
+            if (hasJson) File.Move(stagedJson, companionPath, overwrite: true);
 
             // Başarılı: geri alma kopyalarını temizle
             if (File.Exists(rollbackSav)) File.Delete(rollbackSav);

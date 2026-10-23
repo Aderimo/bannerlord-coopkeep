@@ -222,5 +222,10 @@ public partial class MainViewModel
         }
     }
 
-    partial void OnIsViewerModeChanged(bool value) => RaiseRunStateChanged();
+    partial void OnIsViewerModeChanged(bool value)
+    {
+        // İzleyicide yalnızca harita ve ansiklopedi var; ikisi de "Araçlar" altında.
+        if (value) ToolsExpanded = true;
+        RaiseRunStateChanged();
+    }
 }

@@ -1,24 +1,113 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CoopKeep.App.ViewModels"
+             xmlns:saves="using:CoopKeep.Core.Saves"
              x:Class="CoopKeep.App.Views.Pages.ModsPage"
              x:DataType="vm:MainViewModel">
 
+  <!--
+      Mod yöneticisi: Yüklü modlar (aç/kapat, sıra, kur, kaldır) · Mod bul (Steam Atölyesi,
+      Nexus) · Paketler (oluştur, arkadaşa gönder, içe aktar, uygula).
+  -->
+  <UserControl.Resources>
+    <!-- Bir mod satırı: tutamak, aç/kapat, ad + kaynak + Coop rolü, açıklama, uyarılar, sıra, bilgi, kaldır -->
+    <DataTemplate x:Key="ModRowTemplate" x:DataType="vm:ManagedMod">
+        <Border Classes="modrow" Classes.compact="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CompactMods}" Background="Transparent" CornerRadius="6" Padding="6,6" DragDrop.AllowDrop="{Binding CanMove}">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" Opacity="{Binding RowOpacity}">
+                <Border Classes="grip" Width="18" Background="Transparent" Cursor="SizeAll" VerticalAlignment="Center" Margin="0,0,4,0"
+                        IsVisible="{Binding CanMove}" ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.dragTip]}">
+                    <Path Data="{StaticResource IconGrip}" Stroke="{StaticResource TextFaint}" StrokeThickness="2.6" StrokeLineCap="Round"
+                          Width="10" Height="16" Stretch="Uniform" />
+                </Border>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanToggle}" OnContent="" OffContent=""
+                              VerticalAlignment="Center" Margin="0,0,10,0"
+                              ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.toggleTip]}" />
+                <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                    <WrapPanel>
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding IsWorkshop}" Margin="0,0,6,0">
+                            <TextBlock FontSize="10.5" Foreground="{StaticResource TextDim}"
+                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.src.workshop]}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding IsLocal}" Margin="0,0,6,0">
+                            <TextBlock FontSize="10.5" Foreground="{StaticResource TextDim}"
+                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.src.local]}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource AccentSoft}" IsVisible="{Binding RoleIsNormal}" Margin="0,0,6,0"
+                                ToolTip.Tip="{Binding RoleTip}">
+                            <TextBlock FontSize="10.5" Foreground="{StaticResource Accent}" Text="{Binding RoleLabel}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource DangerSoft}" IsVisible="{Binding RoleIsIncompatible}" Margin="0,0,6,0"
+                                ToolTip.Tip="{Binding RoleTip}">
+                            <TextBlock FontSize="10.5" Foreground="#F5C2C2" Text="{Binding RoleLabel}" />
+                        </Border>
+                        <Border Classes="badge" Background="{StaticResource BgRaised}" IsVisible="{Binding CommunityWorks}" Margin="0,0,6,0">
+                            <TextBlock FontSize="10.5" Foreground="{StaticResource Success}"
+                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.communityWorks]}" />
+                        </Border>
+                    </WrapPanel>
+                    <StackPanel Spacing="2" IsVisible="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShowModDetails}">
+                        <TextBlock Classes="dim" FontSize="12" TextWrapping="Wrap" MaxLines="2" Text="{Binding Description}" IsVisible="{Binding HasDescription}" />
+                        <TextBlock Classes="dim" FontSize="11.5" Foreground="{StaticResource TextFaint}">
+                            <Run Text="{Binding Id}" /><Run Text="  ·  " /><Run Text="{Binding Version}" />
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding Problem}" IsVisible="{Binding HasProblem}" TextWrapping="Wrap" />
+                    <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding VersionWarning}" IsVisible="{Binding HasVersionWarning}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding NotSubscribed}" Margin="0,2,0,0">
+                        <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" VerticalAlignment="Center" TextWrapping="Wrap"
+                                   Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.notSubscribed]}" />
+                        <Button Classes="small" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SubscribeManagedModCommand}" CommandParameter="{Binding}"
+                                Content="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.subscribeSteam]}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="8,0" IsVisible="{Binding CanMove}">
+                    <Button Classes="small" Margin="0,0,8,0" IsVisible="{Binding InWorld}"
+                            ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.world.inTip]}"
+                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ToggleModInWorldCommand}" CommandParameter="{Binding}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Width="10" Height="10" Stretch="Uniform" />
+                            <TextBlock Foreground="{StaticResource Accent}" Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.world.in]}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="ghost small" Margin="0,0,8,0" IsVisible="{Binding NotInWorld}"
+                            IsEnabled="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).HasModsWorld}"
+                            ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.world.addTip]}"
+                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ToggleModInWorldCommand}" CommandParameter="{Binding}"
+                            Content="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.world.add]}" />
+                    <Button Classes="ghost small" Content="▲" ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.up]}"
+                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).MoveModUpCommand}" CommandParameter="{Binding}" />
+                    <Button Classes="ghost small" Content="▼" ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.down]}"
+                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).MoveModDownCommand}" CommandParameter="{Binding}" />
+                </StackPanel>
+                <Button Grid.Column="4" Classes="ghost small" VerticalAlignment="Center" Padding="6"
+                        ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.info]}"
+                        Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShowManagedModInfoCommand}" CommandParameter="{Binding}">
+                    <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="15" Height="15" Stretch="Uniform" />
+                </Button>
+                <Button Grid.Column="5" Classes="ghost small" VerticalAlignment="Center" Padding="6" IsVisible="{Binding CanRemove}"
+                        ToolTip.Tip="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.remove]}"
+                        Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).RequestRemoveModCommand}" CommandParameter="{Binding}">
+                    <Path Data="{StaticResource IconTrash}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="15" Height="15" Stretch="Uniform" />
+                </Button>
+            </Grid>
+        </Border>
+    </DataTemplate>
+  </UserControl.Resources>
+
   <UserControl.Styles>
-    <!-- Filtre sekmesi -->
     <Style Selector="RadioButton.tab">
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Name="bg" Background="Transparent" BorderBrush="{StaticResource BorderDim}" BorderThickness="1"
-                        CornerRadius="4" Padding="12,6" Cursor="Hand">
+                        CornerRadius="4" Padding="14,7" Cursor="Hand">
                     <Border.Transitions>
                         <Transitions>
                             <BrushTransition Property="Background" Duration="0:0:0.15" />
                             <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
                         </Transitions>
                     </Border.Transitions>
-                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" FontSize="12.5"
-                                      Foreground="{StaticResource TextDim}" />
+                    <ContentPresenter Name="cp" Content="{TemplateBinding Content}" FontSize="13" Foreground="{StaticResource TextDim}" />
                 </Border>
             </ControlTemplate>
         </Setter>
@@ -33,189 +122,432 @@
     <Style Selector="RadioButton.tab:checked /template/ ContentPresenter#cp">
         <Setter Property="Foreground" Value="{StaticResource Accent}" />
     </Style>
-    <!-- Tıklanınca bilgi penceresini açan satır -->
-    <Style Selector="Button.modRow">
+    <!-- Grup başlıkları: kartın içinde, temanın renkleriyle (varsayılan başlık siyah görünüyordu) -->
+    <Style Selector="Expander.group">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Cursor" Value="Hand" />
     </Style>
-    <Style Selector="Button.modRow:pointerover /template/ ContentPresenter">
+    <Style Selector="Expander.group /template/ ToggleButton#ExpanderHeader">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Expander.group /template/ ToggleButton#ExpanderHeader /template/ Border#ToggleButtonBackground">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Expander.group /template/ ToggleButton#ExpanderHeader:pointerover /template/ Border#ToggleButtonBackground">
         <Setter Property="Background" Value="{StaticResource BgRaised}" />
-        <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
-    <Style Selector="Button.modRow:pressed">
-        <Setter Property="RenderTransform" Value="scale(1)" />
+    <Style Selector="Expander.group /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
-    <!-- Sayfa düğmesi -->
-    <Style Selector="Button.page">
-        <Setter Property="MinWidth" Value="32" />
+    <Style Selector="Border.modrow:pointerover">
+        <Setter Property="Background" Value="{StaticResource BgRaised}" />
+    </Style>
+    <Style Selector="Border.modrow.compact">
+        <Setter Property="Padding" Value="6,2" />
+    </Style>
+    <Style Selector="Border.modrow.dropTarget">
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+    </Style>
+    <Style Selector="Button.small">
         <Setter Property="Padding" Value="8,4" />
-        <Setter Property="HorizontalContentAlignment" Value="Center" />
-        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontSize" Value="12" />
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer Name="Scroller" VerticalScrollBarVisibility="Auto">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="32,28,32,40" Spacing="14" MaxWidth="1080">
 
-        <TextBlock Classes="display enter" Text="{Binding L[nav.mods]}" />
-
-        <!-- Özet -->
-        <Border Classes="card enter d1" BorderBrush="{Binding ModsCardBorder}" Padding="18,14">
-            <Grid ColumnDefinitions="Auto,*,Auto">
-                <Border Width="38" Height="38" CornerRadius="19" Background="{Binding ModsIconBackground}">
-                    <Panel>
-                        <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2"
-                              Width="16" Height="16" Stretch="Uniform" IsVisible="{Binding !ModuleProblem}" />
-                        <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.9"
-                              Width="16" Height="16" Stretch="Uniform" IsVisible="{Binding ModuleProblem}" />
-                    </Panel>
-                </Border>
-                <StackPanel Grid.Column="1" Margin="14,0" Spacing="2" VerticalAlignment="Center">
-                    <TextBlock Classes="h2" Text="{Binding ModsHeadline}" ToolTip.Tip="{Binding L[mods.why.body]}" />
-                    <TextBlock Classes="dim" FontSize="12" Text="{Binding CommunityStatusText}" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Command="{Binding RestoreModProfileCommand}" Content="{Binding L[mods.restoreProfile]}"
-                            IsVisible="{Binding HasProfileBackup}" />
-                    <Button Classes="primary" Command="{Binding ApplyCoopProfileCommand}" Content="{Binding L[mods.applyProfile]}"
-                            IsVisible="{Binding HasModuleProblems}" ToolTip.Tip="{Binding L[mods.profileHint]}" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Arama ve filtreler -->
-        <Grid Classes="enter d1" ColumnDefinitions="260,12,*">
-            <TextBox Text="{Binding ModSearch}" Watermark="{Binding L[mods.search]}" VerticalAlignment="Top" />
-            <WrapPanel Grid.Column="2" VerticalAlignment="Center">
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterAll}" Margin="0,0,6,6"
-                             Content="{Binding L[mods.f.all]}" />
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCompatible}" Margin="0,0,6,6">
-                    <TextBlock><Run Text="{Binding L[mods.f.ok]}" /><Run Text=" " /><Run Text="{Binding CompatibleCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
-                </RadioButton>
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterNotOnServer}" Margin="0,0,6,6">
-                    <TextBlock><Run Text="{Binding L[mods.f.notOnServer]}" /><Run Text=" " /><Run Text="{Binding NotOnServerCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
-                </RadioButton>
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterBlocked}" Margin="0,0,6,6">
-                    <TextBlock><Run Text="{Binding L[mods.f.blocked]}" /><Run Text=" " /><Run Text="{Binding BlockedCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
-                </RadioButton>
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCommunityWorks}" Margin="0,0,6,6"
-                             Content="{Binding L[mods.f.works]}" />
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterCommunityBroken}" Margin="0,0,6,6"
-                             Content="{Binding L[mods.f.broken]}" />
-                <RadioButton Classes="tab" GroupName="modsFilter" IsChecked="{Binding FilterLibrary}" Margin="0,0,6,6"
-                             ToolTip.Tip="{Binding L[mods.f.libraryTip]}">
-                    <TextBlock><Run Text="{Binding L[mods.f.library]}" /><Run Text=" " /><Run Text="{Binding LibraryCount}" Foreground="{StaticResource TextFaint}" /></TextBlock>
-                </RadioButton>
-            </WrapPanel>
+        <Grid ColumnDefinitions="*,Auto" Classes="enter">
+            <StackPanel Spacing="2">
+                <TextBlock Classes="display" Text="{Binding L[nav.mods]}" />
+                <TextBlock Classes="dim" FontSize="13" Text="{Binding L[mm.sub]}" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                <Button Command="{Binding RefreshModsCommand}" ToolTip.Tip="{Binding L[mm.refreshTip]}" Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Path Data="{StaticResource IconRefresh}" Stroke="{StaticResource TextDim}" StrokeThickness="1.8" Width="13" Height="13" Stretch="Uniform" />
+                        <TextBlock Text="{Binding L[mm.refresh]}" />
+                    </StackPanel>
+                </Button>
+                <RadioButton Classes="tab" GroupName="mmTab" IsChecked="{Binding TabInstalled}" Content="{Binding L[mm.tab.installed]}" />
+                <RadioButton Classes="tab" GroupName="mmTab" IsChecked="{Binding TabBrowse}" Content="{Binding L[mm.tab.browse]}" />
+                <RadioButton Classes="tab" GroupName="mmTab" IsChecked="{Binding TabPacks}" Content="{Binding L[mm.tab.packs]}" />
+            </StackPanel>
         </Grid>
 
-        <!-- Liste -->
-        <Border Name="ListCard" Classes="card enter d2" Padding="6">
-            <StackPanel>
-                <Grid ColumnDefinitions="*,120,150,150,96" Margin="14,6,14,8">
-                    <TextBlock Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.module]}" />
-                    <TextBlock Grid.Column="1" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.version]}" />
-                    <TextBlock Grid.Column="2" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.status]}" />
-                    <TextBlock Grid.Column="3" Classes="dim" FontSize="11.5" Text="{Binding L[mods.col.community]}" />
-                </Grid>
-                <ItemsControl ItemsSource="{Binding Modules}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ModuleRow">
-                          <Button Classes="modRow" ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.rowTip]}"
-                                  Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).OpenModInfoCommand}"
-                                  CommandParameter="{Binding}">
-                            <Border Padding="14,7" CornerRadius="4" Opacity="{Binding RowOpacity}">
-                                <Border.Transitions>
-                                    <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2" /></Transitions>
-                                </Border.Transitions>
-                                <Grid ColumnDefinitions="Auto,*,120,150,150,96">
-                                    <Panel Width="16" Margin="0,0,8,0" VerticalAlignment="Center">
-                                        <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource Success}" IsVisible="{Binding IsSelected}" />
-                                        <Border Width="8" Height="8" CornerRadius="4" BorderBrush="{StaticResource TextFaint}" BorderThickness="1.2" IsVisible="{Binding !IsSelected}" />
-                                    </Panel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Id}" />
-                                        <TextBlock Classes="dim" FontSize="11" Text="{Binding Category}" VerticalAlignment="Center" />
-                                        <Button Classes="ghost" Padding="3" IsVisible="{Binding HasUrl}"
-                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).OpenModPageCommand}"
-                                                CommandParameter="{Binding}">
-                                            <Path Classes="icon" Data="{StaticResource IconArrowRight}" Width="10" />
-                                        </Button>
-                                        <Border Classes="badge" Background="{StaticResource DangerSoft}" Padding="6,1" IsVisible="{Binding HadLocalError}"
-                                                ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.localErrorTip]}">
-                                            <TextBlock FontSize="10.5" Foreground="{StaticResource Danger}"
-                                                       Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.localError]}" />
-                                        </Border>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="2" Classes="dim" Text="{Binding Version}" VerticalAlignment="Center" />
-                                    <Panel Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                        <Border Classes="badge" Background="{StaticResource SuccessSoft}" IsVisible="{Binding IsOk}">
-                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding StatusText}" />
-                                        </Border>
-                                        <Border Classes="badge" Background="{StaticResource DangerSoft}" IsVisible="{Binding IsBlocked}">
-                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding StatusText}" />
-                                        </Border>
-                                        <Border Classes="badge" Background="{StaticResource WarningSoft}" IsVisible="{Binding IsRisky}">
-                                            <TextBlock FontSize="11.5" Foreground="{StaticResource Warning}" Text="{Binding StatusText}" />
-                                        </Border>
-                                    </Panel>
-                                    <Panel Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding CommunityNote}">
-                                        <TextBlock FontSize="11.5" Foreground="{StaticResource Success}" Text="{Binding CommunityText}" IsVisible="{Binding CommunityWorks}" />
-                                        <TextBlock FontSize="11.5" Foreground="{StaticResource Danger}" Text="{Binding CommunityText}" IsVisible="{Binding CommunityBroken}" />
-                                        <TextBlock FontSize="11.5" Foreground="{StaticResource TextFaint}" Text="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mod.community.unknown]}"
-                                                   IsVisible="{Binding Community, Converter={x:Static vm:ModConverters.IsUnknown}}" />
-                                        <TextBlock FontSize="10.5" Foreground="{StaticResource TextDim}" Text="{Binding VotesText}" Margin="0,16,0,0" />
-                                    </Panel>
-                                    <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" IsVisible="{Binding CanReport}">
-                                        <Button Padding="7,4" ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.reportWorks]}"
-                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ReportModWorksCommand}"
-                                                CommandParameter="{Binding}">
-                                            <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2" Width="11" Height="11" Stretch="Uniform" />
-                                        </Button>
-                                        <Button Padding="7,4" ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).L[mods.reportBroken]}"
-                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ReportModBrokenCommand}"
-                                                CommandParameter="{Binding}">
-                                            <Path Data="{StaticResource IconClose}" Stroke="{StaticResource Danger}" StrokeThickness="2" Width="10" Height="10" Stretch="Uniform" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                          </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBlock Classes="hint" Margin="14" Text="{Binding L[msg.modulesUnknown]}" IsVisible="{Binding !HasModules}" />
+        <!-- ================= YÜKLÜ MODLAR ================= -->
+        <StackPanel Spacing="12" IsVisible="{Binding TabInstalled}">
+            <Grid ColumnDefinitions="*,Auto" Classes="enter d1">
+                <TextBox Text="{Binding ManagedModSearch}" Watermark="{Binding L[mm.search]}" Margin="0,0,12,0">
+                    <TextBox.InnerLeftContent>
+                        <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextFaint}" StrokeThickness="1.8"
+                              Width="14" Height="14" Stretch="Uniform" Margin="10,0,2,0" />
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding OpenGameModsFolderCommand}" Content="{Binding L[mm.openFolder]}" />
+                    <Button Command="{Binding InstallModFromZipCommand}" Content="{Binding L[mm.installZip]}" />
+                    <Button Command="{Binding AutoSortModsCommand}" Content="{Binding L[mm.autoSort]}" ToolTip.Tip="{Binding L[mm.autoSortTip]}" />
+                </StackPanel>
+            </Grid>
 
-                <!-- Sayfalama -->
-                <Grid ColumnDefinitions="*,Auto" Margin="14,10,14,6">
-                    <TextBlock Classes="dim" FontSize="12" VerticalAlignment="Center" Text="{Binding ModsRangeText}" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding ModsHasPages}">
-                        <Button Classes="page" Command="{Binding ModsPrevPageCommand}" Content="{Binding L[mods.page.prev]}" />
-                        <ItemsControl ItemsSource="{Binding ModsPageLinks}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4" /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:ModsPageLink">
-                                    <Panel>
-                                        <TextBlock Classes="dim" Text="…" VerticalAlignment="Center" Margin="4,0" IsVisible="{Binding IsGap}" />
-                                        <Button Classes="page" Classes.primary="{Binding IsCurrent}" IsVisible="{Binding IsLink}" Content="{Binding Label}"
-                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).GoToModsPageCommand}"
-                                                CommandParameter="{Binding}" />
-                                    </Panel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Button Classes="page" Command="{Binding ModsNextPageCommand}" Content="{Binding L[mods.page.next]}" />
+            <StackPanel Spacing="2">
+                <TextBlock Classes="dim" FontSize="12.5" Text="{Binding ModsSummaryText}" />
+                <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[mm.rule]}" />
+            </StackPanel>
+
+            <!-- Kaydedilmemiş değişiklik: ne değişecek, oyun açık mı -->
+            <Border Background="{StaticResource BgPanel}" CornerRadius="10" Padding="16,10"
+                    BorderBrush="{StaticResource AccentDim}" BorderThickness="1" IsVisible="{Binding ModsDirty}">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Classes="body" VerticalAlignment="Center" Text="{Binding ModChangesText}" TextWrapping="Wrap" Margin="0,0,12,0" />
+                    <Button Grid.Column="1" Margin="0,0,8,0" Command="{Binding RevertModChangesCommand}" Content="{Binding L[btn.revert]}" />
+                    <Button Grid.Column="2" Classes="primary" Command="{Binding ApplyModChangesCommand}" Content="{Binding L[mm.apply]}"
+                            IsEnabled="{Binding !GameRunningForMods}" />
+                </Grid>
+            </Border>
+
+            <!-- Kaldırma onayı -->
+            <Border Background="{StaticResource DangerSoft}" BorderBrush="{StaticResource Danger}" BorderThickness="1"
+                    CornerRadius="10" Padding="14" IsVisible="{Binding PendingRemoveMod, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Classes="body" Foreground="#F5C2C2" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0">
+                        <Run Text="{Binding PendingRemoveMod.Name, FallbackValue=''}" FontWeight="SemiBold" />
+                        <Run Text="{Binding L[mm.removeConfirm]}" />
+                    </TextBlock>
+                    <Button Grid.Column="1" Margin="0,0,8,0" Command="{Binding CancelRemoveModCommand}" Content="{Binding L[btn.cancel]}" />
+                    <Button Grid.Column="2" Classes="dangerSolid" Command="{Binding ConfirmRemoveModCommand}" Content="{Binding L[mm.remove]}" />
+                </Grid>
+            </Border>
+
+            <!-- Coop: sabit, en üstte -->
+            <Border Classes="card" Background="{StaticResource HeroGradient}" BorderBrush="{StaticResource AccentDim}" Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoft}" Margin="0,0,14,0" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconShield}" Stroke="{StaticResource Accent}" StrokeThickness="1.8" Width="18" Height="18" Stretch="Uniform" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Coop" FontWeight="SemiBold" FontSize="15" />
+                        <TextBlock Classes="dim" FontSize="12.5" TextWrapping="Wrap" Text="{Binding CoopRowText}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Classes="badge" Background="{StaticResource AccentSoft}" IsVisible="{Binding CoopRowOn}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Width="11" Height="11" Stretch="Uniform" />
+                                <TextBlock FontSize="11.5" Foreground="{StaticResource Accent}" Text="{Binding L[mm.coop.badgeOn]}" />
+                            </StackPanel>
+                        </Border>
+                        <Button Classes="primary" IsVisible="{Binding CoopRowOff}" Command="{Binding EnableCoopCommand}" Content="{Binding L[mm.coop.enable]}" />
+                        <Button Classes="primary" IsVisible="{Binding !HasCoopRow}" Command="{Binding RunCheckFixCommand}"
+                                CommandParameter="{x:Static vm:GuideFixes.Workshop}" Content="{Binding L[checkfix.OpenCoopWorkshop]}" />
                     </StackPanel>
                 </Grid>
+            </Border>
+
+            <!-- Sunucu dünyası: modlar hangi sunucuya kurulur -->
+            <Border Classes="card" Padding="16,12">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="Auto,Auto,*">
+                        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" Text="{Binding L[mm.world.label]}" />
+                        <ComboBox Grid.Column="1" MinWidth="220" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding ModsWorld}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="saves:SaveSet">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Grid.Column="2" Classes="dim" Margin="14,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding ModsWorldText}" />
+                    </Grid>
+                    <TextBlock Classes="hint" FontSize="12" TextWrapping="Wrap" Text="{Binding L[mm.world.hint]}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Coop'un reddettikleri açıksa -->
+            <Border Background="{StaticResource DangerSoft}" BorderBrush="#6A2A2A" BorderThickness="1" CornerRadius="8" Padding="14,10"
+                    IsVisible="{Binding HasIncompatibleOn}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Danger}" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Margin="10,0" Classes="body" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding IncompatibleOnText}" />
+                    <Button Grid.Column="2" Classes="primary" Command="{Binding DisableIncompatibleModsCommand}" Content="{Binding L[mm.incompatible.disable]}" />
+                </Grid>
+            </Border>
+
+            <!-- Kullanıcının modları -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+                <TextBlock Classes="h2" VerticalAlignment="Center" Text="{Binding L[mm.group.yours]}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <CheckBox VerticalAlignment="Center" Margin="0,0,10,0" IsChecked="{Binding CompactMods}" Content="{Binding L[mm.compact]}" />
+                    <RadioButton Classes="tab" GroupName="mmFilter" IsChecked="{Binding ModFilterAll}" Content="{Binding L[mm.filter.all]}" />
+                    <RadioButton Classes="tab" GroupName="mmFilter" IsChecked="{Binding ModFilterOn}" Content="{Binding L[mm.filter.on]}" />
+                    <RadioButton Classes="tab" GroupName="mmFilter" IsChecked="{Binding ModFilterOff}" Content="{Binding L[mm.filter.off]}" />
+                    <RadioButton Classes="tab" GroupName="mmFilter" IsChecked="{Binding ModFilterProblems}" Content="{Binding L[mm.filter.problems]}" />
+                </StackPanel>
+            </Grid>
+
+            <Border Classes="card" Padding="8">
+                <StackPanel>
+                    <TextBlock Classes="hint" Margin="10,8" Text="{Binding L[mm.empty]}" IsVisible="{Binding HasNoVisibleMods}" />
+                    <!-- Sütun başlıkları: soldaki aç/kapat senin oyunun, sağdaki düğme sunucu -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="6,4,6,6" IsVisible="{Binding !HasNoVisibleMods}">
+                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Accent}" Margin="2,0,0,0"
+                                   ToolTip.Tip="{Binding L[mm.col.gameTip]}">
+                            <Run Text="↓ " /><Run Text="{Binding L[mm.col.game]}" />
+                        </TextBlock>
+                        <TextBlock Grid.Column="2" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Accent}" Margin="0,0,118,0"
+                                   ToolTip.Tip="{Binding L[mm.world.addTip]}">
+                            <Run Text="{Binding ModsServerColumnText}" /><Run Text=" ↓" />
+                        </TextBlock>
+                    </Grid>
+                    <ItemsControl x:Name="UserModsList" ItemsSource="{Binding VisibleManagedMods}" ItemTemplate="{StaticResource ModRowTemplate}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Oyunun modülleri -->
+            <Border Classes="card" Padding="4">
+            <Expander Classes="group">
+                <Expander.Header>
+                    <TextBlock FontWeight="SemiBold" Text="{Binding OfficialGroupTitle}" />
+                </Expander.Header>
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[mm.group.officialHint]}" Margin="6,0,6,6" />
+                    <ItemsControl ItemsSource="{Binding OfficialMods}" ItemTemplate="{StaticResource ModRowTemplate}" />
+                </StackPanel>
+            </Expander>
+            </Border>
+
+            <!-- Coop'la çalışmayanlar -->
+            <Border Classes="card" Padding="4" IsVisible="{Binding HasIncompatibleMods}">
+            <Expander Classes="group" IsExpanded="{Binding HasIncompatibleOn, Mode=OneWay}">
+                <Expander.Header>
+                    <TextBlock FontWeight="SemiBold" Text="{Binding IncompatibleGroupTitle}" />
+                </Expander.Header>
+                <ItemsControl ItemsSource="{Binding IncompatibleMods}" ItemTemplate="{StaticResource ModRowTemplate}" />
+            </Expander>
+            </Border>
+        </StackPanel>
+
+        <!-- ================= MOD BUL ================= -->
+        <StackPanel Spacing="12" IsVisible="{Binding TabBrowse}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton Classes="tab" GroupName="mmSite" IsChecked="{Binding BrowseWorkshop}" Content="{Binding L[mm.src.workshop]}" />
+                    <RadioButton Classes="tab" GroupName="mmSite" IsChecked="{Binding BrowseNexus}" Content="Nexus Mods" />
+                </StackPanel>
+                <TextBox Grid.Column="1" Margin="12,0" Text="{Binding BrowseQuery}" Watermark="{Binding L[mm.browseSearch]}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchModsCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Grid.Column="2" Classes="primary" Command="{Binding SearchModsCommand}" Content="{Binding L[mm.searchBtn]}" />
+            </Grid>
+            <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[mm.browseHint]}" />
+
+            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding BrowseBusy}">
+                <Path Classes="spin" Data="M12,2 A10,10 0 0 1 22,12" Stroke="{StaticResource Accent}" StrokeThickness="2.6"
+                      StrokeLineCap="Round" Width="20" Height="20" Stretch="None" RenderTransformOrigin="50%,50%" />
+                <TextBlock Classes="dim" VerticalAlignment="Center" Text="{Binding L[mm.searching]}" />
             </StackPanel>
-        </Border>
+            <TextBlock Classes="dim" Text="{Binding BrowseMessage}" IsVisible="{Binding HasBrowseMessage}" TextWrapping="Wrap" />
+
+            <ItemsControl ItemsSource="{Binding BrowseCards}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel ItemWidth="360" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BrowseCard">
+                        <Border Classes="card" Margin="0,0,12,12" Padding="0" ClipToBounds="True">
+                            <StackPanel>
+                                <Panel Height="150" Background="{StaticResource BgRaised}">
+                                    <Image Source="{Binding Image}" Stretch="UniformToFill" IsVisible="{Binding HasImage}" />
+                                </Panel>
+                                <StackPanel Margin="14,10,14,12" Spacing="6">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                                    <TextBlock Classes="dim" FontSize="11.5" Text="{Binding Meta}" />
+                                    <TextBlock Classes="hint" FontSize="12" Text="{Binding Summary}" TextWrapping="Wrap" MaxHeight="52" TextTrimming="WordEllipsis" />
+                                    <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                        <Button Classes="ghost small" Padding="0" HorizontalAlignment="Left"
+                                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).OpenBrowsePageCommand}" CommandParameter="{Binding}">
+                                            <TextBlock FontSize="12" Foreground="{StaticResource Accent}" Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.page]}" />
+                                        </Button>
+                                        <Panel Grid.Column="1">
+                                            <Button Classes="primary small" IsVisible="{Binding CanGet}"
+                                                    Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).GetBrowseModCommand}" CommandParameter="{Binding}"
+                                                    Content="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.get]}" />
+                                            <TextBlock FontSize="12" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" IsVisible="{Binding Waiting}"
+                                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.waiting]}" />
+                                            <TextBlock FontSize="12" Foreground="{StaticResource Success}" VerticalAlignment="Center" IsVisible="{Binding Installed}"
+                                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.installed]}" />
+                                            <TextBlock FontSize="12" Foreground="{StaticResource Accent}" VerticalAlignment="Center" IsVisible="{Binding InWorld}"
+                                                       Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.world.cardIn]}" />
+                                        </Panel>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <Button Command="{Binding BrowsePrevPageCommand}" Content="‹" />
+                <TextBlock Classes="dim" VerticalAlignment="Center" Text="{Binding BrowsePage}" />
+                <Button Command="{Binding BrowseNextPageCommand}" Content="›" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- ================= PAKETLER ================= -->
+        <Grid ColumnDefinitions="300,16,*" IsVisible="{Binding TabPacks}">
+            <StackPanel Spacing="12">
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="h2" Text="{Binding L[mm.pack.new]}" />
+                        <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding L[mm.pack.newHint]}" />
+                        <TextBox Text="{Binding NewPackName}" Watermark="{Binding L[mm.pack.name]}" MaxLength="60" />
+                        <Button Classes="primary" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Command="{Binding CreatePackFromCurrentCommand}" Content="{Binding L[mm.pack.create]}" />
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Command="{Binding ImportPackCommand}" Content="{Binding L[mm.pack.import]}" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card" Padding="8">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="h2" Margin="8,6" Text="{Binding L[mm.pack.list]}" />
+                        <TextBlock Classes="hint" Margin="8,0,8,8" Text="{Binding L[mm.pack.none]}" IsVisible="{Binding !HasPacks}" TextWrapping="Wrap" />
+                        <ListBox ItemsSource="{Binding Packs}" SelectedItem="{Binding SelectedPack}" IsVisible="{Binding HasPacks}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PackRow">
+                                    <StackPanel Spacing="1">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <Border Classes="badge" Background="{StaticResource SuccessSoft}" IsVisible="{Binding IsActive}">
+                                                <TextBlock FontSize="10.5" Foreground="{StaticResource Success}" Text="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.pack.active]}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Classes="dim" FontSize="11.5">
+                                            <Run Text="{Binding Count}" /><Run Text=" mod" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+                <!-- Modlar nereye kurulur? -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="h2" Text="{Binding L[mm.manual.title]}" />
+                        <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Text="{Binding L[mm.manual.workshop]}" />
+                        <TextBlock Classes="dim" FontSize="11" TextWrapping="Wrap" Text="{Binding WorkshopFolderText}" />
+                        <Button HorizontalAlignment="Left" Command="{Binding OpenWorkshopFolderCommand}" Content="{Binding L[mm.manual.openWorkshop]}" />
+                        <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding L[mm.manual.modules]}" />
+                        <TextBlock Classes="dim" FontSize="11" TextWrapping="Wrap" Text="{Binding ManualModsFolderText}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Command="{Binding OpenGameModsFolderCommand}" Content="{Binding L[mm.openFolder]}" />
+                            <Button Command="{Binding InstallModFromZipCommand}" Content="{Binding L[mm.installZip]}" />
+                        </StackPanel>
+                        <TextBlock Classes="hint" FontSize="11.5" TextWrapping="Wrap" Text="{Binding L[mm.manual.after]}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Column="2" Classes="card" IsVisible="{Binding HasSelectedPack}" VerticalAlignment="Top">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="2">
+                            <TextBlock Classes="h1" Text="{Binding SelectedPack.Name, FallbackValue=''}" />
+                            <TextBlock Classes="dim" FontSize="12.5" Text="{Binding PackStatusText}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Classes="primary big" Command="{Binding ApplyPackCommand}"
+                                    Content="{Binding L[mm.pack.apply]}" ToolTip.Tip="{Binding L[mm.pack.applyTip]}" />
+                            <Button Classes="big" Command="{Binding PlayWithPackCommand}" ToolTip.Tip="{Binding L[mm.pack.playTip]}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Data="{StaticResource IconPlay}" Fill="{StaticResource Accent}" Width="12" Height="12" Stretch="Uniform" />
+                                    <TextBlock Text="{Binding L[mm.pack.play]}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Steam silinen mod klasörlerini "kurulu" sanıyor: abone olunsa da indirmez -->
+                    <Border Background="{StaticResource WarningSoft}" BorderBrush="#6A5420" BorderThickness="1" CornerRadius="8" Padding="14,12"
+                            IsVisible="{Binding WorkshopNeedsVerify}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding L[mm.verifyCard]}" />
+                            <Button Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Command="{Binding OpenSteamVerifyCommand}" Content="{Binding L[mm.verifyBtn]}" />
+                        </Grid>
+                    </Border>
+                    <!-- Davet: arkadaşın sunucusu -->
+                    <Border Background="{StaticResource SuccessSoft}" BorderBrush="#2F5A3A" BorderThickness="1" CornerRadius="8" Padding="14,12"
+                            IsVisible="{Binding HasSelectedInvite}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="4">
+                                <TextBlock FontWeight="SemiBold" FontSize="14" Text="{Binding L[invite.pack.title]}" />
+                                <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Text="{Binding SelectedInviteText}" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="primary" VerticalAlignment="Center" Margin="12,0,0,0"
+                                    Command="{Binding ApplyInviteAndJoinCommand}" Content="{Binding L[invite.pack.join]}" />
+                        </Grid>
+                    </Border>
+                    <!-- Paketi hangi sunucu dünyalarına kuralım? -->
+                    <Border Background="{StaticResource AccentSoft}" BorderBrush="{StaticResource AccentDim}" BorderThickness="1" CornerRadius="8" Padding="14,12"
+                            IsVisible="{Binding PackWorldPromptOpen}">
+                        <StackPanel Spacing="8">
+                            <TextBlock FontWeight="SemiBold" FontSize="14" Text="{Binding L[mm.pack.worldPrompt.title]}" />
+                            <TextBlock Classes="body" FontSize="12.5" TextWrapping="Wrap" Text="{Binding L[mm.pack.worldPrompt.body]}" />
+                            <TextBlock Classes="hint" Text="{Binding L[mm.pack.worldPrompt.noWorlds]}" IsVisible="{Binding !HasPackWorldChoices}" />
+                            <ItemsControl ItemsSource="{Binding PackWorldChoices}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WorldChoice">
+                                        <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" Margin="0,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Classes="primary" Command="{Binding InstallPackToWorldsCommand}" IsEnabled="{Binding HasPackWorldChoices}"
+                                        Content="{Binding L[mm.pack.worldPrompt.install]}" />
+                                <Button Command="{Binding ClosePackWorldPromptCommand}" Content="{Binding L[mm.pack.worldPrompt.skip]}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <WrapPanel>
+                        <Button Margin="0,0,8,8" Command="{Binding OpenPackWorldPromptCommand}" Content="{Binding L[mm.pack.toWorlds]}" />
+                        <Button Margin="0,0,8,8" Command="{Binding SubscribeAllMissingCommand}" Content="{Binding L[mm.pack.subscribeAll]}" />
+                        <Button Margin="0,0,8,8" Command="{Binding ExportPackZipCommand}" Content="{Binding L[mm.pack.export]}" />
+                        <CheckBox Margin="0,0,8,8" IsChecked="{Binding PackIncludeWorkshop}" Content="{Binding L[mm.pack.includeWorkshop]}"
+                                  ToolTip.Tip="{Binding L[mm.pack.includeWorkshopTip]}" />
+                        <Button Margin="0,0,8,8" Classes="danger" Command="{Binding DeletePackCommand}" Content="{Binding L[btn.delete]}" />
+                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding PackItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PackItemRow">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
+                                    <Panel Width="14" Height="14" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource Success}" StrokeThickness="2.2" Stretch="Uniform" IsVisible="{Binding Ready}" />
+                                        <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource Warning}" StrokeThickness="2" Stretch="Uniform" IsVisible="{Binding NotReady}" />
+                                    </Panel>
+                                    <StackPanel Grid.Column="1" Spacing="1">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Classes="dim" FontSize="11.5"><Run Text="{Binding Version}" /><Run Text="  ·  " /><Run Text="{Binding StateText}" /></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <Button Classes="small" IsVisible="{Binding CanSubscribe}"
+                                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SubscribePackItemCommand}" CommandParameter="{Binding}"
+                                                Content="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.subscribe]}" />
+                                        <Button Classes="small" IsVisible="{Binding CanOpenPage}"
+                                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).OpenPackItemPageCommand}" CommandParameter="{Binding}"
+                                                Content="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).L[mm.page]}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

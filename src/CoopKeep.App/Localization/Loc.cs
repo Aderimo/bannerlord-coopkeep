@@ -49,7 +49,9 @@ public sealed partial class Loc : INotifyPropertyChanged
 
     /// <summary>Anahtar bulunamazsa anahtarın kendisi döner — eksik çeviri görünür olur, çökmez.</summary>
     public string this[string key] =>
-        (IsTurkish ? TurkishV4 : EnglishV4).TryGetValue(key, out var v4) ? v4
+        (IsTurkish ? TurkishRelease : EnglishRelease).TryGetValue(key, out var release) ? release
+        : (IsTurkish ? TurkishCoop : EnglishCoop).TryGetValue(key, out var coop) ? coop
+        : (IsTurkish ? TurkishV4 : EnglishV4).TryGetValue(key, out var v4) ? v4
         : (IsTurkish ? Turkish : English).TryGetValue(key, out var value) ? value
         : (IsTurkish ? TurkishV2 : EnglishV2).TryGetValue(key, out var v2) ? v2
         : (IsTurkish ? TurkishUi : EnglishUi).TryGetValue(key, out var ui) ? ui
@@ -126,6 +128,8 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.searchPlayers"] = "Oyuncu ara",
         ["msg.settingsNeedRestart"] = "Değişiklikler sunucu yeniden başlatılınca geçerli olur.",
         ["msg.settingsSaved"] = "Ayarlar kaydedildi.",
+        ["msg.invalidPort"] = "Port 1 ile 65535 arasında bir sayı olmalı.",
+        ["msg.invalidAutosave"] = "Otomatik kayıt dakikası 0 veya daha büyük bir sayı olmalı.",
         ["msg.steamHint"] = "Kapalıysa sunucu Steam listesinde görünmez; yalnızca IP ile bağlanılır.",
 
         // Sunucu dünyası işlemleri
@@ -271,6 +275,8 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["msg.searchPlayers"] = "Search players",
         ["msg.settingsNeedRestart"] = "Changes take effect after the server restarts.",
         ["msg.settingsSaved"] = "Settings saved.",
+        ["msg.invalidPort"] = "The port must be a number between 1 and 65535.",
+        ["msg.invalidAutosave"] = "Autosave minutes must be a number of 0 or more.",
         ["msg.steamHint"] = "When off, the server is hidden from the Steam list; join by IP only.",
 
         // Server world actions

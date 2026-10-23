@@ -134,7 +134,7 @@
                          HorizontalAlignment="Center" VerticalAlignment="Center" />
 
               <!-- Tıklama alanları: her kasaba ve kale, katmanlardan bağımsız -->
-              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}">
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapFortified}">
                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:MapSettlement">
@@ -151,7 +151,7 @@
               </ItemsControl>
 
               <!-- Köyler: nokta; ad yalnızca yakında -->
-              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowVillages}">
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapVillages}" IsVisible="{Binding ShowVillages}">
                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:MapSettlement">
@@ -177,7 +177,7 @@
               </ItemsControl>
 
               <!-- Kaleler: küçük sancak; ad orta yakınlıkta -->
-              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowCastles}">
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapCastles}" IsVisible="{Binding ShowCastles}">
                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:MapSettlement">
@@ -207,7 +207,7 @@
               </ItemsControl>
 
               <!-- Kasabalar: yalnızca el değiştirince basılı sancağın üstüne yeni sancak (ad yazılmaz; ad haritada basılı) -->
-              <ItemsControl Classes="layer" ItemsSource="{Binding MapSettlements}" IsVisible="{Binding ShowTowns}">
+              <ItemsControl Classes="layer" ItemsSource="{Binding MapTowns}" IsVisible="{Binding ShowTowns}">
                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:MapSettlement">

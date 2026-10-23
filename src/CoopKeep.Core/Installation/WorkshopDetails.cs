@@ -42,27 +42,50 @@ public sealed record WorkshopDetails
                 list.ValueKind != JsonValueKind.Array || list.GetArrayLength() == 0)
                 return null;
 
-            var item = list[0];
-            if (Long(item, "result") != 1) return null;
-
-            var id = Text(item, "publishedfileid");
-            if (!IsValidId(id)) return null;
-
-            var updated = Long(item, "time_updated");
-            return new WorkshopDetails
-            {
-                Id = id!,
-                Title = Text(item, "title") ?? "",
-                Description = CleanBbCode(Text(item, "description") ?? ""),
-                PreviewUrl = Text(item, "preview_url") is { Length: > 0 } p ? p : null,
-                Subscriptions = Long(item, "subscriptions") ?? 0,
-                Updated = updated is > 0 ? DateTimeOffset.FromUnixTimeSeconds(updated.Value) : null,
-            };
+            return FromItem(list[0]);
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    /// <summary>Birden çok öğe soran yanıttaki bütün geçerli öğeler, yanıttaki sırayla.</summary>
+    public static IReadOnlyList<WorkshopDetails> ParseMany(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("response", out var response) ||
+                !response.TryGetProperty("publishedfiledetails", out var list) ||
+                list.ValueKind != JsonValueKind.Array)
+                return [];
+
+            return list.EnumerateArray().Select(FromItem).Where(d => d is not null).Select(d => d!).ToList();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static WorkshopDetails? FromItem(JsonElement item)
+    {
+        if (Long(item, "result") != 1) return null;
+
+        var id = Text(item, "publishedfileid");
+        if (!IsValidId(id)) return null;
+
+        var updated = Long(item, "time_updated");
+        return new WorkshopDetails
+        {
+            Id = id!,
+            Title = Text(item, "title") ?? "",
+            Description = CleanBbCode(Text(item, "description") ?? ""),
+            PreviewUrl = Text(item, "preview_url") is { Length: > 0 } p ? p : null,
+            Subscriptions = Long(item, "subscriptions") ?? 0,
+            Updated = updated is > 0 ? DateTimeOffset.FromUnixTimeSeconds(updated.Value) : null,
+        };
     }
 
     private static string? Text(JsonElement e, string name) =>

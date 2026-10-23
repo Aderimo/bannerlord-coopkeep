@@ -86,6 +86,7 @@
         <StreamGeometry x:Key="IconFolder">M3,6 H10 L12,8 H21 V19 H3 Z</StreamGeometry>
         <StreamGeometry x:Key="IconShield">M12,3 L20,6 V11.5 C20,16 16.5,19.5 12,21 C7.5,19.5 4,16 4,11.5 V6 Z</StreamGeometry>
         <StreamGeometry x:Key="IconSword">M20,4 L11,13 M20,4 H15.5 M20,4 V8.5 M7,13 L11,17 M9,15 L4.5,19.5</StreamGeometry>
+        <StreamGeometry x:Key="IconBell">M6,17 V11 A6,6 0 0 1 18,11 V17 L20,19 H4 Z M10,21.5 A2,2 0 0 0 14,21.5</StreamGeometry>
         <StreamGeometry x:Key="IconHeart">M12,20 C5,15 3,11.5 3,8.5 C3,6 5,4 7.5,4 C9.5,4 11,5.2 12,6.8 C13,5.2 14.5,4 16.5,4 C19,4 21,6 21,8.5 C21,11.5 19,15 12,20 Z</StreamGeometry>
         <StreamGeometry x:Key="IconCoin">M12,4 A8,8 0 1 0 12,20 A8,8 0 1 0 12,4 Z M12,8 V16 M9.5,10 C9.5,8.5 14.5,8.5 14.5,10 C14.5,12 9.5,12 9.5,14 C9.5,15.5 14.5,15.5 14.5,14</StreamGeometry>
         <StreamGeometry x:Key="IconBan">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M5.6,5.6 L18.4,18.4</StreamGeometry>
@@ -99,6 +100,8 @@
         <StreamGeometry x:Key="IconArrowRight">M5,12 H19 M13,6 L19,12 L13,18</StreamGeometry>
         <StreamGeometry x:Key="IconArrowLeft">M19,12 H5 M11,6 L5,12 L11,18</StreamGeometry>
         <StreamGeometry x:Key="IconInfo">M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 Z M12,11 V16.5 M12,7.6 V8</StreamGeometry>
+        <StreamGeometry x:Key="IconSearch">M10.5,4 A6.5,6.5 0 1 0 10.5,17 A6.5,6.5 0 1 0 10.5,4 Z M15.2,15.2 L20,20</StreamGeometry>
+        <StreamGeometry x:Key="IconGrip">M9,6 H9.01 M15,6 H15.01 M9,12 H9.01 M15,12 H15.01 M9,18 H9.01 M15,18 H15.01</StreamGeometry>
         <StreamGeometry x:Key="IconBook">M4,5 C7,3.5 10,3.5 12,5.5 C14,3.5 17,3.5 20,5 V19 C17,17.5 14,17.5 12,19.5 C10,17.5 7,17.5 4,19 Z M12,5.5 V19.5</StreamGeometry>
         <StreamGeometry x:Key="IconMap">M3,6 L9,4 L15,6 L21,4 V18 L15,20 L9,18 L3,20 Z M9,4 V18 M15,6 V20</StreamGeometry>
         <StreamGeometry x:Key="IconSparkle">M12,3 L13.8,10.2 L21,12 L13.8,13.8 L12,21 L10.2,13.8 L3,12 L10.2,10.2 Z</StreamGeometry>
@@ -304,16 +307,11 @@
         <Style Selector="ToggleButton.disclosure:checked /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
         </Style>
-        <Style Selector="ToggleButton.disclosure Path.chevron">
-            <Setter Property="RenderTransform" Value="rotate(0deg)" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut" />
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="ToggleButton.disclosure:checked Path.chevron">
-            <Setter Property="RenderTransform" Value="rotate(90deg)" />
+        <!-- Ok: kapalıyken aşağı, açıkken yukarı (iki ayrı yol; düğmenin içinde IsChecked'e bağlı). -->
+
+        <Style Selector="ToggleButton.navgroup">
+            <Setter Property="Padding" Value="0,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
 
         <!-- ================= Düğmeler ================= -->

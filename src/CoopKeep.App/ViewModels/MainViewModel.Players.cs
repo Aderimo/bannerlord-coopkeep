@@ -471,6 +471,22 @@ public partial class MainViewModel
         ShowToast(string.Format(L["msg.blocked"], clean));
     }
 
+    /// <summary>Oyuncu katıldı: pencere arkadaysa ses ve görev çubuğu uyarısı (pencere tarafında).</summary>
+    public event Action<string>? PlayerJoinedAlert;
+
+    /// <summary>Ayarlar: oyuncu katılınca ses ve görev çubuğu uyarısı.</summary>
+    public bool JoinAlert
+    {
+        get => _ui.JoinAlert;
+        set
+        {
+            if (_ui.JoinAlert == value) return;
+            _ui.JoinAlert = value;
+            _ui.Save();
+            OnPropertyChanged();
+        }
+    }
+
     /// <summary>Yeni bağlanan oyuncu: engelliyse atılır, değilse karakter listesi tazelenir.</summary>
     private void OnPlayerJoined(ConnectedPlayer player)
     {
@@ -483,6 +499,7 @@ public partial class MainViewModel
         }
 
         ShowToast(string.Format(L["msg.joined"], player.Name), ToastKind.Info);
+        if (JoinAlert) PlayerJoinedAlert?.Invoke(player.Name);
         PlayerSeen(player.Name);
 
         // İlk kez katılan oyuncunun karakteri save'e ancak bir süre sonra yazılıyor.

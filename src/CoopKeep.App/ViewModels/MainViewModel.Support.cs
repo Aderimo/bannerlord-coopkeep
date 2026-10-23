@@ -78,14 +78,18 @@ public partial class MainViewModel
     {
         try
         {
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+            using var http = CoopKeep.Core.Net.FastHttp.Create(TimeSpan.FromSeconds(8));
             http.DefaultRequestHeaders.UserAgent.ParseAdd("CoopKeep/" + AppVersion.TrimStart('v'));
 
-            using var doc = JsonDocument.Parse(await http.GetStringAsync(ReleasesApi));
-            var tag = doc.RootElement.GetProperty("tag_name").GetString();
+            var release = CoopKeep.Core.Net.ReleaseInfo.Parse(await http.GetStringAsync(ReleasesApi));
 
-            if (tag is not null && IsNewer(tag, AppVersion))
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateVersion = tag);
+            if (release is not null && IsNewer(release.Tag, AppVersion))
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    _latestRelease = release;
+                    UpdateVersion = release.Tag;
+                    OnPropertyChanged(nameof(CanSelfUpdate));
+                });
         }
         catch (Exception)
         {
@@ -116,25 +120,41 @@ public partial class MainViewModel
     /// Şifre ve SteamID'ler paketlenmeden önce gizlenir.
     /// </remarks>
     [RelayCommand]
-    private void CreateBugReport()
+    private async Task CreateBugReportAsync()
     {
         try
         {
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var zipPath = Path.Combine(desktop, $"CoopKeep-rapor-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
 
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
-            {
-                AddText(zip, "info.txt", BuildInfoText());
+            // Ekrandan okunanlar UI thread'inde alınır; dosya işi (logların her biri
+            // megabaytlarca) arka planda yapılır ki arayüz donmasın.
+            var info = BuildInfoText();
+            var console = string.Join(Environment.NewLine, Console);
+            var dataDirectory = DataDirectory;
+            var worldProfiles = _profiles.Directory;
+            var activeWorld = ActiveSaveName;
 
-                var config = Path.Combine(DataDirectory, "server-config.json");
+            await Task.Run(() =>
+            {
+                using var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create);
+                AddText(zip, "info.txt", info);
+
+                var config = Path.Combine(dataDirectory, "server-config.json");
                 if (File.Exists(config))
                     AddText(zip, "server-config.json", MaskSecrets(File.ReadAllText(config)));
 
                 if (File.Exists(CoopInstallation.DefaultModConfigPath))
                     AddText(zip, "mod-config.json", File.ReadAllText(CoopInstallation.DefaultModConfigPath));
 
-                var logs = Path.Combine(DataDirectory, "logs");
+                // "Ayarlar sıfırlanıyor" bildirimlerinde dünyanın kendi profili de gerekli.
+                if (!string.IsNullOrEmpty(activeWorld) && Directory.Exists(worldProfiles))
+                {
+                    foreach (var profile in Directory.GetFiles(worldProfiles, activeWorld + ".*.json"))
+                        AddText(zip, "world/" + Path.GetFileName(profile), File.ReadAllText(profile));
+                }
+
+                var logs = Path.Combine(dataDirectory, "logs");
                 if (Directory.Exists(logs))
                 {
                     foreach (var log in new DirectoryInfo(logs).GetFiles("*.log")
@@ -146,8 +166,11 @@ public partial class MainViewModel
                     }
                 }
 
-                AddText(zip, "console.txt", MaskSecrets(string.Join(Environment.NewLine, Console)));
-            }
+                AddText(zip, "console.txt", MaskSecrets(console));
+
+                if (File.Exists(App.CrashLogPath))
+                    AddText(zip, "crash.log", MaskSecrets(File.ReadAllText(App.CrashLogPath)));
+            });
 
             ShowToast(L["msg.reportCreated"]);
             OpenPath(desktop);
@@ -168,7 +191,8 @@ public partial class MainViewModel
         sb.AppendLine($"Active world: {ActiveSaveName}");
         sb.AppendLine();
         sb.AppendLine("Launcher modules:");
-        foreach (var m in Modules)
+        // Ekrandaki sayfa değil, tüm liste (görünüm en fazla 50 satır gösteriyor).
+        foreach (var m in _allModules)
             sb.AppendLine($"  [{(m.IsSelected ? "x" : " ")}] {m.Id} {m.Version} ({m.Status})");
         return sb.ToString();
     }
@@ -186,6 +210,19 @@ public partial class MainViewModel
         var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
         using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
         writer.Write(content);
+    }
+
+    private DateTime _lastUnexpectedErrorAt;
+
+    /// <summary>
+    /// Beklenmeyen hata: program kapanmaz, kısa bir uyarı çıkar. Art arda gelen hatalar
+    /// ekranı doldurmasın diye 10 saniyede bir gösterilir.
+    /// </summary>
+    public void ShowUnexpectedError(Exception ex)
+    {
+        if (DateTime.UtcNow - _lastUnexpectedErrorAt < TimeSpan.FromSeconds(10)) return;
+        _lastUnexpectedErrorAt = DateTime.UtcNow;
+        ShowToast(string.Format(L["msg.unexpectedError"], ex.Message), ToastKind.Error);
     }
 
     [RelayCommand]
